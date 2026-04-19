@@ -73,6 +73,27 @@ class UnbalancedEntryException extends AccountingException {
         );
 }
 
+/// التاريخ يقع في فترة محاسبية مغلقة
+class PeriodClosedException extends AccountingException {
+  final DateTime date;
+  const PeriodClosedException(this.date)
+      : super('التاريخ $date يقع ضمن فترة محاسبية مغلقة ولا يمكن التسجيل فيه.');
+}
+
+/// التاريخ لا يتبع أي فترة محاسبية معرفة
+class DateOutsidePeriodException extends AccountingException {
+  final DateTime date;
+  const DateOutsidePeriodException(this.date)
+      : super('التاريخ $date لا يتبع أي فترة محاسبية نشطة.');
+}
+
+/// رقم القيد مكرر
+class DuplicateSerialNumberException extends AccountingException {
+  final String serialNumber;
+  const DuplicateSerialNumberException(this.serialNumber)
+      : super('رقم القيد "$serialNumber" موجود مسبقاً.');
+}
+
 /// القيد لا يحتوي على بنود كافية
 class InsufficientLinesException extends AccountingException {
   const InsufficientLinesException()

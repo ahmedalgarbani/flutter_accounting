@@ -8,6 +8,8 @@ mixin _$JournalEntriesDaoMixin on DatabaseAccessor<AccountingDatabase> {
   $AccountsTable get accounts => attachedDatabase.accounts;
   $JournalEntryLinesTable get journalEntryLines =>
       attachedDatabase.journalEntryLines;
+  $AccountingPeriodsTable get accountingPeriods =>
+      attachedDatabase.accountingPeriods;
   JournalEntriesDaoManager get managers => JournalEntriesDaoManager(this);
 }
 
@@ -22,4 +24,7 @@ class JournalEntriesDaoManager {
   $$JournalEntryLinesTableTableManager get journalEntryLines =>
       $$JournalEntryLinesTableTableManager(
           _db.attachedDatabase, _db.journalEntryLines);
+  $$AccountingPeriodsTableTableManager get accountingPeriods =>
+      $$AccountingPeriodsTableTableManager(
+          _db.attachedDatabase, _db.accountingPeriods);
 }

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-04-19
+
+### Added
+- **Accounting Period Control**: Prevent posting transactions in closed or undefined periods.
+- **Voucher Serial Numbering**: Automated generation of unique, sequential serial numbers (format: JV-YYYY-XXXX).
+- **Audit Trail**: Enhanced security with `createdBy`, `postedBy`, and `postedAt` fields on journal entries.
+- **Operational Hardening**: Strict validation preventing postings to main (parent) accounts and enforcing balanced double-entry rules.
+- **Period Management**: New `IAccountingPeriodRepository` for opening, closing, and managing accounting years.
+- **Extended Models**: Added `serialNumber` and audit fields to `JournalEntryModel`.
+
 ## [0.2.0] - 2026-04-19
 
 ### Added

@@ -21,6 +21,7 @@ import 'repositories/impl/account_repository_impl.dart';
 import 'repositories/impl/journal_entry_repository_impl.dart';
 import 'repositories/impl/reports_repository_impl.dart';
 import 'repositories/impl/entry_template_repository_impl.dart';
+import 'repositories/impl/accounting_period_repository_impl.dart';
 
 class FlutterAccounting {
   // ─────────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ class FlutterAccounting {
   final IJournalEntryRepository journalEntries;
   final IReportsRepository      reports;
   final IEntryTemplateRepository templates;
+  final IAccountingPeriodRepository periods;
 
   /// الوصول إلى قاعدة البيانات الخام (للاستخدام المتقدم)
   final AccountingDatabase database;
@@ -40,6 +42,7 @@ class FlutterAccounting {
     required this.journalEntries,
     required this.reports,
     required this.templates,
+    required this.periods,
     required this.database,
   });
 
@@ -83,6 +86,7 @@ class FlutterAccounting {
       journalEntries: JournalEntryRepositoryImpl(db.journalEntriesDao, db.accountsDao),
       reports:       ReportsRepositoryImpl(db.journalEntriesDao),
       templates:     EntryTemplateRepositoryImpl(AccountRepositoryImpl(db.accountsDao, db.journalEntriesDao)),
+      periods:       AccountingPeriodRepositoryImpl(db.journalEntriesDao),
     );
 
     return _instance!;
@@ -98,6 +102,7 @@ class FlutterAccounting {
       journalEntries: JournalEntryRepositoryImpl(db.journalEntriesDao, db.accountsDao),
       reports:        ReportsRepositoryImpl(db.journalEntriesDao),
       templates:      EntryTemplateRepositoryImpl(AccountRepositoryImpl(db.accountsDao, db.journalEntriesDao)),
+      periods:        AccountingPeriodRepositoryImpl(db.journalEntriesDao),
     );
   }
 

@@ -568,6 +568,15 @@ class $JournalEntriesTable extends JournalEntries
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _serialNumberMeta =
+      const VerificationMeta('serialNumber');
+  @override
+  late final GeneratedColumn<String> serialNumber = GeneratedColumn<String>(
+      'serial_number', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 50),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
@@ -601,6 +610,24 @@ class $JournalEntriesTable extends JournalEntries
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
       'notes', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdByMeta =
+      const VerificationMeta('createdBy');
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+      'created_by', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _postedByMeta =
+      const VerificationMeta('postedBy');
+  @override
+  late final GeneratedColumn<String> postedBy = GeneratedColumn<String>(
+      'posted_by', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _postedAtMeta =
+      const VerificationMeta('postedAt');
+  @override
+  late final GeneratedColumn<DateTime> postedAt = GeneratedColumn<DateTime>(
+      'posted_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -618,8 +645,20 @@ class $JournalEntriesTable extends JournalEntries
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, date, description, reference, status, notes, createdAt, updatedAt];
+  List<GeneratedColumn> get $columns => [
+        id,
+        serialNumber,
+        date,
+        description,
+        reference,
+        status,
+        notes,
+        createdBy,
+        postedBy,
+        postedAt,
+        createdAt,
+        updatedAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -632,6 +671,14 @@ class $JournalEntriesTable extends JournalEntries
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('serial_number')) {
+      context.handle(
+          _serialNumberMeta,
+          serialNumber.isAcceptableOrUnknown(
+              data['serial_number']!, _serialNumberMeta));
+    } else if (isInserting) {
+      context.missing(_serialNumberMeta);
     }
     if (data.containsKey('date')) {
       context.handle(
@@ -655,6 +702,18 @@ class $JournalEntriesTable extends JournalEntries
       context.handle(
           _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
     }
+    if (data.containsKey('created_by')) {
+      context.handle(_createdByMeta,
+          createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta));
+    }
+    if (data.containsKey('posted_by')) {
+      context.handle(_postedByMeta,
+          postedBy.isAcceptableOrUnknown(data['posted_by']!, _postedByMeta));
+    }
+    if (data.containsKey('posted_at')) {
+      context.handle(_postedAtMeta,
+          postedAt.isAcceptableOrUnknown(data['posted_at']!, _postedAtMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -669,11 +728,17 @@ class $JournalEntriesTable extends JournalEntries
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {serialNumber},
+      ];
+  @override
   JournalEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return JournalEntry(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      serialNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}serial_number'])!,
       date: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
       description: attachedDatabase.typeMapping
@@ -685,6 +750,12 @@ class $JournalEntriesTable extends JournalEntries
           .read(DriftSqlType.int, data['${effectivePrefix}status'])!),
       notes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
+      createdBy: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}created_by']),
+      postedBy: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}posted_by']),
+      postedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}posted_at']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -703,28 +774,39 @@ class $JournalEntriesTable extends JournalEntries
 
 class JournalEntry extends DataClass implements Insertable<JournalEntry> {
   final int id;
+
+  /// رقم القيد المتسلسل (Unique Serial Number)
+  final String serialNumber;
   final DateTime date;
   final String description;
 
-  /// رقم المرجع (رقم الفاتورة، رقم السند، ...)
+  /// رقم المرجع (فاتورة، سند، ...)
   final String? reference;
   final EntryStatus status;
   final String? notes;
+  final String? createdBy;
+  final String? postedBy;
+  final DateTime? postedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   const JournalEntry(
       {required this.id,
+      required this.serialNumber,
       required this.date,
       required this.description,
       this.reference,
       required this.status,
       this.notes,
+      this.createdBy,
+      this.postedBy,
+      this.postedAt,
       required this.createdAt,
       required this.updatedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['serial_number'] = Variable<String>(serialNumber);
     map['date'] = Variable<DateTime>(date);
     map['description'] = Variable<String>(description);
     if (!nullToAbsent || reference != null) {
@@ -737,6 +819,15 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    if (!nullToAbsent || postedBy != null) {
+      map['posted_by'] = Variable<String>(postedBy);
+    }
+    if (!nullToAbsent || postedAt != null) {
+      map['posted_at'] = Variable<DateTime>(postedAt);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -745,6 +836,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
   JournalEntriesCompanion toCompanion(bool nullToAbsent) {
     return JournalEntriesCompanion(
       id: Value(id),
+      serialNumber: Value(serialNumber),
       date: Value(date),
       description: Value(description),
       reference: reference == null && nullToAbsent
@@ -753,6 +845,15 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       status: Value(status),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      postedBy: postedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postedBy),
+      postedAt: postedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postedAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -763,12 +864,16 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return JournalEntry(
       id: serializer.fromJson<int>(json['id']),
+      serialNumber: serializer.fromJson<String>(json['serialNumber']),
       date: serializer.fromJson<DateTime>(json['date']),
       description: serializer.fromJson<String>(json['description']),
       reference: serializer.fromJson<String?>(json['reference']),
       status: $JournalEntriesTable.$converterstatus
           .fromJson(serializer.fromJson<int>(json['status'])),
       notes: serializer.fromJson<String?>(json['notes']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      postedBy: serializer.fromJson<String?>(json['postedBy']),
+      postedAt: serializer.fromJson<DateTime?>(json['postedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -778,12 +883,16 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'serialNumber': serializer.toJson<String>(serialNumber),
       'date': serializer.toJson<DateTime>(date),
       'description': serializer.toJson<String>(description),
       'reference': serializer.toJson<String?>(reference),
       'status': serializer
           .toJson<int>($JournalEntriesTable.$converterstatus.toJson(status)),
       'notes': serializer.toJson<String?>(notes),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'postedBy': serializer.toJson<String?>(postedBy),
+      'postedAt': serializer.toJson<DateTime?>(postedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -791,32 +900,46 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
 
   JournalEntry copyWith(
           {int? id,
+          String? serialNumber,
           DateTime? date,
           String? description,
           Value<String?> reference = const Value.absent(),
           EntryStatus? status,
           Value<String?> notes = const Value.absent(),
+          Value<String?> createdBy = const Value.absent(),
+          Value<String?> postedBy = const Value.absent(),
+          Value<DateTime?> postedAt = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
       JournalEntry(
         id: id ?? this.id,
+        serialNumber: serialNumber ?? this.serialNumber,
         date: date ?? this.date,
         description: description ?? this.description,
         reference: reference.present ? reference.value : this.reference,
         status: status ?? this.status,
         notes: notes.present ? notes.value : this.notes,
+        createdBy: createdBy.present ? createdBy.value : this.createdBy,
+        postedBy: postedBy.present ? postedBy.value : this.postedBy,
+        postedAt: postedAt.present ? postedAt.value : this.postedAt,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
   JournalEntry copyWithCompanion(JournalEntriesCompanion data) {
     return JournalEntry(
       id: data.id.present ? data.id.value : this.id,
+      serialNumber: data.serialNumber.present
+          ? data.serialNumber.value
+          : this.serialNumber,
       date: data.date.present ? data.date.value : this.date,
       description:
           data.description.present ? data.description.value : this.description,
       reference: data.reference.present ? data.reference.value : this.reference,
       status: data.status.present ? data.status.value : this.status,
       notes: data.notes.present ? data.notes.value : this.notes,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      postedBy: data.postedBy.present ? data.postedBy.value : this.postedBy,
+      postedAt: data.postedAt.present ? data.postedAt.value : this.postedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -826,11 +949,15 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
   String toString() {
     return (StringBuffer('JournalEntry(')
           ..write('id: $id, ')
+          ..write('serialNumber: $serialNumber, ')
           ..write('date: $date, ')
           ..write('description: $description, ')
           ..write('reference: $reference, ')
           ..write('status: $status, ')
           ..write('notes: $notes, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('postedBy: $postedBy, ')
+          ..write('postedAt: $postedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -839,69 +966,105 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
 
   @override
   int get hashCode => Object.hash(
-      id, date, description, reference, status, notes, createdAt, updatedAt);
+      id,
+      serialNumber,
+      date,
+      description,
+      reference,
+      status,
+      notes,
+      createdBy,
+      postedBy,
+      postedAt,
+      createdAt,
+      updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is JournalEntry &&
           other.id == this.id &&
+          other.serialNumber == this.serialNumber &&
           other.date == this.date &&
           other.description == this.description &&
           other.reference == this.reference &&
           other.status == this.status &&
           other.notes == this.notes &&
+          other.createdBy == this.createdBy &&
+          other.postedBy == this.postedBy &&
+          other.postedAt == this.postedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
 
 class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
   final Value<int> id;
+  final Value<String> serialNumber;
   final Value<DateTime> date;
   final Value<String> description;
   final Value<String?> reference;
   final Value<EntryStatus> status;
   final Value<String?> notes;
+  final Value<String?> createdBy;
+  final Value<String?> postedBy;
+  final Value<DateTime?> postedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const JournalEntriesCompanion({
     this.id = const Value.absent(),
+    this.serialNumber = const Value.absent(),
     this.date = const Value.absent(),
     this.description = const Value.absent(),
     this.reference = const Value.absent(),
     this.status = const Value.absent(),
     this.notes = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.postedBy = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
   JournalEntriesCompanion.insert({
     this.id = const Value.absent(),
+    required String serialNumber,
     required DateTime date,
     required String description,
     this.reference = const Value.absent(),
     required EntryStatus status,
     this.notes = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.postedBy = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  })  : date = Value(date),
+  })  : serialNumber = Value(serialNumber),
+        date = Value(date),
         description = Value(description),
         status = Value(status);
   static Insertable<JournalEntry> custom({
     Expression<int>? id,
+    Expression<String>? serialNumber,
     Expression<DateTime>? date,
     Expression<String>? description,
     Expression<String>? reference,
     Expression<int>? status,
     Expression<String>? notes,
+    Expression<String>? createdBy,
+    Expression<String>? postedBy,
+    Expression<DateTime>? postedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (serialNumber != null) 'serial_number': serialNumber,
       if (date != null) 'date': date,
       if (description != null) 'description': description,
       if (reference != null) 'reference': reference,
       if (status != null) 'status': status,
       if (notes != null) 'notes': notes,
+      if (createdBy != null) 'created_by': createdBy,
+      if (postedBy != null) 'posted_by': postedBy,
+      if (postedAt != null) 'posted_at': postedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -909,20 +1072,28 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
 
   JournalEntriesCompanion copyWith(
       {Value<int>? id,
+      Value<String>? serialNumber,
       Value<DateTime>? date,
       Value<String>? description,
       Value<String?>? reference,
       Value<EntryStatus>? status,
       Value<String?>? notes,
+      Value<String?>? createdBy,
+      Value<String?>? postedBy,
+      Value<DateTime?>? postedAt,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt}) {
     return JournalEntriesCompanion(
       id: id ?? this.id,
+      serialNumber: serialNumber ?? this.serialNumber,
       date: date ?? this.date,
       description: description ?? this.description,
       reference: reference ?? this.reference,
       status: status ?? this.status,
       notes: notes ?? this.notes,
+      createdBy: createdBy ?? this.createdBy,
+      postedBy: postedBy ?? this.postedBy,
+      postedAt: postedAt ?? this.postedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -933,6 +1104,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (serialNumber.present) {
+      map['serial_number'] = Variable<String>(serialNumber.value);
     }
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
@@ -950,6 +1124,15 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (postedBy.present) {
+      map['posted_by'] = Variable<String>(postedBy.value);
+    }
+    if (postedAt.present) {
+      map['posted_at'] = Variable<DateTime>(postedAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -963,11 +1146,15 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
   String toString() {
     return (StringBuffer('JournalEntriesCompanion(')
           ..write('id: $id, ')
+          ..write('serialNumber: $serialNumber, ')
           ..write('date: $date, ')
           ..write('description: $description, ')
           ..write('reference: $reference, ')
           ..write('status: $status, ')
           ..write('notes: $notes, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('postedBy: $postedBy, ')
+          ..write('postedAt: $postedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1361,6 +1548,346 @@ class JournalEntryLinesCompanion extends UpdateCompanion<JournalEntryLine> {
   }
 }
 
+class $AccountingPeriodsTable extends AccountingPeriods
+    with TableInfo<$AccountingPeriodsTable, AccountingPeriod> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountingPeriodsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _startDateMeta =
+      const VerificationMeta('startDate');
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+      'start_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _endDateMeta =
+      const VerificationMeta('endDate');
+  @override
+  late final GeneratedColumn<DateTime> endDate = GeneratedColumn<DateTime>(
+      'end_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _isClosedMeta =
+      const VerificationMeta('isClosed');
+  @override
+  late final GeneratedColumn<bool> isClosed = GeneratedColumn<bool>(
+      'is_closed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_closed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, startDate, endDate, isClosed, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'accounting_periods';
+  @override
+  VerificationContext validateIntegrity(Insertable<AccountingPeriod> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(_startDateMeta,
+          startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta));
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(_endDateMeta,
+          endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta));
+    } else if (isInserting) {
+      context.missing(_endDateMeta);
+    }
+    if (data.containsKey('is_closed')) {
+      context.handle(_isClosedMeta,
+          isClosed.isAcceptableOrUnknown(data['is_closed']!, _isClosedMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AccountingPeriod map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AccountingPeriod(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      startDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}start_date'])!,
+      endDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_date'])!,
+      isClosed: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_closed'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $AccountingPeriodsTable createAlias(String alias) {
+    return $AccountingPeriodsTable(attachedDatabase, alias);
+  }
+}
+
+class AccountingPeriod extends DataClass
+    implements Insertable<AccountingPeriod> {
+  final int id;
+  final String name;
+  final DateTime startDate;
+  final DateTime endDate;
+  final bool isClosed;
+  final DateTime createdAt;
+  const AccountingPeriod(
+      {required this.id,
+      required this.name,
+      required this.startDate,
+      required this.endDate,
+      required this.isClosed,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['start_date'] = Variable<DateTime>(startDate);
+    map['end_date'] = Variable<DateTime>(endDate);
+    map['is_closed'] = Variable<bool>(isClosed);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  AccountingPeriodsCompanion toCompanion(bool nullToAbsent) {
+    return AccountingPeriodsCompanion(
+      id: Value(id),
+      name: Value(name),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      isClosed: Value(isClosed),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory AccountingPeriod.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AccountingPeriod(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      startDate: serializer.fromJson<DateTime>(json['startDate']),
+      endDate: serializer.fromJson<DateTime>(json['endDate']),
+      isClosed: serializer.fromJson<bool>(json['isClosed']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'startDate': serializer.toJson<DateTime>(startDate),
+      'endDate': serializer.toJson<DateTime>(endDate),
+      'isClosed': serializer.toJson<bool>(isClosed),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  AccountingPeriod copyWith(
+          {int? id,
+          String? name,
+          DateTime? startDate,
+          DateTime? endDate,
+          bool? isClosed,
+          DateTime? createdAt}) =>
+      AccountingPeriod(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate ?? this.endDate,
+        isClosed: isClosed ?? this.isClosed,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  AccountingPeriod copyWithCompanion(AccountingPeriodsCompanion data) {
+    return AccountingPeriod(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      isClosed: data.isClosed.present ? data.isClosed.value : this.isClosed,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountingPeriod(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('isClosed: $isClosed, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, startDate, endDate, isClosed, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AccountingPeriod &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.isClosed == this.isClosed &&
+          other.createdAt == this.createdAt);
+}
+
+class AccountingPeriodsCompanion extends UpdateCompanion<AccountingPeriod> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<DateTime> startDate;
+  final Value<DateTime> endDate;
+  final Value<bool> isClosed;
+  final Value<DateTime> createdAt;
+  const AccountingPeriodsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.isClosed = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  AccountingPeriodsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required DateTime startDate,
+    required DateTime endDate,
+    this.isClosed = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  })  : name = Value(name),
+        startDate = Value(startDate),
+        endDate = Value(endDate);
+  static Insertable<AccountingPeriod> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<DateTime>? startDate,
+    Expression<DateTime>? endDate,
+    Expression<bool>? isClosed,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (isClosed != null) 'is_closed': isClosed,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  AccountingPeriodsCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? name,
+      Value<DateTime>? startDate,
+      Value<DateTime>? endDate,
+      Value<bool>? isClosed,
+      Value<DateTime>? createdAt}) {
+    return AccountingPeriodsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      isClosed: isClosed ?? this.isClosed,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<DateTime>(endDate.value);
+    }
+    if (isClosed.present) {
+      map['is_closed'] = Variable<bool>(isClosed.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountingPeriodsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('isClosed: $isClosed, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AccountingDatabase extends GeneratedDatabase {
   _$AccountingDatabase(QueryExecutor e) : super(e);
   $AccountingDatabaseManager get managers => $AccountingDatabaseManager(this);
@@ -1368,6 +1895,8 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
   late final $JournalEntriesTable journalEntries = $JournalEntriesTable(this);
   late final $JournalEntryLinesTable journalEntryLines =
       $JournalEntryLinesTable(this);
+  late final $AccountingPeriodsTable accountingPeriods =
+      $AccountingPeriodsTable(this);
   late final AccountsDao accountsDao = AccountsDao(this as AccountingDatabase);
   late final JournalEntriesDao journalEntriesDao =
       JournalEntriesDao(this as AccountingDatabase);
@@ -1376,7 +1905,7 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [accounts, journalEntries, journalEntryLines];
+      [accounts, journalEntries, journalEntryLines, accountingPeriods];
 }
 
 typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
@@ -1815,22 +2344,30 @@ typedef $$AccountsTableProcessedTableManager = ProcessedTableManager<
 typedef $$JournalEntriesTableCreateCompanionBuilder = JournalEntriesCompanion
     Function({
   Value<int> id,
+  required String serialNumber,
   required DateTime date,
   required String description,
   Value<String?> reference,
   required EntryStatus status,
   Value<String?> notes,
+  Value<String?> createdBy,
+  Value<String?> postedBy,
+  Value<DateTime?> postedAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
 typedef $$JournalEntriesTableUpdateCompanionBuilder = JournalEntriesCompanion
     Function({
   Value<int> id,
+  Value<String> serialNumber,
   Value<DateTime> date,
   Value<String> description,
   Value<String?> reference,
   Value<EntryStatus> status,
   Value<String?> notes,
+  Value<String?> createdBy,
+  Value<String?> postedBy,
+  Value<DateTime?> postedAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -1870,6 +2407,9 @@ class $$JournalEntriesTableFilterComposer
   ColumnFilters<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get serialNumber => $composableBuilder(
+      column: $table.serialNumber, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnFilters(column));
 
@@ -1886,6 +2426,15 @@ class $$JournalEntriesTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+      column: $table.createdBy, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get postedBy => $composableBuilder(
+      column: $table.postedBy, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get postedAt => $composableBuilder(
+      column: $table.postedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -1927,6 +2476,10 @@ class $$JournalEntriesTableOrderingComposer
   ColumnOrderings<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get serialNumber => $composableBuilder(
+      column: $table.serialNumber,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnOrderings(column));
 
@@ -1941,6 +2494,15 @@ class $$JournalEntriesTableOrderingComposer
 
   ColumnOrderings<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+      column: $table.createdBy, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get postedBy => $composableBuilder(
+      column: $table.postedBy, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get postedAt => $composableBuilder(
+      column: $table.postedAt, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
@@ -1961,6 +2523,9 @@ class $$JournalEntriesTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get serialNumber => $composableBuilder(
+      column: $table.serialNumber, builder: (column) => column);
+
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
 
@@ -1975,6 +2540,15 @@ class $$JournalEntriesTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get postedBy =>
+      $composableBuilder(column: $table.postedBy, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get postedAt =>
+      $composableBuilder(column: $table.postedAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2030,41 +2604,57 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
               $$JournalEntriesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
+            Value<String> serialNumber = const Value.absent(),
             Value<DateTime> date = const Value.absent(),
             Value<String> description = const Value.absent(),
             Value<String?> reference = const Value.absent(),
             Value<EntryStatus> status = const Value.absent(),
             Value<String?> notes = const Value.absent(),
+            Value<String?> createdBy = const Value.absent(),
+            Value<String?> postedBy = const Value.absent(),
+            Value<DateTime?> postedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
               JournalEntriesCompanion(
             id: id,
+            serialNumber: serialNumber,
             date: date,
             description: description,
             reference: reference,
             status: status,
             notes: notes,
+            createdBy: createdBy,
+            postedBy: postedBy,
+            postedAt: postedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
+            required String serialNumber,
             required DateTime date,
             required String description,
             Value<String?> reference = const Value.absent(),
             required EntryStatus status,
             Value<String?> notes = const Value.absent(),
+            Value<String?> createdBy = const Value.absent(),
+            Value<String?> postedBy = const Value.absent(),
+            Value<DateTime?> postedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
               JournalEntriesCompanion.insert(
             id: id,
+            serialNumber: serialNumber,
             date: date,
             description: description,
             reference: reference,
             status: status,
             notes: notes,
+            createdBy: createdBy,
+            postedBy: postedBy,
+            postedAt: postedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
@@ -2494,6 +3084,192 @@ typedef $$JournalEntryLinesTableProcessedTableManager = ProcessedTableManager<
     (JournalEntryLine, $$JournalEntryLinesTableReferences),
     JournalEntryLine,
     PrefetchHooks Function({bool entryId, bool accountId})>;
+typedef $$AccountingPeriodsTableCreateCompanionBuilder
+    = AccountingPeriodsCompanion Function({
+  Value<int> id,
+  required String name,
+  required DateTime startDate,
+  required DateTime endDate,
+  Value<bool> isClosed,
+  Value<DateTime> createdAt,
+});
+typedef $$AccountingPeriodsTableUpdateCompanionBuilder
+    = AccountingPeriodsCompanion Function({
+  Value<int> id,
+  Value<String> name,
+  Value<DateTime> startDate,
+  Value<DateTime> endDate,
+  Value<bool> isClosed,
+  Value<DateTime> createdAt,
+});
+
+class $$AccountingPeriodsTableFilterComposer
+    extends Composer<_$AccountingDatabase, $AccountingPeriodsTable> {
+  $$AccountingPeriodsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get endDate => $composableBuilder(
+      column: $table.endDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isClosed => $composableBuilder(
+      column: $table.isClosed, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$AccountingPeriodsTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $AccountingPeriodsTable> {
+  $$AccountingPeriodsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get endDate => $composableBuilder(
+      column: $table.endDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isClosed => $composableBuilder(
+      column: $table.isClosed, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$AccountingPeriodsTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $AccountingPeriodsTable> {
+  $$AccountingPeriodsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<bool> get isClosed =>
+      $composableBuilder(column: $table.isClosed, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$AccountingPeriodsTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $AccountingPeriodsTable,
+    AccountingPeriod,
+    $$AccountingPeriodsTableFilterComposer,
+    $$AccountingPeriodsTableOrderingComposer,
+    $$AccountingPeriodsTableAnnotationComposer,
+    $$AccountingPeriodsTableCreateCompanionBuilder,
+    $$AccountingPeriodsTableUpdateCompanionBuilder,
+    (
+      AccountingPeriod,
+      BaseReferences<_$AccountingDatabase, $AccountingPeriodsTable,
+          AccountingPeriod>
+    ),
+    AccountingPeriod,
+    PrefetchHooks Function()> {
+  $$AccountingPeriodsTableTableManager(
+      _$AccountingDatabase db, $AccountingPeriodsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AccountingPeriodsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AccountingPeriodsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AccountingPeriodsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<DateTime> startDate = const Value.absent(),
+            Value<DateTime> endDate = const Value.absent(),
+            Value<bool> isClosed = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              AccountingPeriodsCompanion(
+            id: id,
+            name: name,
+            startDate: startDate,
+            endDate: endDate,
+            isClosed: isClosed,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String name,
+            required DateTime startDate,
+            required DateTime endDate,
+            Value<bool> isClosed = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              AccountingPeriodsCompanion.insert(
+            id: id,
+            name: name,
+            startDate: startDate,
+            endDate: endDate,
+            isClosed: isClosed,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$AccountingPeriodsTableProcessedTableManager = ProcessedTableManager<
+    _$AccountingDatabase,
+    $AccountingPeriodsTable,
+    AccountingPeriod,
+    $$AccountingPeriodsTableFilterComposer,
+    $$AccountingPeriodsTableOrderingComposer,
+    $$AccountingPeriodsTableAnnotationComposer,
+    $$AccountingPeriodsTableCreateCompanionBuilder,
+    $$AccountingPeriodsTableUpdateCompanionBuilder,
+    (
+      AccountingPeriod,
+      BaseReferences<_$AccountingDatabase, $AccountingPeriodsTable,
+          AccountingPeriod>
+    ),
+    AccountingPeriod,
+    PrefetchHooks Function()>;
 
 class $AccountingDatabaseManager {
   final _$AccountingDatabase _db;
@@ -2504,4 +3280,6 @@ class $AccountingDatabaseManager {
       $$JournalEntriesTableTableManager(_db, _db.journalEntries);
   $$JournalEntryLinesTableTableManager get journalEntryLines =>
       $$JournalEntryLinesTableTableManager(_db, _db.journalEntryLines);
+  $$AccountingPeriodsTableTableManager get accountingPeriods =>
+      $$AccountingPeriodsTableTableManager(_db, _db.accountingPeriods);
 }

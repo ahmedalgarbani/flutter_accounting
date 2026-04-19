@@ -5,6 +5,7 @@ library;
 
 import '../../core/enums.dart';
 import '../../models/account_model.dart';
+import '../../models/accounting_period_model.dart';
 import '../../models/journal_entry_model.dart';
 import '../../models/entry_template_model.dart';
 import '../../reports/report_models.dart';
@@ -52,8 +53,20 @@ abstract class IJournalEntryRepository {
   Future<void>              deleteEntry(int id);
 
   // ترحيل وعكس
-  Future<JournalEntryModel> postEntry(int id);
+  Future<JournalEntryModel> postEntry(int id, {String? postedBy});
   Future<JournalEntryModel> reverseEntry(int id, {DateTime? reversalDate});
+}
+
+// ─────────────────────────────────────────────────────────────
+// IAccountingPeriodRepository
+// ─────────────────────────────────────────────────────────────
+
+abstract class IAccountingPeriodRepository {
+  Future<List<AccountingPeriodModel>> getAllPeriods();
+  Future<AccountingPeriodModel?>      getPeriodForDate(DateTime date);
+  Future<AccountingPeriodModel>       createPeriod(AccountingPeriodModel period);
+  Future<AccountingPeriodModel>       updatePeriod(AccountingPeriodModel period);
+  Future<void>                        closePeriod(int id);
 }
 
 // ─────────────────────────────────────────────────────────────

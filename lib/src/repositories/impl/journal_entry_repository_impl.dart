@@ -67,12 +67,26 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
 
   @override
   Future<JournalEntryModel> createEntry(JournalEntryModel entry) async {
-    // التحقق من القواعد المحاسبية دائماً (حتى للمسودات)
-    // لضمان عدم وجود حالات "مستحيلة" محاسبياً
-    await _validateLines(entry.lines);
+    // 1. التحقق من القواعد المحاسبية والفترة
+    await _validateEntry(entry);
+
+    // 2. توليد رقم تسلسلي إذا لم يوجد أو التحقق من وجوده
+    String serial = entry.serialNumber ?? 
+                    await _entriesDao.generateNextSerialNumber(entry.date);
+    
+    if (await _entriesDao.serialNumberExists(serial)) {
+      if (entry.id == null) { // قيد جديد
+         throw DuplicateSerialNumberException(serial);
+      }
+    }
 
     final now = DateTime.now();
-    final toSave = entry.copyWith(createdAt: now, updatedAt: now);
+    final toSave = entry.copyWith(
+      serialNumber: serial,
+      createdAt:    now, 
+      updatedAt:    now,
+    );
+    
     final comp = JournalEntryMapper.toCompanion(toSave);
     final lineComps =
         entry.lines.map(JournalEntryLineMapper.toCompanion).toList();
@@ -125,17 +139,27 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   // ─────────────────────────────────────────────────────────────
 
   @override
-  Future<JournalEntryModel> postEntry(int id) async {
+  Future<JournalEntryModel> postEntry(int id, {String? postedBy}) async {
     final entry = await _getOrThrow(id);
 
     if (entry.isPosted) return entry; // مرحّل مسبقاً
 
-    // التحقق من صحة البنود قبل الترحيل
-    await _validateLines(entry.lines);
+    // التحقق من صحة القيد والفترة قبل الترحيل
+    await _validateEntry(entry);
 
-    await _entriesDao.updateEntryStatus(id, EntryStatus.posted);
-    return entry.copyWith(
-        status: EntryStatus.posted, updatedAt: DateTime.now());
+    final now = DateTime.now();
+    final updated = entry.copyWith(
+      status:   EntryStatus.posted,
+      postedBy: postedBy,
+      postedAt: now,
+      updatedAt: now,
+    );
+
+    final comp = JournalEntryMapper.toCompanion(updated);
+    // نقوم بتحديث القيد بالكامل لتسجيل بيانات الترحيل
+    await _entriesDao.updateEntry(comp);
+    
+    return updated;
   }
 
   @override
@@ -196,10 +220,26 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     final linesData = await _entriesDao.getLinesForEntry(data.id);
     final lines =
         linesData.map(JournalEntryLineMapper.fromEntryLineWithAccount).toList();
-    return JournalEntryMapper.fromData(data, lines: lines);
+    return JournalEntryMapper.fromData(data, lines: lines as List<JournalEntryLineModel>);
+  }
+
+  Future<void> _validateEntry(JournalEntryModel entry) async {
+    // 1. التحقق من القواعد المحاسبية للبنود
+    await _validateLines(entry.lines);
+
+    // 2. التحقق من الفترة المحاسبية (Period Control)
+    final period = await _entriesDao.getPeriodForDate(entry.date);
+    if (period == null) {
+      throw DateOutsidePeriodException(entry.date);
+    }
+    if (period.isClosed) {
+      throw PeriodClosedException(entry.date);
+    }
   }
 
   Future<void> _validateLines(List<JournalEntryLineModel> lines) async {
+    if (lines.isEmpty) throw const InsufficientLinesException();
+
     // التحقق من قواعد الـ Double-Entry
     AccountingValidator.validateEntryLines(lines);
 

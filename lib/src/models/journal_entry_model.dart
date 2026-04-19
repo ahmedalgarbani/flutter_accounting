@@ -9,25 +9,36 @@ import 'journal_entry_line_model.dart';
 @immutable
 class JournalEntryModel {
   final int? id;
+  final String? serialNumber; // رقم القيد المتسلسل (Unique)
   final DateTime date;
   final String description;
   final String? reference;     // رقم المرجع (فاتورة، سند، ...)
   final EntryStatus status;
   final List<JournalEntryLineModel> lines;
   final String? notes;
+
+  // حقول التدقيق والرقابة (Audit Trail)
+  final String? createdBy;
+  final String? postedBy;
+  final DateTime? postedAt;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   const JournalEntryModel({
     this.id,
+    this.serialNumber,
     required this.date,
     required this.description,
     this.reference,
     this.status = EntryStatus.draft,
     this.lines = const [],
     this.notes,
-     this.createdAt,
-     this.updatedAt,
+    this.createdBy,
+    this.postedBy,
+    this.postedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -56,19 +67,27 @@ class JournalEntryModel {
     EntryStatus? status,
     List<JournalEntryLineModel>? lines,
     String? notes,
+    String? createdBy,
+    String? postedBy,
+    DateTime? postedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? serialNumber,
   }) {
     return JournalEntryModel(
-      id:          id          ?? this.id,
-      date:        date        ?? this.date,
-      description: description ?? this.description,
-      reference:   reference   ?? this.reference,
-      status:      status      ?? this.status,
-      lines:       lines       ?? this.lines,
-      notes:       notes       ?? this.notes,
-      createdAt:   createdAt   ?? this.createdAt,
-      updatedAt:   updatedAt   ?? this.updatedAt,
+      id:           id           ?? this.id,
+      serialNumber: serialNumber ?? this.serialNumber,
+      date:         date         ?? this.date,
+      description:  description  ?? this.description,
+      reference:    reference    ?? this.reference,
+      status:       status       ?? this.status,
+      lines:        lines        ?? this.lines,
+      notes:        notes        ?? this.notes,
+      createdBy:    createdBy    ?? this.createdBy,
+      postedBy:     postedBy     ?? this.postedBy,
+      postedAt:     postedAt     ?? this.postedAt,
+      createdAt:    createdAt    ?? this.createdAt,
+      updatedAt:    updatedAt    ?? this.updatedAt,
     );
   }
 

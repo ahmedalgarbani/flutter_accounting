@@ -15,7 +15,7 @@ import 'daos/journal_entries_dao.dart';
 part 'accounting_database.g.dart';
 
 @DriftDatabase(
-  tables: [Accounts, JournalEntries, JournalEntryLines],
+  tables: [Accounts, JournalEntries, JournalEntryLines, AccountingPeriods],
   daos: [AccountsDao, JournalEntriesDao],
 )
 class AccountingDatabase extends _$AccountingDatabase {

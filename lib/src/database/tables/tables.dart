@@ -32,22 +32,47 @@ class Accounts extends Table {
 }
 
 // ─────────────────────────────────────────────────────────────
+// جدول الفترات المحاسبية - Accounting Periods
+// ─────────────────────────────────────────────────────────────
+class AccountingPeriods extends Table {
+  IntColumn  get id        => integer().autoIncrement()();
+  TextColumn get name      => text().withLength(min: 1, max: 100)(); // مثال: "يناير 2024"
+  DateTimeColumn get startDate => dateTime()();
+  DateTimeColumn get endDate   => dateTime()();
+  BoolColumn get isClosed  => boolean().withDefault(const Constant(false))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+// ─────────────────────────────────────────────────────────────
 // جدول القيود اليومية - Journal Entries
 // ─────────────────────────────────────────────────────────────
 
 class JournalEntries extends Table {
   IntColumn  get id          => integer().autoIncrement()();
+  
+  /// رقم القيد المتسلسل (Unique Serial Number)
+  TextColumn get serialNumber => text().withLength(min: 1, max: 50)();
+
   DateTimeColumn get date    => dateTime()();
   TextColumn get description => text().withLength(min: 1, max: 500)();
 
-  /// رقم المرجع (رقم الفاتورة، رقم السند، ...)
+  /// رقم المرجع (فاتورة، سند، ...)
   TextColumn get reference   => text().withLength(min: 1, max: 100).nullable()();
 
   IntColumn  get status      => intEnum<EntryStatus>()();
   TextColumn get notes       => text().nullable()();
 
+  // تتبع التدقيق (Audit Trail)
+  TextColumn get createdBy   => text().nullable()();
+  TextColumn get postedBy    => text().nullable()();
+  DateTimeColumn get postedAt => dateTime().nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [{serialNumber}];
 
   @override
   String get tableName => 'journal_entries';

@@ -14,6 +14,7 @@ export 'src/flutter_accounting_init.dart';
 export 'src/models/account_model.dart';
 export 'src/models/journal_entry_model.dart';
 export 'src/models/journal_entry_line_model.dart';
+export 'src/models/accounting_period_model.dart';
 export 'src/models/entry_template_model.dart';
 
 // ── التعدادات ──

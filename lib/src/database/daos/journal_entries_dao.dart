@@ -3,9 +3,11 @@
 library;
 
 import 'package:drift/drift.dart';
-import 'package:flutter_accounting/flutter_accounting.dart';
+import '../../core/enums.dart';
 import '../accounting_database.dart';
 import '../tables/tables.dart';
+
+import '../../models/journal_entry_line_model.dart';
 
 part 'journal_entries_dao.g.dart';
 
@@ -17,10 +19,68 @@ class EntryLineWithAccount {
   EntryLineWithAccount({required this.line, required this.account});
 }
 
-@DriftAccessor(tables: [JournalEntries, JournalEntryLines, Accounts])
+@DriftAccessor(
+    tables: [JournalEntries, JournalEntryLines, Accounts, AccountingPeriods])
 class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
     with _$JournalEntriesDaoMixin {
   JournalEntriesDao(super.db);
+
+  // ─────────────────────────────────────────────────────────────
+  // الفترات المحاسبية - Accounting Periods
+  // ─────────────────────────────────────────────────────────────
+
+  Future<List<AccountingPeriod>> getAllPeriods() => (select(accountingPeriods)
+        ..orderBy([(t) => OrderingTerm.desc(t.startDate)]))
+      .get();
+
+  Future<AccountingPeriod?> getPeriodById(int id) =>
+      (select(accountingPeriods)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
+  Future<AccountingPeriod?> getPeriodForDate(DateTime date) =>
+      (select(accountingPeriods)
+            ..where((t) => t.startDate.isSmallerOrEqual(Variable(date)))
+            ..where((t) => t.endDate.isBiggerOrEqual(Variable(date))))
+          .getSingleOrNull();
+
+  Future<int> insertPeriod(AccountingPeriodsCompanion period) =>
+      into(accountingPeriods).insert(period);
+
+  Future<void> updatePeriod(AccountingPeriodsCompanion period) =>
+      (update(accountingPeriods)..where((t) => t.id.equals(period.id.value)))
+          .write(period);
+
+  // ─────────────────────────────────────────────────────────────
+  // تسلسل القيود - Serial Numbers
+  // ─────────────────────────────────────────────────────────────
+
+  Future<bool> serialNumberExists(String serial) async {
+    final query = select(journalEntries)
+      ..where((t) => t.serialNumber.equals(serial));
+    final result = await query.getSingleOrNull();
+    return result != null;
+  }
+
+  Future<String> generateNextSerialNumber(DateTime date) async {
+    final year = date.year;
+    final prefix = 'JV-$year-';
+
+    final query = select(journalEntries)
+      ..where((t) => t.serialNumber.like('$prefix%'))
+      ..orderBy([(t) => OrderingTerm.desc(t.serialNumber)])
+      ..limit(1);
+
+    final latest = await query.getSingleOrNull();
+    int nextNumber = 1;
+
+    if (latest != null) {
+      final lastSerial = latest.serialNumber;
+      final lastNumberStr = lastSerial.split('-').last;
+      nextNumber = (int.tryParse(lastNumberStr) ?? 0) + 1;
+    }
+
+    return '$prefix${nextNumber.toString().padLeft(4, '0')}';
+  }
 
   // ─────────────────────────────────────────────────────────────
   // قراءة القيود
