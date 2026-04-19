@@ -43,6 +43,13 @@ class AccountHasTransactionsException extends AccountingException {
       : super('لا يمكن حذف الحساب لأنه يحتوي على قيود محاسبية.');
 }
 
+/// لا يمكن استخدام حساب أب في القيود المحاسبية
+class AccountIsParentException extends AccountingException {
+  final String accountCode;
+  const AccountIsParentException(this.accountCode)
+      : super('الحساب "$accountCode" حساب رئيسي (أب)، لا يمكن التسجيل عليه مباشرة. استخدم حساباً فرعياً.');
+}
+
 /// لا يمكن حذف حساب أب يحتوي على حسابات فرعية
 class AccountHasChildrenException extends AccountingException {
   const AccountHasChildrenException()

@@ -2,7 +2,7 @@
 /// تعريفات جداول Drift
 
 import 'package:drift/drift.dart';
-import '../core/enums.dart';
+import '../../core/enums.dart';
 
 // ─────────────────────────────────────────────────────────────
 // جدول الحسابات - Accounts

@@ -1,5 +1,6 @@
 /// accounts_dao.dart
 /// عمليات قاعدة البيانات الخاصة بالحسابات
+library;
 
 import 'package:drift/drift.dart';
 import '../accounting_database.dart';

@@ -2,12 +2,13 @@
 /// التحويل بين نماذج Drift ونماذج الـ Domain
 
 import 'package:drift/drift.dart';
-import '../core/enums.dart';
-import '../models/account_model.dart';
-import '../models/journal_entry_model.dart';
-import '../models/journal_entry_line_model.dart';
-import '../database/tables/tables.dart';
-import '../database/daos/journal_entries_dao.dart';
+import 'package:flutter_accounting/src/database/accounting_database.dart';
+
+import '../../models/account_model.dart';
+import '../../models/journal_entry_model.dart';
+import '../../models/journal_entry_line_model.dart';
+
+import '../daos/journal_entries_dao.dart';
 
 // ─────────────────────────────────────────────────────────────
 // Account Mapper

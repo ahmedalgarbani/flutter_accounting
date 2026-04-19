@@ -14,6 +14,7 @@ export 'src/flutter_accounting_init.dart';
 export 'src/models/account_model.dart';
 export 'src/models/journal_entry_model.dart';
 export 'src/models/journal_entry_line_model.dart';
+export 'src/models/entry_template_model.dart';
 
 // ── التعدادات ──
 export 'src/core/enums.dart';
@@ -29,3 +30,5 @@ export 'src/repositories/interfaces/interfaces.dart';
 
 // ── نماذج التقارير ──
 export 'src/reports/report_models.dart';
+export 'src/core/standard_templates.dart';
+export 'src/seed/accounting_seed_data.dart';

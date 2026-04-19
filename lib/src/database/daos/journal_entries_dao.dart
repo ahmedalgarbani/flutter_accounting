@@ -1,7 +1,9 @@
 /// journal_entries_dao.dart
 /// عمليات قاعدة البيانات للقيود اليومية وبنودها
+library;
 
 import 'package:drift/drift.dart';
+import 'package:flutter_accounting/flutter_accounting.dart';
 import '../accounting_database.dart';
 import '../tables/tables.dart';
 
@@ -25,16 +27,15 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
   // ─────────────────────────────────────────────────────────────
 
   Future<List<JournalEntry>> getAllEntries() =>
-      (select(journalEntries)
-            ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+      (select(journalEntries)..orderBy([(t) => OrderingTerm.desc(t.date)]))
           .get();
 
   Future<JournalEntry?> getEntryById(int id) =>
       (select(journalEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<List<JournalEntry>> getEntriesByStatus(int statusIndex) =>
+  Future<List<JournalEntry>> getEntriesByStatus(EntryStatus status) =>
       (select(journalEntries)
-            ..where((t) => t.status.equals(statusIndex))
+            ..where((t) => t.status.equals(status.index))
             ..orderBy([(t) => OrderingTerm.desc(t.date)]))
           .get();
 
@@ -48,8 +49,7 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
           .get();
 
   Stream<List<JournalEntry>> watchAllEntries() =>
-      (select(journalEntries)
-            ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+      (select(journalEntries)..orderBy([(t) => OrderingTerm.desc(t.date)]))
           .watch();
 
   // ─────────────────────────────────────────────────────────────
@@ -64,10 +64,12 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
       ..orderBy([OrderingTerm(expression: journalEntryLines.sortOrder)]);
 
     final rows = await query.get();
-    return rows.map((row) => EntryLineWithAccount(
-          line:    row.readTable(journalEntryLines),
-          account: row.readTable(accounts),
-        )).toList();
+    return rows
+        .map((row) => EntryLineWithAccount(
+              line: row.readTable(journalEntryLines),
+              account: row.readTable(accounts),
+            ))
+        .toList();
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -81,10 +83,10 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
       (update(journalEntries)..where((t) => t.id.equals(entry.id.value)))
           .write(entry);
 
-  Future<void> updateEntryStatus(int entryId, int statusIndex) =>
+  Future<void> updateEntryStatus(int entryId, EntryStatus status) =>
       (update(journalEntries)..where((t) => t.id.equals(entryId))).write(
         JournalEntriesCompanion(
-          status:    Value(statusIndex),
+          status: Value(status),
           updatedAt: Value(DateTime.now()),
         ),
       );
@@ -100,9 +102,7 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
       into(journalEntryLines).insert(line);
 
   Future<void> deleteLinesForEntry(int entryId) =>
-      (delete(journalEntryLines)
-            ..where((t) => t.entryId.equals(entryId)))
-          .go();
+      (delete(journalEntryLines)..where((t) => t.entryId.equals(entryId))).go();
 
   // ─────────────────────────────────────────────────────────────
   // عمليات مجمّعة (Transaction-safe)
@@ -161,7 +161,7 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
   }) async {
     // نستخدم استعلام خام لأن Drift لا يدعم GROUP BY بشكل كامل في API العادي
     final fromStr = (from ?? DateTime(1970)).toIso8601String();
-    final toStr   = (to   ?? DateTime(2100)).toIso8601String();
+    final toStr = (to ?? DateTime(2100)).toIso8601String();
 
     final result = await customSelect(
       '''
@@ -193,10 +193,10 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
 // نموذج صف رصيد الحساب (لتقديم البيانات للـ Repository)
 // ─────────────────────────────────────────────────────────────
 class AccountBalanceRow {
-  final int    accountId;
+  final int accountId;
   final String accountCode;
   final String accountName;
-  final int    accountType;
+  final int accountType;
   final double totalDebit;
   final double totalCredit;
 
@@ -210,11 +210,11 @@ class AccountBalanceRow {
   });
 
   factory AccountBalanceRow.fromRow(QueryRow row) => AccountBalanceRow(
-        accountId:   row.read<int>('account_id'),
+        accountId: row.read<int>('account_id'),
         accountCode: row.read<String>('account_code'),
         accountName: row.read<String>('account_name'),
         accountType: row.read<int>('account_type'),
-        totalDebit:  row.read<double>('total_debit'),
+        totalDebit: row.read<double>('total_debit'),
         totalCredit: row.read<double>('total_credit'),
       );
 }

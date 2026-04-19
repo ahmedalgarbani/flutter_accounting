@@ -10,6 +10,7 @@
 - ✅ **دليل الحسابات** — هرمي متعدد المستويات مع الأنواع الخمسة
 - ✅ **القيود اليومية** — إنشاء / تعديل / ترحيل / عكس
 - ✅ **3 تقارير مالية** — ميزان المراجعة، الميزانية العمومية، قائمة الأرباح والخسائر
+- ✅ **قوالب العمليات** — قوالب جاهزة للمبيعات والمشتريات والسندات (صرف وقبض)
 - ✅ **Drift (SQLite)** — أوفلاين بالكامل، type-safe، يدعم WAL
 - ✅ **Clean Architecture** — Models + Repository + DAO منفصلة
 - ✅ **دليل حسابات جاهز** — 40+ حساب عربي/إنجليزي يمكن زرعه بسطر واحد
@@ -113,7 +114,33 @@ final reversal = await fa.journalEntries.reverseEntry(posted.id!);
 print(reversal.description); // "عكس: قيد مبيعات نقدية"
 ```
 
-### 5. التقارير المالية
+### 5. استخدام قوالب العمليات (Entry Templates)
+
+تسمح القوالب بإنشاء قيود معقدة بسرعة بناءً على أنماط محاسبية جاهزة.
+
+```dart
+// 1. اختر قالب (مثلاً مبيعات نقدية)
+final template = StandardTemplates.cashSale;
+
+// 2. اربط الحسابات الحقيقية بالمسميات الموجودة في القالب
+final accountIdMap = {
+  'Cash/Bank Account':    1,  // ID حساب الصندوق
+  'Sales Revenue Account': 41, // ID حساب المبيعات
+};
+
+// 3. طبّق القالب لإنشاء مسودة قيد
+final templateEntry = await fa.templates.applyTemplate(
+  template:    template,
+  accountIdMap: accountIdMap,
+  totalAmount:  1500.0,
+  description:  'مبيعات نقدية عبر القالب',
+);
+
+// 4. احفظ القيد
+await fa.journalEntries.createEntry(templateEntry);
+```
+
+### 6. التقارير المالية
 
 ```dart
 final now       = DateTime.now();
@@ -158,7 +185,13 @@ lib/
     ├── models/                      ← Domain Models (Pure Dart)
     │   ├── account_model.dart
     │   ├── journal_entry_model.dart
-    │   └── journal_entry_line_model.dart
+    │   ├── journal_entry_line_model.dart
+    │   └── entry_template_model.dart ← جديد: نماذج القوالب
+    ├── core/
+    │   ├── enums.dart
+    │   ├── exceptions.dart
+    │   ├── accounting_validator.dart
+    │   └── standard_templates.dart   ← جديد: القوالب القياسية
     ├── reports/
     │   └── report_models.dart       ← TrialBalance, BalanceSheet, IncomeStatement
     ├── database/                    ← طبقة Drift (داخلية)

@@ -3,6 +3,9 @@
 /// - التحقق من القيد المزدوج
 /// - منع تعديل القيود المرحّلة
 /// - دعم القيد العكسي (Reversal)
+library;
+
+import 'package:flutter_accounting/src/database/accounting_database.dart';
 
 import '../../core/enums.dart';
 import '../../core/exceptions.dart';
@@ -16,7 +19,7 @@ import '../interfaces/interfaces.dart';
 
 class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   final JournalEntriesDao _entriesDao;
-  final AccountsDao       _accountsDao;
+  final AccountsDao _accountsDao;
 
   JournalEntryRepositoryImpl(this._entriesDao, this._accountsDao);
 
@@ -39,7 +42,7 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
 
   @override
   Future<List<JournalEntryModel>> getEntriesByStatus(EntryStatus status) async {
-    final entries = await _entriesDao.getEntriesByStatus(status.index);
+    final entries = await _entriesDao.getEntriesByStatus(status);
     return Future.wait(entries.map(_buildWithLines));
   }
 
@@ -64,15 +67,15 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
 
   @override
   Future<JournalEntryModel> createEntry(JournalEntryModel entry) async {
-    // التحقق من البنود إذا كانت القيد مرحّلاً مباشرةً
-    if (entry.status == EntryStatus.posted) {
-      await _validateLines(entry.lines);
-    }
+    // التحقق من القواعد المحاسبية دائماً (حتى للمسودات)
+    // لضمان عدم وجود حالات "مستحيلة" محاسبياً
+    await _validateLines(entry.lines);
 
-    final now     = DateTime.now();
-    final toSave  = entry.copyWith(createdAt: now, updatedAt: now);
-    final comp    = JournalEntryMapper.toCompanion(toSave);
-    final lineComps = entry.lines.map(JournalEntryLineMapper.toCompanion).toList();
+    final now = DateTime.now();
+    final toSave = entry.copyWith(createdAt: now, updatedAt: now);
+    final comp = JournalEntryMapper.toCompanion(toSave);
+    final lineComps =
+        entry.lines.map(JournalEntryLineMapper.toCompanion).toList();
 
     final id = await _entriesDao.insertEntryWithLines(
       entry: comp,
@@ -93,9 +96,13 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       throw const CannotModifyPostedEntryException();
     }
 
-    final updated   = entry.copyWith(updatedAt: DateTime.now());
-    final comp      = JournalEntryMapper.toCompanion(updated);
-    final lineComps = entry.lines.map(JournalEntryLineMapper.toCompanion).toList();
+    // التحقق من القواعد المحاسبية
+    await _validateLines(entry.lines);
+
+    final updated = entry.copyWith(updatedAt: DateTime.now());
+    final comp = JournalEntryMapper.toCompanion(updated);
+    final lineComps =
+        entry.lines.map(JournalEntryLineMapper.toCompanion).toList();
 
     await _entriesDao.updateEntryWithLines(entry: comp, lines: lineComps);
     return updated;
@@ -126,8 +133,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     // التحقق من صحة البنود قبل الترحيل
     await _validateLines(entry.lines);
 
-    await _entriesDao.updateEntryStatus(id, EntryStatus.posted.index);
-    return entry.copyWith(status: EntryStatus.posted, updatedAt: DateTime.now());
+    await _entriesDao.updateEntryStatus(id, EntryStatus.posted);
+    return entry.copyWith(
+        status: EntryStatus.posted, updatedAt: DateTime.now());
   }
 
   @override
@@ -144,29 +152,32 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     final date = reversalDate ?? DateTime.now();
 
     // إنشاء القيد العكسي (قلب المدين والدائن)
-    final reversalLines = original.lines.map((line) => line.copyWith(
-          id:      null,
-          entryId: null,
-          debit:   line.credit, // مبادلة
-          credit:  line.debit,  // مبادلة
-        )).toList();
+    final reversalLines = original.lines
+        .map((line) => line.copyWith(
+              id: null,
+              entryId: null,
+              debit: line.credit, // مبادلة
+              credit: line.debit, // مبادلة
+            ))
+        .toList();
 
     final reversalEntry = JournalEntryModel(
-      date:        date,
+      date: date,
       description: 'عكس: ${original.description}',
-      reference:   original.reference != null ? 'REV-${original.reference}' : null,
-      status:      EntryStatus.posted,
-      lines:       reversalLines,
-      notes:       'قيد عكسي للقيد رقم ${original.id}',
-      createdAt:   DateTime.now(),
-      updatedAt:   DateTime.now(),
+      reference:
+          original.reference != null ? 'REV-${original.reference}' : null,
+      status: EntryStatus.posted,
+      lines: reversalLines,
+      notes: 'قيد عكسي للقيد رقم ${original.id}',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
 
     // تسجيل القيد العكسي
     final created = await createEntry(reversalEntry);
 
     // تحديث حالة القيد الأصلي إلى "معكوس"
-    await _entriesDao.updateEntryStatus(id, EntryStatus.reversed.index);
+    await _entriesDao.updateEntryStatus(id, EntryStatus.reversed);
 
     return created;
   }
@@ -183,9 +194,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
 
   Future<JournalEntryModel> _buildWithLines(JournalEntry data) async {
     final linesData = await _entriesDao.getLinesForEntry(data.id);
-    final lines = linesData
-        .map(JournalEntryLineMapper.fromEntryLineWithAccount)
-        .toList();
+    final lines =
+        linesData.map(JournalEntryLineMapper.fromEntryLineWithAccount).toList();
     return JournalEntryMapper.fromData(data, lines: lines);
   }
 
@@ -193,11 +203,18 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     // التحقق من قواعد الـ Double-Entry
     AccountingValidator.validateEntryLines(lines);
 
-    // التحقق من أن جميع الحسابات موجودة ونشطة
+    // التحقق من أن جميع الحسابات موجودة ونشطة وليست حسابات أب لـ (Leaf Accounts Only)
     for (final line in lines) {
       final account = await _accountsDao.getAccountById(line.accountId);
       if (account == null) throw AccountNotFoundException(line.accountId);
+      
+      // 1. الحساب يجب أن يكون نشطاً
       if (!account.isActive) throw InactiveAccountException(account.code);
+
+      // 2. الحساب يجب أن يكون حساباً فرعياً (Leaf) ولا يسمح بالتسجيل على الحسابات الأب
+      if (await _accountsDao.hasChildren(line.accountId)) {
+        throw AccountIsParentException(account.code);
+      }
     }
   }
 }

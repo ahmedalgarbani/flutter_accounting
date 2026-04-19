@@ -1,5 +1,6 @@
 /// reports_repository_impl.dart
 /// تنفيذ Repository التقارير المالية الثلاثة
+library;
 
 import '../../core/enums.dart';
 import '../../database/daos/journal_entries_dao.dart';

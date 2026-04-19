@@ -1,11 +1,13 @@
 /// interfaces.dart
 /// واجهات الـ Repository (Abstract Contracts)
 /// تسمح بالاستبدال والاختبار بسهولة
+library;
 
-import '../core/enums.dart';
-import '../models/account_model.dart';
-import '../models/journal_entry_model.dart';
-import '../reports/report_models.dart';
+import '../../core/enums.dart';
+import '../../models/account_model.dart';
+import '../../models/journal_entry_model.dart';
+import '../../models/entry_template_model.dart';
+import '../../reports/report_models.dart';
 
 // ─────────────────────────────────────────────────────────────
 // IAccountRepository
@@ -62,4 +64,33 @@ abstract class IReportsRepository {
   Future<TrialBalanceReport>     getTrialBalance({DateTime? from, DateTime? to});
   Future<BalanceSheetReport>     getBalanceSheet({required DateTime asOf});
   Future<IncomeStatementReport>  getIncomeStatement({required DateTime from, required DateTime to});
+}
+
+// ─────────────────────────────────────────────────────────────
+// IEntryTemplateRepository
+// ─────────────────────────────────────────────────────────────
+
+abstract class IEntryTemplateRepository {
+  /// جلب القوالب القياسية المدمجة
+  List<EntryTemplateModel> getStandardTemplates();
+
+  /// جلب القوالب المخصصة من قاعدة البيانات
+  Future<List<EntryTemplateModel>> getCustomTemplates();
+
+  /// حفظ قالب مخصص (سيتم تطبيقه لاحقاً عند إضافة جدول القوالب)
+  Future<EntryTemplateModel> saveTemplate(EntryTemplateModel template);
+
+  /// حذف قالب مخصص
+  Future<void> deleteTemplate(int id);
+
+  /// تطبيق قالب لإنشاء مسودة قيد
+  /// [accountIdMap] خريطة تربط Label الوارد في القالب بـ ID الحساب المختار
+  Future<JournalEntryModel> applyTemplate({
+    required EntryTemplateModel template,
+    required Map<String, int> accountIdMap,
+    required double totalAmount,
+    DateTime? date,
+    String? description,
+    String? reference,
+  });
 }

@@ -3,6 +3,7 @@
 
 import 'package:meta/meta.dart';
 import '../core/enums.dart';
+import '../core/accounting_validator.dart';
 import 'journal_entry_line_model.dart';
 
 @immutable
@@ -14,8 +15,8 @@ class JournalEntryModel {
   final EntryStatus status;
   final List<JournalEntryLineModel> lines;
   final String? notes;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const JournalEntryModel({
     this.id,
@@ -25,8 +26,8 @@ class JournalEntryModel {
     this.status = EntryStatus.draft,
     this.lines = const [],
     this.notes,
-    required this.createdAt,
-    required this.updatedAt,
+     this.createdAt,
+     this.updatedAt,
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -38,6 +39,11 @@ class JournalEntryModel {
   bool   get isBalanced   => (totalDebits - totalCredits).abs() < 0.001;
   bool   get isEditable   => status.isEditable;
   bool   get isPosted     => status.isPosted;
+
+  /// يتحقق من صحة القيد ويرفع استثناءً في حال وجود خطأ (Double-Entry rules)
+  void validate() {
+    AccountingValidator.validateEntryLines(lines);
+  }
 
   // ─────────────────────────────────────────────────────────────
   // نسخ معدّلة

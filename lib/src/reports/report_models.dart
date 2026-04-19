@@ -48,8 +48,8 @@ class TrialBalanceReport {
     required this.rows,
   });
 
-  double get totalDebitBalances  => rows.fold(0, (s, r) => s + r.debitBalance);
-  double get totalCreditBalances => rows.fold(0, (s, r) => s + r.creditBalance);
+  double get totalDebitBalances  => rows.fold(0.0, (s, r) => s + r.debitBalance);
+  double get totalCreditBalances => rows.fold(0.0, (s, r) => s + r.creditBalance);
   bool   get isBalanced => (totalDebitBalances - totalCreditBalances).abs() < 0.001;
 
   List<TrialBalanceRow> get assetRows     => _byType(AccountType.asset);
@@ -101,9 +101,9 @@ class BalanceSheetReport {
     required this.retainedEarnings,
   });
 
-  double get totalAssets      => assetRows.fold(0, (s, r) => s + r.balance);
-  double get totalLiabilities => liabilityRows.fold(0, (s, r) => s + r.balance);
-  double get totalEquity      => equityRows.fold(0, (s, r) => s + r.balance) + retainedEarnings;
+  double get totalAssets      => assetRows.fold(0.0, (s, r) => s + r.balance);
+  double get totalLiabilities => liabilityRows.fold(0.0, (s, r) => s + r.balance);
+  double get totalEquity      => equityRows.fold(0.0, (s, r) => s + r.balance) + retainedEarnings;
 
   /// أصول = خصوم + حقوق ملكية (مبدأ المعادلة المحاسبية)
   bool get isBalanced => (totalAssets - (totalLiabilities + totalEquity)).abs() < 0.01;
@@ -146,8 +146,8 @@ class IncomeStatementReport {
     required this.expenseRows,
   });
 
-  double get totalRevenue  => revenueRows.fold(0, (s, r) => s + r.balance);
-  double get totalExpenses => expenseRows.fold(0, (s, r) => s + r.balance);
+  double get totalRevenue  => revenueRows.fold(0.0, (s, r) => s + r.balance);
+  double get totalExpenses => expenseRows.fold(0.0, (s, r) => s + r.balance);
 
   /// صافي الربح (أو الخسارة إذا كانت سالبة)
   double get netIncome     => totalRevenue - totalExpenses;

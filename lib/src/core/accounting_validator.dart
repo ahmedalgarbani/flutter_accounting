@@ -1,5 +1,6 @@
 /// accounting_validator.dart
 /// محرك التحقق من قواعد القيد المزدوج
+library;
 
 import '../models/journal_entry_line_model.dart';
 import 'exceptions.dart';

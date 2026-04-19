@@ -1,5 +1,6 @@
 /// account_repository_impl.dart
 /// تنفيذ Repository الحسابات مع قواعد العمل الكاملة
+library;
 
 import '../../core/enums.dart';
 import '../../core/exceptions.dart';

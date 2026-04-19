@@ -83,3 +83,41 @@ extension EntryStatusX on EntryStatus {
   bool get isEditable => this == EntryStatus.draft;
   bool get isPosted    => this == EntryStatus.posted;
 }
+// ─────────────────────────────────────────────────────────────
+// نوع القيد أو العملية (Entry Type / Operation Type)
+// ─────────────────────────────────────────────────────────────
+enum EntryType {
+  sale,             // مبيعات نقدية
+  purchase,         // مشتريات نقدية
+  saleAgil,         // مبيعات آجلة
+  purchaseAgil,     // مشتريات آجلة
+  paymentVoucher,   // سند صرف
+  receiptVoucher,   // سند قبض
+  journalEntry,     // قيد يومية عام
+}
+
+extension EntryTypeX on EntryType {
+  String get displayNameAr {
+    switch (this) {
+      case EntryType.sale:             return 'مبيعات نقدية';
+      case EntryType.purchase:         return 'مشتريات نقدية';
+      case EntryType.saleAgil:         return 'مبيعات آجلة';
+      case EntryType.purchaseAgil:     return 'مشتريات آجلة';
+      case EntryType.paymentVoucher:   return 'سند صرف';
+      case EntryType.receiptVoucher:   return 'سند قبض';
+      case EntryType.journalEntry:     return 'قيد يومية';
+    }
+  }
+
+  String get displayNameEn {
+    switch (this) {
+      case EntryType.sale:             return 'Cash Sale';
+      case EntryType.purchase:         return 'Cash Purchase';
+      case EntryType.saleAgil:         return 'Credit Sale';
+      case EntryType.purchaseAgil:     return 'Credit Purchase';
+      case EntryType.paymentVoucher:   return 'Payment Voucher';
+      case EntryType.receiptVoucher:   return 'Receipt Voucher';
+      case EntryType.journalEntry:     return 'Journal Entry';
+    }
+  }
+}
