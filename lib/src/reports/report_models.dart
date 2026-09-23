@@ -1,5 +1,6 @@
 /// reports_models.dart
 /// نماذج بيانات التقارير المالية
+library;
 
 import 'package:meta/meta.dart';
 import '../core/enums.dart';
@@ -18,15 +19,22 @@ class TrialBalanceRow {
   final double totalCredits;
   final double balance; // موجب = مدين، سالب = دائن
 
+  /// الاسم العربي (إن وُجد)
+  final String? accountNameAr;
+
   const TrialBalanceRow({
     required this.accountId,
     required this.accountCode,
     required this.accountName,
+    this.accountNameAr,
     required this.accountType,
     required this.totalDebits,
     required this.totalCredits,
     required this.balance,
   });
+
+  /// الاسم المعروض (العربي إن وُجد، وإلا الإنجليزي)
+  String get displayName => accountNameAr ?? accountName;
 
   bool get isDebitBalance  => balance > 0;
   bool get isCreditBalance => balance < 0;
@@ -74,13 +82,20 @@ class BalanceSheetRow {
   final AccountType type;
   final double balance;
 
+  /// الاسم العربي (إن وُجد)
+  final String? accountNameAr;
+
   const BalanceSheetRow({
     required this.accountId,
     required this.accountCode,
     required this.accountName,
+    this.accountNameAr,
     required this.type,
     required this.balance,
   });
+
+  /// الاسم المعروض (العربي إن وُجد، وإلا الإنجليزي)
+  String get displayName => accountNameAr ?? accountName;
 }
 
 @immutable
@@ -121,13 +136,20 @@ class IncomeStatementRow {
   final AccountType type;
   final double balance;
 
+  /// الاسم العربي (إن وُجد)
+  final String? accountNameAr;
+
   const IncomeStatementRow({
     required this.accountId,
     required this.accountCode,
     required this.accountName,
+    this.accountNameAr,
     required this.type,
     required this.balance,
   });
+
+  /// الاسم المعروض (العربي إن وُجد، وإلا الإنجليزي)
+  String get displayName => accountNameAr ?? accountName;
 }
 
 @immutable
@@ -152,4 +174,81 @@ class IncomeStatementReport {
   /// صافي الربح (أو الخسارة إذا كانت سالبة)
   double get netIncome     => totalRevenue - totalExpenses;
   bool   get isProfitable  => netIncome >= 0;
+}
+
+// ─────────────────────────────────────────────────────────────
+// كشف الحساب / دفتر الأستاذ - Account Ledger
+// ─────────────────────────────────────────────────────────────
+
+@immutable
+class LedgerEntryLine {
+  final int entryId;
+  final String serialNumber;
+  final DateTime date;
+  final String description;
+  final String? reference;
+
+  /// الحساب الذي تمت عليه الحركة (قد يكون حساباً فرعياً عند تضمين الأبناء)
+  final int accountId;
+  final double debit;
+  final double credit;
+
+  /// الرصيد التراكمي بعد هذه الحركة (بالاتجاه الطبيعي للحساب:
+  /// موجب = رصيد طبيعي، سالب = رصيد عكسي)
+  final double runningBalance;
+
+  const LedgerEntryLine({
+    required this.entryId,
+    required this.serialNumber,
+    required this.date,
+    required this.description,
+    this.reference,
+    required this.accountId,
+    required this.debit,
+    required this.credit,
+    required this.runningBalance,
+  });
+}
+
+@immutable
+class AccountLedgerReport {
+  final int accountId;
+  final String accountCode;
+  final String accountName;
+  final String? accountNameAr;
+  final AccountType accountType;
+
+  /// هل تشمل الحركات الحسابات الفرعية؟
+  final bool includesChildren;
+
+  final DateTime? from;
+  final DateTime to;
+  final DateTime generatedAt;
+
+  /// الرصيد الافتتاحي (قبل [from]) بالاتجاه الطبيعي للحساب
+  final double openingBalance;
+  final List<LedgerEntryLine> lines;
+
+  const AccountLedgerReport({
+    required this.accountId,
+    required this.accountCode,
+    required this.accountName,
+    this.accountNameAr,
+    required this.accountType,
+    required this.includesChildren,
+    required this.from,
+    required this.to,
+    required this.generatedAt,
+    required this.openingBalance,
+    required this.lines,
+  });
+
+  String get displayName => accountNameAr ?? accountName;
+
+  double get totalDebits  => lines.fold(0.0, (s, l) => s + l.debit);
+  double get totalCredits => lines.fold(0.0, (s, l) => s + l.credit);
+
+  /// الرصيد الختامي بالاتجاه الطبيعي للحساب
+  double get closingBalance =>
+      lines.isEmpty ? openingBalance : lines.last.runningBalance;
 }

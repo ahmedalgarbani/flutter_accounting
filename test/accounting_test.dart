@@ -10,14 +10,16 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_accounting/flutter_accounting.dart';
 
+import 'test_helpers.dart';
+
 void main() {
   late FlutterAccounting fa;
 
   // ─────────────────────────────────────────────────────────────
   // إعداد: قاعدة بيانات في الذاكرة لكل اختبار
   // ─────────────────────────────────────────────────────────────
-  setUp(() {
-    fa = FlutterAccounting.forTesting();
+  setUp(() async {
+    fa = await createTestAccounting();
   });
 
   tearDown(() async {
@@ -30,7 +32,7 @@ void main() {
   // ═══════════════════════════════════════════════════════════════
   group('AccountRepository', () {
     test('إنشاء حساب جديد بنجاح', () async {
-      final account = await fa.accounts.createAccount(_cashAccount());
+      final account = await fa.accounts.createAccount(cashAccount());
 
       expect(account.id,   isNotNull);
       expect(account.code, '111');
@@ -39,10 +41,10 @@ void main() {
     });
 
     test('رفض رمز الحساب المكرر', () async {
-      await fa.accounts.createAccount(_cashAccount());
+      await fa.accounts.createAccount(cashAccount());
 
       expect(
-        () => fa.accounts.createAccount(_cashAccount()),
+        () => fa.accounts.createAccount(cashAccount()),
         throwsA(isA<DuplicateAccountCodeException>()),
       );
     });
@@ -56,16 +58,16 @@ void main() {
     });
 
     test('حذف حساب بدون قيود', () async {
-      final account = await fa.accounts.createAccount(_cashAccount());
+      final account = await fa.accounts.createAccount(cashAccount());
       await expectLater(fa.accounts.deleteAccount(account.id!), completes);
     });
 
     test('رفض حذف حساب يحتوي على قيود', () async {
-      final cash    = await fa.accounts.createAccount(_cashAccount());
-      final revenue = await fa.accounts.createAccount(_revenueAccount());
+      final cash    = await fa.accounts.createAccount(cashAccount());
+      final revenue = await fa.accounts.createAccount(revenueAccount());
 
       // إنشاء قيد يستخدم حساب الصندوق
-      await fa.journalEntries.createEntry(_saleEntry(cash.id!, revenue.id!));
+      await fa.journalEntries.createEntry(saleEntry(cash.id!, revenue.id!));
 
       // محاولة الترحيل أولاً
       final allEntries = await fa.journalEntries.getAllEntries();
@@ -78,7 +80,7 @@ void main() {
     });
 
     test('تعطيل حساب وإعادة تفعيله', () async {
-      final account = await fa.accounts.createAccount(_cashAccount());
+      final account = await fa.accounts.createAccount(cashAccount());
 
       await fa.accounts.setAccountActive(account.id!, isActive: false);
       final disabled = await fa.accounts.getAccountById(account.id!);
@@ -90,8 +92,8 @@ void main() {
     });
 
     test('جلب الحسابات حسب النوع', () async {
-      await fa.accounts.createAccount(_cashAccount());
-      await fa.accounts.createAccount(_revenueAccount());
+      await fa.accounts.createAccount(cashAccount());
+      await fa.accounts.createAccount(revenueAccount());
 
       final assets = await fa.accounts.getAccountsByType(AccountType.asset);
       expect(assets.length, 1);
@@ -140,7 +142,8 @@ void main() {
 
     test('رفض البنود ذات المبلغ الصفري', () {
       final lines = [
-        JournalEntryLineModel(accountId: 1, debit: 0, credit: 0),
+        JournalEntryLineModel.debitLine(accountId: 1, amount: 500),
+        const JournalEntryLineModel(accountId: 3, debit: 0, credit: 0),
         JournalEntryLineModel.creditLine(accountId: 2, amount: 500),
       ];
 
@@ -170,15 +173,15 @@ void main() {
     late int revenueId;
 
     setUp(() async {
-      final cash    = await fa.accounts.createAccount(_cashAccount());
-      final revenue = await fa.accounts.createAccount(_revenueAccount());
+      final cash    = await fa.accounts.createAccount(cashAccount());
+      final revenue = await fa.accounts.createAccount(revenueAccount());
       cashId    = cash.id!;
       revenueId = revenue.id!;
     });
 
     test('إنشاء قيد مسودة بنجاح', () async {
       final entry = await fa.journalEntries.createEntry(
-        _saleEntry(cashId, revenueId),
+        saleEntry(cashId, revenueId),
       );
 
       expect(entry.id,     isNotNull);
@@ -188,7 +191,7 @@ void main() {
     });
 
     test('ترحيل القيد بنجاح', () async {
-      final draft  = await fa.journalEntries.createEntry(_saleEntry(cashId, revenueId));
+      final draft  = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
       final posted = await fa.journalEntries.postEntry(draft.id!);
 
       expect(posted.status,   EntryStatus.posted);
@@ -196,7 +199,7 @@ void main() {
     });
 
     test('رفض تعديل القيد المرحّل', () async {
-      final draft  = await fa.journalEntries.createEntry(_saleEntry(cashId, revenueId));
+      final draft  = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
       final posted = await fa.journalEntries.postEntry(draft.id!);
 
       expect(
@@ -206,7 +209,7 @@ void main() {
     });
 
     test('رفض حذف القيد المرحّل', () async {
-      final draft = await fa.journalEntries.createEntry(_saleEntry(cashId, revenueId));
+      final draft = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
       await fa.journalEntries.postEntry(draft.id!);
 
       expect(
@@ -216,7 +219,7 @@ void main() {
     });
 
     test('القيد العكسي يُنشئ قيداً جديداً ويعكس البنود', () async {
-      final draft    = await fa.journalEntries.createEntry(_saleEntry(cashId, revenueId));
+      final draft    = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
       final posted   = await fa.journalEntries.postEntry(draft.id!);
       final reversal = await fa.journalEntries.reverseEntry(posted.id!);
 
@@ -236,9 +239,8 @@ void main() {
     });
 
     test('رفض الترحيل على حساب غير نشط', () async {
+      final draft = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
       await fa.accounts.setAccountActive(cashId, isActive: false);
-
-      final draft = await fa.journalEntries.createEntry(_saleEntry(cashId, revenueId));
 
       expect(
         () => fa.journalEntries.postEntry(draft.id!),
@@ -252,26 +254,23 @@ void main() {
   // ═══════════════════════════════════════════════════════════════
   group('ReportsRepository', () {
     setUp(() async {
-      final cash     = await fa.accounts.createAccount(_cashAccount());
-      final revenue  = await fa.accounts.createAccount(_revenueAccount());
-      final expenses = await fa.accounts.createAccount(_expenseAccount());
+      final cash     = await fa.accounts.createAccount(cashAccount());
+      final revenue  = await fa.accounts.createAccount(revenueAccount());
+      final expenses = await fa.accounts.createAccount(expenseAccount());
 
       // قيد مبيعات: صندوق مدين / إيرادات دائن - 5000
-      final saleEntry  = await fa.journalEntries.createEntry(_saleEntry(cash.id!, revenue.id!));
-      await fa.journalEntries.postEntry(saleEntry.id!);
+      final sale = await fa.journalEntries.createEntry(saleEntry(cash.id!, revenue.id!));
+      await fa.journalEntries.postEntry(sale.id!);
 
       // قيد مصاريف: مصاريف مدين / صندوق دائن - 2000
       final expEntry = await fa.journalEntries.createEntry(
         JournalEntryModel(
           date: DateTime.now(),
           description: 'دفع مصاريف إيجار',
-          status: EntryStatus.draft,
           lines: [
             JournalEntryLineModel.debitLine(accountId: expenses.id!, amount: 2000),
             JournalEntryLineModel.creditLine(accountId: cash.id!, amount: 2000),
           ],
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
         ),
       );
       await fa.journalEntries.postEntry(expEntry.id!);
@@ -300,38 +299,3 @@ void main() {
     });
   });
 }
-
-// ─────────────────────────────────────────────────────────────
-// بيانات الاختبار المساعدة
-// ─────────────────────────────────────────────────────────────
-
-AccountModel _cashAccount() => AccountModel(
-  code: '111', name: 'Cash', nameAr: 'الصندوق',
-  type: AccountType.asset,
-  createdAt: DateTime.now(), updatedAt: DateTime.now(),
-);
-
-AccountModel _revenueAccount() => AccountModel(
-  code: '41', name: 'Sales Revenue', nameAr: 'إيرادات المبيعات',
-  type: AccountType.revenue,
-  createdAt: DateTime.now(), updatedAt: DateTime.now(),
-);
-
-AccountModel _expenseAccount() => AccountModel(
-  code: '53', name: 'Rent Expense', nameAr: 'مصاريف الإيجار',
-  type: AccountType.expense,
-  createdAt: DateTime.now(), updatedAt: DateTime.now(),
-);
-
-JournalEntryModel _saleEntry(int cashId, int revenueId) => JournalEntryModel(
-  date:        DateTime.now(),
-  description: 'قيد مبيعات نقدية',
-  reference:   'INV-001',
-  status:      EntryStatus.draft,
-  lines: [
-    JournalEntryLineModel.debitLine(accountId: cashId,    amount: 5000, description: 'استلام نقدي'),
-    JournalEntryLineModel.creditLine(accountId: revenueId, amount: 5000, description: 'إيراد مبيعات'),
-  ],
-  createdAt: DateTime.now(),
-  updatedAt: DateTime.now(),
-);

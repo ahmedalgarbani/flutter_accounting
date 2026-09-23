@@ -15,47 +15,60 @@ class AccountingValidator {
   /// يتحقق من صحة بنود القيد المزدوج ويرفع استثناءً عند الخطأ.
   ///
   /// القواعد:
-  /// 1. يجب وجود بند مدين وبند دائن على الأقل
-  /// 2. لا يُسمح ببنود بمبلغ صفر
-  /// 3. كل بند يجب أن يكون إما مديناً أو دائناً وليس الاثنين معاً
-  /// 4. مجموع المدين = مجموع الدائن (القيد المتوازن)
+  /// 1. لا يُسمح بمبالغ سالبة ([NegativeAmountException])
+  /// 2. لا يُسمح ببنود بمبلغ صفر ([ZeroAmountLineException])
+  /// 3. كل بند إما مدين أو دائن وليس الاثنين ([InvalidLineAmountsException])
+  /// 4. يجب وجود بند مدين وبند دائن على الأقل ([InsufficientLinesException])
+  /// 5. مجموع المدين = مجموع الدائن ([UnbalancedEntryException])
   static void validateEntryLines(List<JournalEntryLineModel> lines) {
-    // القاعدة 1: عدد كافٍ من البنود
-    final hasDebit  = lines.any((l) => l.debit > 0);
-    final hasCredit = lines.any((l) => l.credit > 0);
-    if (!hasDebit || !hasCredit) {
-      throw const InsufficientLinesException();
-    }
+    if (lines.isEmpty) throw const InsufficientLinesException();
 
     double totalDebits  = 0;
     double totalCredits = 0;
 
+    // فحص كل بند أولاً كي تكون رسالة الخطأ دقيقة
     for (final line in lines) {
-      // القاعدة 2: لا مبالغ صفرية
+      // لا مبالغ سالبة
+      if (line.debit < 0 || line.credit < 0) {
+        throw const NegativeAmountException();
+      }
+
+      // لا مبالغ صفرية
       if (line.debit == 0 && line.credit == 0) {
         throw const ZeroAmountLineException();
       }
 
-      // القاعدة 3: مدين أو دائن وليس الاثنين
+      // مدين أو دائن وليس الاثنين
       if (line.debit > 0 && line.credit > 0) {
         throw const InvalidLineAmountsException();
-      }
-
-      // القاعدة 4: لا مبالغ سالبة
-      if (line.debit < 0 || line.credit < 0) {
-        throw const ZeroAmountLineException();
       }
 
       totalDebits  += line.debit;
       totalCredits += line.credit;
     }
 
-    // القاعدة 4: التوازن
-    if (!_almostEqual(totalDebits, totalCredits)) {
+    // يجب وجود بند مدين وبند دائن على الأقل
+    if (totalDebits == 0 || totalCredits == 0) {
+      throw const InsufficientLinesException();
+    }
+
+    // التوازن
+    if (!isBalanced(totalDebits, totalCredits)) {
       throw UnbalancedEntryException(
         totalDebits: totalDebits,
         totalCredits: totalCredits,
       );
+    }
+  }
+
+  /// يتحقق دون رمي استثناء: يُعيد رسالة الخطأ أو `null` إن كان القيد صحيحاً.
+  /// مفيد لعرض رسالة في الواجهة أثناء إدخال المستخدم.
+  static String? checkEntryLines(List<JournalEntryLineModel> lines) {
+    try {
+      validateEntryLines(lines);
+      return null;
+    } on AccountingException catch (e) {
+      return e.message;
     }
   }
 
@@ -74,7 +87,9 @@ class AccountingValidator {
   // ─────────────────────────────────────────────────────────────
   // مقارنة الأرقام العشرية
   // ─────────────────────────────────────────────────────────────
-  static const double _epsilon = 0.001; // دقة 3 منازل عشرية
+  /// هامش التسامح في مقارنة المبالغ (دقة 3 منازل عشرية)
+  static const double epsilon = 0.001;
 
-  static bool _almostEqual(double a, double b) => (a - b).abs() < _epsilon;
+  /// هل المبلغان متساويان ضمن هامش التسامح؟
+  static bool isBalanced(double a, double b) => (a - b).abs() < epsilon;
 }

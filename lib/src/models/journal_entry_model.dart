@@ -1,5 +1,6 @@
 /// journal_entry_model.dart
 /// نموذج القيد اليومي (Domain Model)
+library;
 
 import 'package:meta/meta.dart';
 import '../core/enums.dart';
@@ -22,6 +23,17 @@ class JournalEntryModel {
   final String? postedBy;
   final DateTime? postedAt;
 
+  /// نوع العملية (مبيعات، سند قبض...) - اختياري
+  final EntryType? entryType;
+
+  /// ربط القيد بمستند في نظامك (مثال: sourceType: 'invoice', sourceId: '15')
+  /// يسهّل البحث عن قيود المستند وعكسها عند إلغائه.
+  final String? sourceType;
+  final String? sourceId;
+
+  /// إن كان القيد قيداً عكسياً: معرّف القيد الأصلي
+  final int? reversalOfId;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -37,6 +49,10 @@ class JournalEntryModel {
     this.createdBy,
     this.postedBy,
     this.postedAt,
+    this.entryType,
+    this.sourceType,
+    this.sourceId,
+    this.reversalOfId,
     this.createdAt,
     this.updatedAt,
   });
@@ -50,6 +66,10 @@ class JournalEntryModel {
   bool   get isBalanced   => (totalDebits - totalCredits).abs() < 0.001;
   bool   get isEditable   => status.isEditable;
   bool   get isPosted     => status.isPosted;
+  bool   get isReversed   => status == EntryStatus.reversed;
+
+  /// هل هذا القيد قيد عكسي لقيد آخر؟
+  bool   get isReversal   => reversalOfId != null;
 
   /// يتحقق من صحة القيد ويرفع استثناءً في حال وجود خطأ (Double-Entry rules)
   void validate() {
@@ -70,6 +90,10 @@ class JournalEntryModel {
     String? createdBy,
     String? postedBy,
     DateTime? postedAt,
+    EntryType? entryType,
+    String? sourceType,
+    String? sourceId,
+    int? reversalOfId,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? serialNumber,
@@ -86,8 +110,65 @@ class JournalEntryModel {
       createdBy:    createdBy    ?? this.createdBy,
       postedBy:     postedBy     ?? this.postedBy,
       postedAt:     postedAt     ?? this.postedAt,
+      entryType:    entryType    ?? this.entryType,
+      sourceType:   sourceType   ?? this.sourceType,
+      sourceId:     sourceId     ?? this.sourceId,
+      reversalOfId: reversalOfId ?? this.reversalOfId,
       createdAt:    createdAt    ?? this.createdAt,
       updatedAt:    updatedAt    ?? this.updatedAt,
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // تحويل إلى/من Map (للمزامنة مع الخادم أو التصدير)
+  // ─────────────────────────────────────────────────────────────
+
+  Map<String, dynamic> toMap() => {
+        'id':           id,
+        'serialNumber': serialNumber,
+        'date':         date.toIso8601String(),
+        'description':  description,
+        'reference':    reference,
+        'status':       status.name,
+        'notes':        notes,
+        'createdBy':    createdBy,
+        'postedBy':     postedBy,
+        'postedAt':     postedAt?.toIso8601String(),
+        'entryType':    entryType?.name,
+        'sourceType':   sourceType,
+        'sourceId':     sourceId,
+        'reversalOfId': reversalOfId,
+        'createdAt':    createdAt?.toIso8601String(),
+        'updatedAt':    updatedAt?.toIso8601String(),
+        'lines':        lines.map((l) => l.toMap()).toList(),
+      };
+
+  factory JournalEntryModel.fromMap(Map<String, dynamic> map) {
+    DateTime? parseDate(Object? v) => v == null ? null : DateTime.parse(v as String);
+    return JournalEntryModel(
+      id:           map['id'] as int?,
+      serialNumber: map['serialNumber'] as String?,
+      date:         DateTime.parse(map['date'] as String),
+      description:  map['description'] as String,
+      reference:    map['reference'] as String?,
+      status:       map['status'] == null
+          ? EntryStatus.draft
+          : EntryStatus.values.byName(map['status'] as String),
+      notes:        map['notes'] as String?,
+      createdBy:    map['createdBy'] as String?,
+      postedBy:     map['postedBy'] as String?,
+      postedAt:     parseDate(map['postedAt']),
+      entryType:    map['entryType'] == null
+          ? null
+          : EntryType.values.byName(map['entryType'] as String),
+      sourceType:   map['sourceType'] as String?,
+      sourceId:     map['sourceId'] as String?,
+      reversalOfId: map['reversalOfId'] as int?,
+      createdAt:    parseDate(map['createdAt']),
+      updatedAt:    parseDate(map['updatedAt']),
+      lines: ((map['lines'] as List?) ?? const [])
+          .map((l) => JournalEntryLineModel.fromMap(Map<String, dynamic>.from(l as Map)))
+          .toList(),
     );
   }
 
@@ -103,5 +184,5 @@ class JournalEntryModel {
 
   @override
   String toString() =>
-      'JournalEntry(id: $id, date: $date, desc: $description, status: ${status.name})';
+      'JournalEntry(id: $id, serial: $serialNumber, date: $date, desc: $description, status: ${status.name})';
 }

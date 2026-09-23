@@ -1,5 +1,6 @@
 /// standard_templates.dart
 /// القوالب القياسية للعمليات المحاسبية الشائعة
+library;
 
 import '../models/entry_template_model.dart';
 import '../core/enums.dart';
