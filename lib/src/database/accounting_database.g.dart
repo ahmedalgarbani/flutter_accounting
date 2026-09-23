@@ -628,6 +628,29 @@ class $JournalEntriesTable extends JournalEntries
   late final GeneratedColumn<DateTime> postedAt = GeneratedColumn<DateTime>(
       'posted_at', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  late final GeneratedColumnWithTypeConverter<EntryType?, int> entryType =
+      GeneratedColumn<int>('entry_type', aliasedName, true,
+              type: DriftSqlType.int, requiredDuringInsert: false)
+          .withConverter<EntryType?>($JournalEntriesTable.$converterentryTypen);
+  static const VerificationMeta _sourceTypeMeta =
+      const VerificationMeta('sourceType');
+  @override
+  late final GeneratedColumn<String> sourceType = GeneratedColumn<String>(
+      'source_type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _sourceIdMeta =
+      const VerificationMeta('sourceId');
+  @override
+  late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
+      'source_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _reversalOfIdMeta =
+      const VerificationMeta('reversalOfId');
+  @override
+  late final GeneratedColumn<int> reversalOfId = GeneratedColumn<int>(
+      'reversal_of_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -656,6 +679,10 @@ class $JournalEntriesTable extends JournalEntries
         createdBy,
         postedBy,
         postedAt,
+        entryType,
+        sourceType,
+        sourceId,
+        reversalOfId,
         createdAt,
         updatedAt
       ];
@@ -714,6 +741,22 @@ class $JournalEntriesTable extends JournalEntries
       context.handle(_postedAtMeta,
           postedAt.isAcceptableOrUnknown(data['posted_at']!, _postedAtMeta));
     }
+    if (data.containsKey('source_type')) {
+      context.handle(
+          _sourceTypeMeta,
+          sourceType.isAcceptableOrUnknown(
+              data['source_type']!, _sourceTypeMeta));
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(_sourceIdMeta,
+          sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta));
+    }
+    if (data.containsKey('reversal_of_id')) {
+      context.handle(
+          _reversalOfIdMeta,
+          reversalOfId.isAcceptableOrUnknown(
+              data['reversal_of_id']!, _reversalOfIdMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -756,6 +799,15 @@ class $JournalEntriesTable extends JournalEntries
           .read(DriftSqlType.string, data['${effectivePrefix}posted_by']),
       postedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}posted_at']),
+      entryType: $JournalEntriesTable.$converterentryTypen.fromSql(
+          attachedDatabase.typeMapping
+              .read(DriftSqlType.int, data['${effectivePrefix}entry_type'])),
+      sourceType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source_type']),
+      sourceId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source_id']),
+      reversalOfId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}reversal_of_id']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -770,6 +822,10 @@ class $JournalEntriesTable extends JournalEntries
 
   static JsonTypeConverter2<EntryStatus, int, int> $converterstatus =
       const EnumIndexConverter<EntryStatus>(EntryStatus.values);
+  static JsonTypeConverter2<EntryType, int, int> $converterentryType =
+      const EnumIndexConverter<EntryType>(EntryType.values);
+  static JsonTypeConverter2<EntryType?, int?, int?> $converterentryTypen =
+      JsonTypeConverter2.asNullable($converterentryType);
 }
 
 class JournalEntry extends DataClass implements Insertable<JournalEntry> {
@@ -787,6 +843,16 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
   final String? createdBy;
   final String? postedBy;
   final DateTime? postedAt;
+
+  /// نوع العملية (مبيعات، مشتريات، سند قبض...) - اختياري
+  final EntryType? entryType;
+
+  /// ربط القيد بمستند في النظام المضيف (مثال: 'invoice' / '15')
+  final String? sourceType;
+  final String? sourceId;
+
+  /// إن كان هذا القيد قيداً عكسياً: معرّف القيد الأصلي
+  final int? reversalOfId;
   final DateTime createdAt;
   final DateTime updatedAt;
   const JournalEntry(
@@ -800,6 +866,10 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       this.createdBy,
       this.postedBy,
       this.postedAt,
+      this.entryType,
+      this.sourceType,
+      this.sourceId,
+      this.reversalOfId,
       required this.createdAt,
       required this.updatedAt});
   @override
@@ -828,6 +898,19 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
     if (!nullToAbsent || postedAt != null) {
       map['posted_at'] = Variable<DateTime>(postedAt);
     }
+    if (!nullToAbsent || entryType != null) {
+      map['entry_type'] = Variable<int>(
+          $JournalEntriesTable.$converterentryTypen.toSql(entryType));
+    }
+    if (!nullToAbsent || sourceType != null) {
+      map['source_type'] = Variable<String>(sourceType);
+    }
+    if (!nullToAbsent || sourceId != null) {
+      map['source_id'] = Variable<String>(sourceId);
+    }
+    if (!nullToAbsent || reversalOfId != null) {
+      map['reversal_of_id'] = Variable<int>(reversalOfId);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -854,6 +937,18 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       postedAt: postedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(postedAt),
+      entryType: entryType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(entryType),
+      sourceType: sourceType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceType),
+      sourceId: sourceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceId),
+      reversalOfId: reversalOfId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reversalOfId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -874,6 +969,11 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       createdBy: serializer.fromJson<String?>(json['createdBy']),
       postedBy: serializer.fromJson<String?>(json['postedBy']),
       postedAt: serializer.fromJson<DateTime?>(json['postedAt']),
+      entryType: $JournalEntriesTable.$converterentryTypen
+          .fromJson(serializer.fromJson<int?>(json['entryType'])),
+      sourceType: serializer.fromJson<String?>(json['sourceType']),
+      sourceId: serializer.fromJson<String?>(json['sourceId']),
+      reversalOfId: serializer.fromJson<int?>(json['reversalOfId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -893,6 +993,11 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       'createdBy': serializer.toJson<String?>(createdBy),
       'postedBy': serializer.toJson<String?>(postedBy),
       'postedAt': serializer.toJson<DateTime?>(postedAt),
+      'entryType': serializer.toJson<int?>(
+          $JournalEntriesTable.$converterentryTypen.toJson(entryType)),
+      'sourceType': serializer.toJson<String?>(sourceType),
+      'sourceId': serializer.toJson<String?>(sourceId),
+      'reversalOfId': serializer.toJson<int?>(reversalOfId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -909,6 +1014,10 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
           Value<String?> createdBy = const Value.absent(),
           Value<String?> postedBy = const Value.absent(),
           Value<DateTime?> postedAt = const Value.absent(),
+          Value<EntryType?> entryType = const Value.absent(),
+          Value<String?> sourceType = const Value.absent(),
+          Value<String?> sourceId = const Value.absent(),
+          Value<int?> reversalOfId = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
       JournalEntry(
@@ -922,6 +1031,11 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
         createdBy: createdBy.present ? createdBy.value : this.createdBy,
         postedBy: postedBy.present ? postedBy.value : this.postedBy,
         postedAt: postedAt.present ? postedAt.value : this.postedAt,
+        entryType: entryType.present ? entryType.value : this.entryType,
+        sourceType: sourceType.present ? sourceType.value : this.sourceType,
+        sourceId: sourceId.present ? sourceId.value : this.sourceId,
+        reversalOfId:
+            reversalOfId.present ? reversalOfId.value : this.reversalOfId,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
@@ -940,6 +1054,13 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       postedBy: data.postedBy.present ? data.postedBy.value : this.postedBy,
       postedAt: data.postedAt.present ? data.postedAt.value : this.postedAt,
+      entryType: data.entryType.present ? data.entryType.value : this.entryType,
+      sourceType:
+          data.sourceType.present ? data.sourceType.value : this.sourceType,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      reversalOfId: data.reversalOfId.present
+          ? data.reversalOfId.value
+          : this.reversalOfId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -958,6 +1079,10 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
           ..write('createdBy: $createdBy, ')
           ..write('postedBy: $postedBy, ')
           ..write('postedAt: $postedAt, ')
+          ..write('entryType: $entryType, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('reversalOfId: $reversalOfId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -976,6 +1101,10 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       createdBy,
       postedBy,
       postedAt,
+      entryType,
+      sourceType,
+      sourceId,
+      reversalOfId,
       createdAt,
       updatedAt);
   @override
@@ -992,6 +1121,10 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
           other.createdBy == this.createdBy &&
           other.postedBy == this.postedBy &&
           other.postedAt == this.postedAt &&
+          other.entryType == this.entryType &&
+          other.sourceType == this.sourceType &&
+          other.sourceId == this.sourceId &&
+          other.reversalOfId == this.reversalOfId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -1007,6 +1140,10 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
   final Value<String?> createdBy;
   final Value<String?> postedBy;
   final Value<DateTime?> postedAt;
+  final Value<EntryType?> entryType;
+  final Value<String?> sourceType;
+  final Value<String?> sourceId;
+  final Value<int?> reversalOfId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const JournalEntriesCompanion({
@@ -1020,6 +1157,10 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     this.createdBy = const Value.absent(),
     this.postedBy = const Value.absent(),
     this.postedAt = const Value.absent(),
+    this.entryType = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.reversalOfId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -1034,6 +1175,10 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     this.createdBy = const Value.absent(),
     this.postedBy = const Value.absent(),
     this.postedAt = const Value.absent(),
+    this.entryType = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.reversalOfId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   })  : serialNumber = Value(serialNumber),
@@ -1051,6 +1196,10 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     Expression<String>? createdBy,
     Expression<String>? postedBy,
     Expression<DateTime>? postedAt,
+    Expression<int>? entryType,
+    Expression<String>? sourceType,
+    Expression<String>? sourceId,
+    Expression<int>? reversalOfId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -1065,6 +1214,10 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
       if (createdBy != null) 'created_by': createdBy,
       if (postedBy != null) 'posted_by': postedBy,
       if (postedAt != null) 'posted_at': postedAt,
+      if (entryType != null) 'entry_type': entryType,
+      if (sourceType != null) 'source_type': sourceType,
+      if (sourceId != null) 'source_id': sourceId,
+      if (reversalOfId != null) 'reversal_of_id': reversalOfId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -1081,6 +1234,10 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
       Value<String?>? createdBy,
       Value<String?>? postedBy,
       Value<DateTime?>? postedAt,
+      Value<EntryType?>? entryType,
+      Value<String?>? sourceType,
+      Value<String?>? sourceId,
+      Value<int?>? reversalOfId,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt}) {
     return JournalEntriesCompanion(
@@ -1094,6 +1251,10 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
       createdBy: createdBy ?? this.createdBy,
       postedBy: postedBy ?? this.postedBy,
       postedAt: postedAt ?? this.postedAt,
+      entryType: entryType ?? this.entryType,
+      sourceType: sourceType ?? this.sourceType,
+      sourceId: sourceId ?? this.sourceId,
+      reversalOfId: reversalOfId ?? this.reversalOfId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -1133,6 +1294,19 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     if (postedAt.present) {
       map['posted_at'] = Variable<DateTime>(postedAt.value);
     }
+    if (entryType.present) {
+      map['entry_type'] = Variable<int>(
+          $JournalEntriesTable.$converterentryTypen.toSql(entryType.value));
+    }
+    if (sourceType.present) {
+      map['source_type'] = Variable<String>(sourceType.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<String>(sourceId.value);
+    }
+    if (reversalOfId.present) {
+      map['reversal_of_id'] = Variable<int>(reversalOfId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1155,6 +1329,10 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
           ..write('createdBy: $createdBy, ')
           ..write('postedBy: $postedBy, ')
           ..write('postedAt: $postedAt, ')
+          ..write('entryType: $entryType, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('reversalOfId: $reversalOfId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1888,6 +2066,353 @@ class AccountingPeriodsCompanion extends UpdateCompanion<AccountingPeriod> {
   }
 }
 
+class $EntryTemplatesTable extends EntryTemplates
+    with TableInfo<$EntryTemplatesTable, EntryTemplate> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EntryTemplatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  late final GeneratedColumnWithTypeConverter<EntryType, int> type =
+      GeneratedColumn<int>('type', aliasedName, false,
+              type: DriftSqlType.int, requiredDuringInsert: true)
+          .withConverter<EntryType>($EntryTemplatesTable.$convertertype);
+  static const VerificationMeta _linesJsonMeta =
+      const VerificationMeta('linesJson');
+  @override
+  late final GeneratedColumn<String> linesJson = GeneratedColumn<String>(
+      'lines_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, description, type, linesJson, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'entry_templates';
+  @override
+  VerificationContext validateIntegrity(Insertable<EntryTemplate> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('lines_json')) {
+      context.handle(_linesJsonMeta,
+          linesJson.isAcceptableOrUnknown(data['lines_json']!, _linesJsonMeta));
+    } else if (isInserting) {
+      context.missing(_linesJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EntryTemplate map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EntryTemplate(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      type: $EntryTemplatesTable.$convertertype.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}type'])!),
+      linesJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}lines_json'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $EntryTemplatesTable createAlias(String alias) {
+    return $EntryTemplatesTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<EntryType, int, int> $convertertype =
+      const EnumIndexConverter<EntryType>(EntryType.values);
+}
+
+class EntryTemplate extends DataClass implements Insertable<EntryTemplate> {
+  final int id;
+  final String name;
+  final String? description;
+  final EntryType type;
+
+  /// بنود القالب مخزّنة كـ JSON
+  final String linesJson;
+  final DateTime createdAt;
+  const EntryTemplate(
+      {required this.id,
+      required this.name,
+      this.description,
+      required this.type,
+      required this.linesJson,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    {
+      map['type'] =
+          Variable<int>($EntryTemplatesTable.$convertertype.toSql(type));
+    }
+    map['lines_json'] = Variable<String>(linesJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  EntryTemplatesCompanion toCompanion(bool nullToAbsent) {
+    return EntryTemplatesCompanion(
+      id: Value(id),
+      name: Value(name),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      type: Value(type),
+      linesJson: Value(linesJson),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory EntryTemplate.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EntryTemplate(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+      type: $EntryTemplatesTable.$convertertype
+          .fromJson(serializer.fromJson<int>(json['type'])),
+      linesJson: serializer.fromJson<String>(json['linesJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+      'type': serializer
+          .toJson<int>($EntryTemplatesTable.$convertertype.toJson(type)),
+      'linesJson': serializer.toJson<String>(linesJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  EntryTemplate copyWith(
+          {int? id,
+          String? name,
+          Value<String?> description = const Value.absent(),
+          EntryType? type,
+          String? linesJson,
+          DateTime? createdAt}) =>
+      EntryTemplate(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        description: description.present ? description.value : this.description,
+        type: type ?? this.type,
+        linesJson: linesJson ?? this.linesJson,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  EntryTemplate copyWithCompanion(EntryTemplatesCompanion data) {
+    return EntryTemplate(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      type: data.type.present ? data.type.value : this.type,
+      linesJson: data.linesJson.present ? data.linesJson.value : this.linesJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EntryTemplate(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('linesJson: $linesJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, description, type, linesJson, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EntryTemplate &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.type == this.type &&
+          other.linesJson == this.linesJson &&
+          other.createdAt == this.createdAt);
+}
+
+class EntryTemplatesCompanion extends UpdateCompanion<EntryTemplate> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String?> description;
+  final Value<EntryType> type;
+  final Value<String> linesJson;
+  final Value<DateTime> createdAt;
+  const EntryTemplatesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.type = const Value.absent(),
+    this.linesJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  EntryTemplatesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.description = const Value.absent(),
+    required EntryType type,
+    required String linesJson,
+    this.createdAt = const Value.absent(),
+  })  : name = Value(name),
+        type = Value(type),
+        linesJson = Value(linesJson);
+  static Insertable<EntryTemplate> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<int>? type,
+    Expression<String>? linesJson,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (type != null) 'type': type,
+      if (linesJson != null) 'lines_json': linesJson,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  EntryTemplatesCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? name,
+      Value<String?>? description,
+      Value<EntryType>? type,
+      Value<String>? linesJson,
+      Value<DateTime>? createdAt}) {
+    return EntryTemplatesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      linesJson: linesJson ?? this.linesJson,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (type.present) {
+      map['type'] =
+          Variable<int>($EntryTemplatesTable.$convertertype.toSql(type.value));
+    }
+    if (linesJson.present) {
+      map['lines_json'] = Variable<String>(linesJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EntryTemplatesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('linesJson: $linesJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AccountingDatabase extends GeneratedDatabase {
   _$AccountingDatabase(QueryExecutor e) : super(e);
   $AccountingDatabaseManager get managers => $AccountingDatabaseManager(this);
@@ -1897,15 +2422,37 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
       $JournalEntryLinesTable(this);
   late final $AccountingPeriodsTable accountingPeriods =
       $AccountingPeriodsTable(this);
+  late final $EntryTemplatesTable entryTemplates = $EntryTemplatesTable(this);
+  late final Index idxJournalEntriesDate = Index('idx_journal_entries_date',
+      'CREATE INDEX idx_journal_entries_date ON journal_entries (date)');
+  late final Index idxJournalEntriesSource = Index('idx_journal_entries_source',
+      'CREATE INDEX idx_journal_entries_source ON journal_entries (source_type, source_id)');
+  late final Index idxJournalEntryLinesEntry = Index(
+      'idx_journal_entry_lines_entry',
+      'CREATE INDEX idx_journal_entry_lines_entry ON journal_entry_lines (entry_id)');
+  late final Index idxJournalEntryLinesAccount = Index(
+      'idx_journal_entry_lines_account',
+      'CREATE INDEX idx_journal_entry_lines_account ON journal_entry_lines (account_id)');
   late final AccountsDao accountsDao = AccountsDao(this as AccountingDatabase);
   late final JournalEntriesDao journalEntriesDao =
       JournalEntriesDao(this as AccountingDatabase);
+  late final EntryTemplatesDao entryTemplatesDao =
+      EntryTemplatesDao(this as AccountingDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [accounts, journalEntries, journalEntryLines, accountingPeriods];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        accounts,
+        journalEntries,
+        journalEntryLines,
+        accountingPeriods,
+        entryTemplates,
+        idxJournalEntriesDate,
+        idxJournalEntriesSource,
+        idxJournalEntryLinesEntry,
+        idxJournalEntryLinesAccount
+      ];
 }
 
 typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
@@ -1939,8 +2486,8 @@ final class $$AccountsTableReferences
     extends BaseReferences<_$AccountingDatabase, $AccountsTable, Account> {
   $$AccountsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $AccountsTable _parentIdTable(_$AccountingDatabase db) => db.accounts
-      .createAlias($_aliasNameGenerator(db.accounts.parentId, db.accounts.id));
+  static $AccountsTable _parentIdTable(_$AccountingDatabase db) =>
+      db.accounts.createAlias('accounts__parent_id__accounts__id');
 
   $$AccountsTableProcessedTableManager? get parentId {
     final $_column = $_itemColumn<int>('parent_id');
@@ -1956,8 +2503,7 @@ final class $$AccountsTableReferences
   static MultiTypedResultKey<$JournalEntryLinesTable, List<JournalEntryLine>>
       _journalEntryLinesRefsTable(_$AccountingDatabase db) =>
           MultiTypedResultKey.fromTable(db.journalEntryLines,
-              aliasName: $_aliasNameGenerator(
-                  db.accounts.id, db.journalEntryLines.accountId));
+              aliasName: 'accounts__id__journal_entry_lines__account_id');
 
   $$JournalEntryLinesTableProcessedTableManager get journalEntryLinesRefs {
     final manager =
@@ -2271,8 +2817,10 @@ class $$AccountsTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$AccountsTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$AccountsTable, Account>(table),
+                    $$AccountsTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: (
               {parentId = false, journalEntryLinesRefs = false}) {
@@ -2353,6 +2901,10 @@ typedef $$JournalEntriesTableCreateCompanionBuilder = JournalEntriesCompanion
   Value<String?> createdBy,
   Value<String?> postedBy,
   Value<DateTime?> postedAt,
+  Value<EntryType?> entryType,
+  Value<String?> sourceType,
+  Value<String?> sourceId,
+  Value<int?> reversalOfId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -2368,6 +2920,10 @@ typedef $$JournalEntriesTableUpdateCompanionBuilder = JournalEntriesCompanion
   Value<String?> createdBy,
   Value<String?> postedBy,
   Value<DateTime?> postedAt,
+  Value<EntryType?> entryType,
+  Value<String?> sourceType,
+  Value<String?> sourceId,
+  Value<int?> reversalOfId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -2380,8 +2936,7 @@ final class $$JournalEntriesTableReferences extends BaseReferences<
   static MultiTypedResultKey<$JournalEntryLinesTable, List<JournalEntryLine>>
       _journalEntryLinesRefsTable(_$AccountingDatabase db) =>
           MultiTypedResultKey.fromTable(db.journalEntryLines,
-              aliasName: $_aliasNameGenerator(
-                  db.journalEntries.id, db.journalEntryLines.entryId));
+              aliasName: 'journal_entries__id__journal_entry_lines__entry_id');
 
   $$JournalEntryLinesTableProcessedTableManager get journalEntryLinesRefs {
     final manager =
@@ -2435,6 +2990,20 @@ class $$JournalEntriesTableFilterComposer
 
   ColumnFilters<DateTime> get postedAt => $composableBuilder(
       column: $table.postedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<EntryType?, EntryType, int> get entryType =>
+      $composableBuilder(
+          column: $table.entryType,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnFilters<String> get sourceType => $composableBuilder(
+      column: $table.sourceType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sourceId => $composableBuilder(
+      column: $table.sourceId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get reversalOfId => $composableBuilder(
+      column: $table.reversalOfId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -2504,6 +3073,19 @@ class $$JournalEntriesTableOrderingComposer
   ColumnOrderings<DateTime> get postedAt => $composableBuilder(
       column: $table.postedAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get entryType => $composableBuilder(
+      column: $table.entryType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sourceType => $composableBuilder(
+      column: $table.sourceType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sourceId => $composableBuilder(
+      column: $table.sourceId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get reversalOfId => $composableBuilder(
+      column: $table.reversalOfId,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -2549,6 +3131,18 @@ class $$JournalEntriesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get postedAt =>
       $composableBuilder(column: $table.postedAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<EntryType?, int> get entryType =>
+      $composableBuilder(column: $table.entryType, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceType => $composableBuilder(
+      column: $table.sourceType, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
+  GeneratedColumn<int> get reversalOfId => $composableBuilder(
+      column: $table.reversalOfId, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2613,6 +3207,10 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
             Value<String?> createdBy = const Value.absent(),
             Value<String?> postedBy = const Value.absent(),
             Value<DateTime?> postedAt = const Value.absent(),
+            Value<EntryType?> entryType = const Value.absent(),
+            Value<String?> sourceType = const Value.absent(),
+            Value<String?> sourceId = const Value.absent(),
+            Value<int?> reversalOfId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
@@ -2627,6 +3225,10 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
             createdBy: createdBy,
             postedBy: postedBy,
             postedAt: postedAt,
+            entryType: entryType,
+            sourceType: sourceType,
+            sourceId: sourceId,
+            reversalOfId: reversalOfId,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
@@ -2641,6 +3243,10 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
             Value<String?> createdBy = const Value.absent(),
             Value<String?> postedBy = const Value.absent(),
             Value<DateTime?> postedAt = const Value.absent(),
+            Value<EntryType?> entryType = const Value.absent(),
+            Value<String?> sourceType = const Value.absent(),
+            Value<String?> sourceId = const Value.absent(),
+            Value<int?> reversalOfId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
@@ -2655,12 +3261,16 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
             createdBy: createdBy,
             postedBy: postedBy,
             postedAt: postedAt,
+            entryType: entryType,
+            sourceType: sourceType,
+            sourceId: sourceId,
+            reversalOfId: reversalOfId,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$JournalEntriesTable, JournalEntry>(table),
                     $$JournalEntriesTableReferences(db, table, e)
                   ))
               .toList(),
@@ -2732,8 +3342,8 @@ final class $$JournalEntryLinesTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $JournalEntriesTable _entryIdTable(_$AccountingDatabase db) =>
-      db.journalEntries.createAlias($_aliasNameGenerator(
-          db.journalEntryLines.entryId, db.journalEntries.id));
+      db.journalEntries
+          .createAlias('journal_entry_lines__entry_id__journal_entries__id');
 
   $$JournalEntriesTableProcessedTableManager get entryId {
     final $_column = $_itemColumn<int>('entry_id')!;
@@ -2747,8 +3357,7 @@ final class $$JournalEntryLinesTableReferences extends BaseReferences<
   }
 
   static $AccountsTable _accountIdTable(_$AccountingDatabase db) =>
-      db.accounts.createAlias(
-          $_aliasNameGenerator(db.journalEntryLines.accountId, db.accounts.id));
+      db.accounts.createAlias('journal_entry_lines__account_id__accounts__id');
 
   $$AccountsTableProcessedTableManager get accountId {
     final $_column = $_itemColumn<int>('account_id')!;
@@ -3019,7 +3628,8 @@ class $$JournalEntryLinesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$JournalEntryLinesTable, JournalEntryLine>(
+                        table),
                     $$JournalEntryLinesTableReferences(db, table, e)
                   ))
               .toList(),
@@ -3248,7 +3858,12 @@ class $$AccountingPeriodsTableTableManager extends RootTableManager<
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$AccountingPeriodsTable, AccountingPeriod>(
+                        table),
+                    BaseReferences<_$AccountingDatabase,
+                        $AccountingPeriodsTable, AccountingPeriod>(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -3270,6 +3885,195 @@ typedef $$AccountingPeriodsTableProcessedTableManager = ProcessedTableManager<
     ),
     AccountingPeriod,
     PrefetchHooks Function()>;
+typedef $$EntryTemplatesTableCreateCompanionBuilder = EntryTemplatesCompanion
+    Function({
+  Value<int> id,
+  required String name,
+  Value<String?> description,
+  required EntryType type,
+  required String linesJson,
+  Value<DateTime> createdAt,
+});
+typedef $$EntryTemplatesTableUpdateCompanionBuilder = EntryTemplatesCompanion
+    Function({
+  Value<int> id,
+  Value<String> name,
+  Value<String?> description,
+  Value<EntryType> type,
+  Value<String> linesJson,
+  Value<DateTime> createdAt,
+});
+
+class $$EntryTemplatesTableFilterComposer
+    extends Composer<_$AccountingDatabase, $EntryTemplatesTable> {
+  $$EntryTemplatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<EntryType, EntryType, int> get type =>
+      $composableBuilder(
+          column: $table.type,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnFilters<String> get linesJson => $composableBuilder(
+      column: $table.linesJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$EntryTemplatesTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $EntryTemplatesTable> {
+  $$EntryTemplatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get linesJson => $composableBuilder(
+      column: $table.linesJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$EntryTemplatesTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $EntryTemplatesTable> {
+  $$EntryTemplatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<EntryType, int> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get linesJson =>
+      $composableBuilder(column: $table.linesJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$EntryTemplatesTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $EntryTemplatesTable,
+    EntryTemplate,
+    $$EntryTemplatesTableFilterComposer,
+    $$EntryTemplatesTableOrderingComposer,
+    $$EntryTemplatesTableAnnotationComposer,
+    $$EntryTemplatesTableCreateCompanionBuilder,
+    $$EntryTemplatesTableUpdateCompanionBuilder,
+    (
+      EntryTemplate,
+      BaseReferences<_$AccountingDatabase, $EntryTemplatesTable, EntryTemplate>
+    ),
+    EntryTemplate,
+    PrefetchHooks Function()> {
+  $$EntryTemplatesTableTableManager(
+      _$AccountingDatabase db, $EntryTemplatesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EntryTemplatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EntryTemplatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EntryTemplatesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<EntryType> type = const Value.absent(),
+            Value<String> linesJson = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              EntryTemplatesCompanion(
+            id: id,
+            name: name,
+            description: description,
+            type: type,
+            linesJson: linesJson,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String name,
+            Value<String?> description = const Value.absent(),
+            required EntryType type,
+            required String linesJson,
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              EntryTemplatesCompanion.insert(
+            id: id,
+            name: name,
+            description: description,
+            type: type,
+            linesJson: linesJson,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$EntryTemplatesTable, EntryTemplate>(table),
+                    BaseReferences<_$AccountingDatabase, $EntryTemplatesTable,
+                        EntryTemplate>(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$EntryTemplatesTableProcessedTableManager = ProcessedTableManager<
+    _$AccountingDatabase,
+    $EntryTemplatesTable,
+    EntryTemplate,
+    $$EntryTemplatesTableFilterComposer,
+    $$EntryTemplatesTableOrderingComposer,
+    $$EntryTemplatesTableAnnotationComposer,
+    $$EntryTemplatesTableCreateCompanionBuilder,
+    $$EntryTemplatesTableUpdateCompanionBuilder,
+    (
+      EntryTemplate,
+      BaseReferences<_$AccountingDatabase, $EntryTemplatesTable, EntryTemplate>
+    ),
+    EntryTemplate,
+    PrefetchHooks Function()>;
 
 class $AccountingDatabaseManager {
   final _$AccountingDatabase _db;
@@ -3282,4 +4086,6 @@ class $AccountingDatabaseManager {
       $$JournalEntryLinesTableTableManager(_db, _db.journalEntryLines);
   $$AccountingPeriodsTableTableManager get accountingPeriods =>
       $$AccountingPeriodsTableTableManager(_db, _db.accountingPeriods);
+  $$EntryTemplatesTableTableManager get entryTemplates =>
+      $$EntryTemplatesTableTableManager(_db, _db.entryTemplates);
 }

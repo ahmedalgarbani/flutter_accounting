@@ -50,6 +50,46 @@ class AccountsDao extends DatabaseAccessor<AccountingDatabase>
             ..orderBy([(t) => OrderingTerm(expression: t.code)]))
           .get();
 
+  /// الحسابات الفرعية النهائية (Leaf) - الحسابات التي يُسمح بالتسجيل عليها
+  Future<List<Account>> getLeafAccounts({int? typeIndex, bool activeOnly = true}) {
+    final query = select(accounts)
+      ..where((t) => notExistsQuery(
+            select(alias(accounts, 'c'))
+              ..where((c) => c.parentId.equalsExp(t.id)),
+          ));
+    if (typeIndex != null) query.where((t) => t.type.equals(typeIndex));
+    if (activeOnly) query.where((t) => t.isActive.equals(true));
+    query.orderBy([(t) => OrderingTerm(expression: t.code)]);
+    return query.get();
+  }
+
+  /// البحث بالرمز أو الاسم (عربي/إنجليزي)
+  Future<List<Account>> searchAccounts(String text) {
+    final pattern = '%${text.trim()}%';
+    return (select(accounts)
+          ..where((t) =>
+              t.code.like(pattern) | t.name.like(pattern) | t.nameAr.like(pattern))
+          ..orderBy([(t) => OrderingTerm(expression: t.code)]))
+        .get();
+  }
+
+  /// معرّفات جميع الحسابات المتفرعة من حساب (الأبناء والأحفاد...) - بدون الحساب نفسه
+  Future<List<int>> getDescendantIds(int accountId) async {
+    final rows = await customSelect(
+      '''
+      WITH RECURSIVE tree(id) AS (
+        SELECT id FROM accounts WHERE parent_id = ?
+        UNION ALL
+        SELECT a.id FROM accounts a INNER JOIN tree ON a.parent_id = tree.id
+      )
+      SELECT id FROM tree
+      ''',
+      variables: [Variable.withInt(accountId)],
+      readsFrom: {accounts},
+    ).get();
+    return rows.map((r) => r.read<int>('id')).toList();
+  }
+
   /// مشاهدة جميع الحسابات (Stream)
   Stream<List<Account>> watchAllAccounts() =>
       (select(accounts)..orderBy([(t) => OrderingTerm(expression: t.code)])).watch();
@@ -89,6 +129,11 @@ class AccountsDao extends DatabaseAccessor<AccountingDatabase>
           updatedAt: Value(DateTime.now()),
         ),
       );
+
+  /// تحديث مستوى حساب
+  Future<void> setAccountLevel(int id, int level) =>
+      (update(accounts)..where((t) => t.id.equals(id)))
+          .write(AccountsCompanion(level: Value(level)));
 
   /// حذف حساب
   Future<int> deleteAccount(int id) =>

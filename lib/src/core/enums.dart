@@ -1,5 +1,9 @@
 /// enums.dart
 /// التعدادات الأساسية للمكتبة المحاسبية
+///
+/// ⚠️ التعدادات تُخزَّن في قاعدة البيانات بترتيبها (index)،
+/// لذا أضف القيم الجديدة دائماً في النهاية ولا تغيّر ترتيب القيم الموجودة.
+library;
 
 // ─────────────────────────────────────────────────────────────
 // نوع الحساب (Account Type)
@@ -80,8 +84,21 @@ extension EntryStatusX on EntryStatus {
     }
   }
 
+  String get displayNameEn {
+    switch (this) {
+      case EntryStatus.draft:    return 'Draft';
+      case EntryStatus.posted:   return 'Posted';
+      case EntryStatus.reversed: return 'Reversed';
+    }
+  }
+
   bool get isEditable => this == EntryStatus.draft;
   bool get isPosted    => this == EntryStatus.posted;
+
+  /// هل يؤثر القيد على الأرصدة؟ (المرحّل والمعكوس كلاهما في دفتر الأستاذ،
+  /// والقيد العكسي المقابل يلغي أثر القيد المعكوس)
+  bool get affectsBalances =>
+      this == EntryStatus.posted || this == EntryStatus.reversed;
 }
 // ─────────────────────────────────────────────────────────────
 // نوع القيد أو العملية (Entry Type / Operation Type)
@@ -94,6 +111,9 @@ enum EntryType {
   paymentVoucher,   // سند صرف
   receiptVoucher,   // سند قبض
   journalEntry,     // قيد يومية عام
+  openingBalance,   // قيد افتتاحي
+  reversal,         // قيد عكسي
+  adjustment,       // قيد تسوية
 }
 
 extension EntryTypeX on EntryType {
@@ -106,6 +126,9 @@ extension EntryTypeX on EntryType {
       case EntryType.paymentVoucher:   return 'سند صرف';
       case EntryType.receiptVoucher:   return 'سند قبض';
       case EntryType.journalEntry:     return 'قيد يومية';
+      case EntryType.openingBalance:   return 'قيد افتتاحي';
+      case EntryType.reversal:         return 'قيد عكسي';
+      case EntryType.adjustment:       return 'قيد تسوية';
     }
   }
 
@@ -118,6 +141,9 @@ extension EntryTypeX on EntryType {
       case EntryType.paymentVoucher:   return 'Payment Voucher';
       case EntryType.receiptVoucher:   return 'Receipt Voucher';
       case EntryType.journalEntry:     return 'Journal Entry';
+      case EntryType.openingBalance:   return 'Opening Balance';
+      case EntryType.reversal:         return 'Reversal';
+      case EntryType.adjustment:       return 'Adjustment';
     }
   }
 }

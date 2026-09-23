@@ -1,5 +1,6 @@
 /// tables.dart
 /// تعريفات جداول Drift
+library;
 
 import 'package:drift/drift.dart';
 import '../../core/enums.dart';
@@ -48,6 +49,8 @@ class AccountingPeriods extends Table {
 // جدول القيود اليومية - Journal Entries
 // ─────────────────────────────────────────────────────────────
 
+@TableIndex(name: 'idx_journal_entries_date', columns: {#date})
+@TableIndex(name: 'idx_journal_entries_source', columns: {#sourceType, #sourceId})
 class JournalEntries extends Table {
   IntColumn  get id          => integer().autoIncrement()();
   
@@ -68,6 +71,18 @@ class JournalEntries extends Table {
   TextColumn get postedBy    => text().nullable()();
   DateTimeColumn get postedAt => dateTime().nullable()();
 
+  // ── أُضيفت في الإصدار 2 من المخطط (Schema v2) ──
+
+  /// نوع العملية (مبيعات، مشتريات، سند قبض...) - اختياري
+  IntColumn get entryType => intEnum<EntryType>().nullable()();
+
+  /// ربط القيد بمستند في النظام المضيف (مثال: 'invoice' / '15')
+  TextColumn get sourceType => text().nullable()();
+  TextColumn get sourceId   => text().nullable()();
+
+  /// إن كان هذا القيد قيداً عكسياً: معرّف القيد الأصلي
+  IntColumn get reversalOfId => integer().nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
@@ -82,6 +97,8 @@ class JournalEntries extends Table {
 // جدول بنود القيود - Journal Entry Lines
 // ─────────────────────────────────────────────────────────────
 
+@TableIndex(name: 'idx_journal_entry_lines_entry', columns: {#entryId})
+@TableIndex(name: 'idx_journal_entry_lines_account', columns: {#accountId})
 class JournalEntryLines extends Table {
   IntColumn get id      => integer().autoIncrement()();
   IntColumn get entryId => integer().references(JournalEntries, #id)();
@@ -100,4 +117,23 @@ class JournalEntryLines extends Table {
 
   @override
   String get tableName => 'journal_entry_lines';
+}
+
+// ─────────────────────────────────────────────────────────────
+// جدول القوالب المخصصة - Entry Templates (Schema v2)
+// ─────────────────────────────────────────────────────────────
+
+class EntryTemplates extends Table {
+  IntColumn  get id          => integer().autoIncrement()();
+  TextColumn get name        => text().withLength(min: 1, max: 255)();
+  TextColumn get description => text().nullable()();
+  IntColumn  get type        => intEnum<EntryType>()();
+
+  /// بنود القالب مخزّنة كـ JSON
+  TextColumn get linesJson   => text()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  String get tableName => 'entry_templates';
 }

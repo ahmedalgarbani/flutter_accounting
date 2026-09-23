@@ -1,5 +1,6 @@
 /// journal_entry_line_model.dart
 /// نموذج بند القيد اليومي (Domain Model)
+library;
 
 import 'package:meta/meta.dart';
 
@@ -113,6 +114,31 @@ class JournalEntryLineModel {
       sortOrder:   sortOrder   ?? this.sortOrder,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'id':          id,
+        'entryId':     entryId,
+        'accountId':   accountId,
+        'accountCode': accountCode,
+        'accountName': accountName,
+        'debit':       debit,
+        'credit':      credit,
+        'description': description,
+        'sortOrder':   sortOrder,
+      };
+
+  factory JournalEntryLineModel.fromMap(Map<String, dynamic> map) =>
+      JournalEntryLineModel(
+        id:          map['id'] as int?,
+        entryId:     map['entryId'] as int?,
+        accountId:   map['accountId'] as int,
+        accountCode: (map['accountCode'] as String?) ?? '',
+        accountName: (map['accountName'] as String?) ?? '',
+        debit:       ((map['debit'] as num?) ?? 0).toDouble(),
+        credit:      ((map['credit'] as num?) ?? 0).toDouble(),
+        description: map['description'] as String?,
+        sortOrder:   (map['sortOrder'] as int?) ?? 0,
+      );
 
   @override
   bool operator ==(Object other) =>

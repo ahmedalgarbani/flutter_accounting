@@ -1,5 +1,10 @@
 /// accounting_period_model.dart
 /// نموذج الفترة المحاسبية (Domain Model)
+///
+/// ملاحظة: عند الحفظ تُطبَّع الفترة لتبدأ من بداية يوم [startDate]
+/// وتنتهي بنهاية يوم [endDate] (23:59:59)، لذا فإن
+/// `endDate: DateTime(2026, 12, 31)` يشمل كامل يوم 31 ديسمبر.
+library;
 
 import 'package:meta/meta.dart';
 
@@ -21,10 +26,35 @@ class AccountingPeriodModel {
     this.createdAt,
   });
 
+  /// هل الفترة مفتوحة للتسجيل؟
+  bool get isOpen => !isClosed;
+
+  /// هل يقع التاريخ ضمن الفترة؟ (المقارنة على مستوى اليوم: من بداية يوم
+  /// البداية حتى نهاية يوم النهاية)
   bool isDateInPeriod(DateTime date) {
-    return date.isAfter(startDate.subtract(const Duration(seconds: 1))) &&
-           date.isBefore(endDate.add(const Duration(seconds: 1)));
+    final start = DateTime(startDate.year, startDate.month, startDate.day);
+    final endExclusive = DateTime(endDate.year, endDate.month, endDate.day + 1);
+    return !date.isBefore(start) && date.isBefore(endExclusive);
   }
+
+  Map<String, dynamic> toMap() => {
+        'id':        id,
+        'name':      name,
+        'startDate': startDate.toIso8601String(),
+        'endDate':   endDate.toIso8601String(),
+        'isClosed':  isClosed,
+        'createdAt': createdAt?.toIso8601String(),
+      };
+
+  factory AccountingPeriodModel.fromMap(Map<String, dynamic> map) =>
+      AccountingPeriodModel(
+        id:        map['id'] as int?,
+        name:      map['name'] as String,
+        startDate: DateTime.parse(map['startDate'] as String),
+        endDate:   DateTime.parse(map['endDate'] as String),
+        isClosed:  (map['isClosed'] as bool?) ?? false,
+        createdAt: map['createdAt'] == null ? null : DateTime.parse(map['createdAt'] as String),
+      );
 
   AccountingPeriodModel copyWith({
     int? id,
@@ -53,4 +83,8 @@ class AccountingPeriodModel {
 
   @override
   int get hashCode => id.hashCode;
+
+  @override
+  String toString() =>
+      'AccountingPeriod(id: $id, name: $name, $startDate → $endDate, closed: $isClosed)';
 }

@@ -1,5 +1,8 @@
 /// mappers.dart
 /// التحويل بين نماذج Drift ونماذج الـ Domain
+library;
+
+import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:flutter_accounting/src/database/accounting_database.dart';
@@ -9,6 +12,10 @@ import '../../models/account_model.dart';
 import '../../models/accounting_period_model.dart';
 import '../../models/journal_entry_model.dart';
 import '../../models/journal_entry_line_model.dart';
+import '../../models/entry_template_model.dart';
+
+/// يحوّل النص الفارغ إلى null (الأعمدة الاختيارية لا تقبل نصاً فارغاً)
+String? _nullIfBlank(String? v) => (v == null || v.trim().isEmpty) ? null : v;
 
 
 // ─────────────────────────────────────────────────────────────
@@ -36,7 +43,7 @@ class AccountMapper {
         id:          model.id != null ? Value(model.id!) : const Value.absent(),
         code:        Value(model.code),
         name:        Value(model.name),
-        nameAr:      Value(model.nameAr),
+        nameAr:      Value(_nullIfBlank(model.nameAr)),
         type:        Value(model.type),
         parentId:    Value(model.parentId),
         isActive:    Value(model.isActive),
@@ -106,6 +113,10 @@ class JournalEntryMapper {
         createdBy:    data.createdBy,
         postedBy:     data.postedBy,
         postedAt:     data.postedAt,
+        entryType:    data.entryType,
+        sourceType:   data.sourceType,
+        sourceId:     data.sourceId,
+        reversalOfId: data.reversalOfId,
         createdAt:    data.createdAt,
         updatedAt:    data.updatedAt,
       );
@@ -116,12 +127,16 @@ class JournalEntryMapper {
         serialNumber: model.serialNumber != null ? Value(model.serialNumber!) : const Value.absent(),
         date:         Value(model.date),
         description:  Value(model.description),
-        reference:    Value(model.reference),
+        reference:    Value(_nullIfBlank(model.reference)),
         status:       Value(model.status),
         notes:        Value(model.notes),
         createdBy:    Value(model.createdBy),
         postedBy:     Value(model.postedBy),
         postedAt:     Value(model.postedAt),
+        entryType:    Value(model.entryType),
+        sourceType:   Value(_nullIfBlank(model.sourceType)),
+        sourceId:     Value(_nullIfBlank(model.sourceId)),
+        reversalOfId: Value(model.reversalOfId),
         updatedAt:    Value(DateTime.now()),
       );
 }
@@ -154,4 +169,34 @@ class AccountingPeriodMapper {
 
   static List<AccountingPeriodModel> fromDataList(List<AccountingPeriod> list) =>
       list.map(fromData).toList();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Entry Template Mapper
+// ─────────────────────────────────────────────────────────────
+
+class EntryTemplateMapper {
+  EntryTemplateMapper._();
+
+  static EntryTemplateModel fromData(EntryTemplate data) {
+    final decoded = jsonDecode(data.linesJson) as List;
+    return EntryTemplateModel(
+      id:          data.id,
+      name:        data.name,
+      description: data.description,
+      type:        data.type,
+      lines: decoded
+          .map((l) => EntryTemplateLineModel.fromMap(Map<String, dynamic>.from(l as Map)))
+          .toList(),
+    );
+  }
+
+  static EntryTemplatesCompanion toCompanion(EntryTemplateModel model) =>
+      EntryTemplatesCompanion(
+        id:          model.id != null ? Value(model.id!) : const Value.absent(),
+        name:        Value(model.name),
+        description: Value(model.description),
+        type:        Value(model.type),
+        linesJson:   Value(jsonEncode(model.lines.map((l) => l.toMap()).toList())),
+      );
 }

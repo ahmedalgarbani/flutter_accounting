@@ -1,5 +1,6 @@
 /// accounting_database.dart
 /// قاعدة بيانات Drift الرئيسية
+library;
 
 import 'dart:io';
 import 'package:drift/drift.dart';
@@ -11,18 +12,29 @@ import 'package:path/path.dart' as p;
 import 'tables/tables.dart';
 import 'daos/accounts_dao.dart';
 import 'daos/journal_entries_dao.dart';
+import 'daos/entry_templates_dao.dart';
 
 part 'accounting_database.g.dart';
 
 @DriftDatabase(
-  tables: [Accounts, JournalEntries, JournalEntryLines, AccountingPeriods],
-  daos: [AccountsDao, JournalEntriesDao],
+  tables: [
+    Accounts,
+    JournalEntries,
+    JournalEntryLines,
+    AccountingPeriods,
+    EntryTemplates,
+  ],
+  daos: [AccountsDao, JournalEntriesDao, EntryTemplatesDao],
 )
 class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  /// سجل الإصدارات:
+  /// - 1: الإصدار الأولي
+  /// - 2: نوع القيد، ربط المصدر (sourceType/sourceId)، ربط القيد العكسي،
+  ///      جدول القوالب المخصصة، وفهارس للأداء
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -31,7 +43,17 @@ class AccountingDatabase extends _$AccountingDatabase {
           // البيانات الأولية (اختياري): يمكن إضافة حسابات أساسية هنا
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // إضافة الترقيات المستقبلية هنا
+          if (from < 2) {
+            await m.addColumn(journalEntries, journalEntries.entryType);
+            await m.addColumn(journalEntries, journalEntries.sourceType);
+            await m.addColumn(journalEntries, journalEntries.sourceId);
+            await m.addColumn(journalEntries, journalEntries.reversalOfId);
+            await m.createTable(entryTemplates);
+            await m.createIndex(idxJournalEntriesDate);
+            await m.createIndex(idxJournalEntriesSource);
+            await m.createIndex(idxJournalEntryLinesEntry);
+            await m.createIndex(idxJournalEntryLinesAccount);
+          }
         },
         beforeOpen: (details) async {
           // تفعيل Foreign Keys في SQLite
@@ -44,11 +66,14 @@ class AccountingDatabase extends _$AccountingDatabase {
   // Factory: إنشاء قاعدة بيانات حقيقية على الجهاز
   // ─────────────────────────────────────────────────────────────
 
+  ///
+  /// [directory] مجلد مخصص لحفظ الملف (الافتراضي: مجلد مستندات التطبيق).
   static Future<AccountingDatabase> create({
     String databaseName = 'flutter_accounting.db',
+    String? directory,
   }) async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, databaseName));
+    final dbFolder = directory ?? (await getApplicationDocumentsDirectory()).path;
+    final file = File(p.join(dbFolder, databaseName));
     return AccountingDatabase(NativeDatabase.createInBackground(file));
   }
 
