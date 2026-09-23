@@ -11,7 +11,8 @@ Welcome! This document provides a comprehensive overview of the `flutter_account
 - **Double-Entry Validation**: Ensures `Σ Debits = Σ Credits` and prevents invalid financial states.
 - **Hierarchical Chart of Accounts**: Supports unlimited sub-accounts across 5 main types (Asset, Liability, Equity, Revenue, Expense).
 - **Journal Management**: Full lifecycle (Draft → Posted → Reversed).
-- **Financial Reports**: Built-in Trial Balance, Balance Sheet, and Income Statement.
+- **Financial Reports**: Built-in Trial Balance, Balance Sheet, Income Statement, account balances and account ledgers (statements).
+- **Integration helpers**: `JournalEntryBuilder`, `fa.record`, source-document linking, atomic transactions.
 - **Operation Templates**: Quick generation of entries for Sales, Purchases, and Vouchers.
 
 ---
@@ -48,38 +49,46 @@ The library is divided into clear layers to ensure logic purity and testability:
 ---
 
 ## 4. Key Repositories & APIs
+All accessed via `FlutterAccounting.instance` (or a `forTesting()` instance). Full reference: `README.md`; integration guide: `doc/INTEGRATION.md`.
 
-Access all features via `FlutterAccounting.instance`:
+### Top-level convenience (`FlutterAccounting`)
+- `record(JournalEntryBuilder, {post = true, postedBy})`: resolves account codes, validates, creates and posts atomically. **Preferred way to write entries.**
+- `reverseSource(sourceType, sourceId)`: reverses all posted entries linked to a host-app document (idempotent).
+- `transaction(() async {...})`: atomic multi-step operations.
 
 ### `accounts` (`IAccountRepository`)
-- `createAccount(AccountModel)`
-- `getAccountByCode(String code)`
-- `getChildAccounts(int parentId)`
-- `watchAllAccounts()` (Stream support)
+- `createAccount(AccountModel.create(...))`, `ensureAccount(code:, name:, type:, parentCode:)` (idempotent).
+- `getAccountByCode`, `getPostableAccounts({type})` (active leaf accounts), `searchAccounts`, `hasChildren`.
+- Tree rules: child type == parent type, no children under accounts with entries, no cycles.
 
 ### `journalEntries` (`IJournalEntryRepository`)
-- `createEntry(JournalEntryModel)`
-- `postEntry(int id)`: Validates and moves to ledger. **Crucial: Always post to affect reports.**
-- `reverseEntry(int id)`: Creates a matching entry with opposite amounts to cancel the original.
+- `createEntry` (draft), `createAndPost`, `postEntry(id)`, `reverseEntry(id)` (atomic, sets `reversalOfId`).
+- `updateEntry` / `deleteEntry`: drafts only; `updateEntry` never changes status.
+- Lookups: `getEntryBySerial`, `getEntriesByReference`, `getEntriesBySource(type, id)`, `watchAllEntries()`.
 
 ### `reports` (`IReportsRepository`)
-- `getTrialBalance({from, to})`
-- `getBalanceSheet({asOf})`
-- `getIncomeStatement({from, to})`
+- `getTrialBalance({from, to})`, `getBalanceSheet({asOf})`, `getIncomeStatement({from, to})`.
+- `getAccountBalance(id, {asOf, includeChildren})`, `getAccountLedger(id, {from, to})`.
+- Reports use posted + reversed entries only (drafts excluded); dates are day-inclusive.
+
+### `periods` (`IAccountingPeriodRepository`)
+- `createFiscalYear(year, {monthly})`, `ensureOpenPeriodFor(date)`, `closePeriod`, `reopenPeriod`.
+- By default every entry date must fall in an open period (`AccountingConfig.requireOpenPeriod`).
 
 ### `templates` (`IEntryTemplateRepository`)
-- `getStandardTemplates()`
-- `applyTemplate({template, accountIdMap, totalAmount})`: Returns a `JournalEntryModel`.
+- `getStandardTemplates()`, persisted `saveTemplate` / `getCustomTemplates` / `deleteTemplate`.
+- `applyTemplate({template, accountIdMap, totalAmount})`: Returns a draft `JournalEntryModel`.
 
 ---
 
 ## 5. Built-in Validation Rules
-The package strictly enforces these rules during the `postEntry` process:
-1. **Balance**: Debits must equal Credits exactly.
+Enforced on create, update, and post:
+1. **Balance**: Debits must equal Credits (tolerance 0.001).
 2. **Completeness**: At least one Debit line and one Credit line.
-3. **Non-Zero**: No lines with zero amount allowed.
-4. **Active Accounts**: All involved accounts must be marked as active.
-5. **Immutability**: Once `posted`, entries cannot be modified or deleted (must use `reverseEntry`).
+3. **Non-Zero / Non-Negative**: No zero or negative amounts.
+4. **Accounts**: Must exist, be active, and be leaf accounts.
+5. **Periods**: Date must be in an open period (configurable).
+6. **Immutability**: Once `posted`, entries cannot be modified or deleted (must use `reverseEntry`).
 
 ---
 
@@ -87,29 +96,28 @@ The package strictly enforces these rules during the `postEntry` process:
 
 ### Initialization
 ```dart
-final accounting = await FlutterAccounting.initialize();
-// Optional: Seed standard Chart of Accounts
-await AccountingSeedData.seed(accounting.accounts);
+final fa = await FlutterAccounting.initialize(seedDefaultAccounts: true);
+await fa.periods.ensureOpenPeriodFor(DateTime.now());
 ```
 
-### Creating a Template Entry (Sale)
+### Recording a business event
 ```dart
-final fa = FlutterAccounting.instance;
-final entry = await fa.templates.applyTemplate(
-  template: StandardTemplates.cashSale,
-  accountIdMap: {
-    'Cash/Bank Account': 1, 
-    'Sales Revenue Account': 41,
-  },
-  totalAmount: 500.0,
+await fa.record(
+  JournalEntryBuilder(description: 'Invoice 15')
+    .source('invoice', 15)
+    .type(EntryType.sale)
+    .debitCode('111', 1150)
+    .creditCode('41', 1000)
+    .creditCode('215', 150),
 );
-await fa.journalEntries.createEntry(entry);
+// Cancelling the invoice:
+await fa.reverseSource('invoice', 15);
 ```
 
 ### Generating a Report
 ```dart
 final report = await fa.reports.getIncomeStatement(
-  from: DateTime(2024, 1, 1),
+  from: DateTime(2026, 1, 1),
   to: DateTime.now(),
 );
 print("Net Profit: ${report.netIncome}");
@@ -118,7 +126,8 @@ print("Net Profit: ${report.netIncome}");
 ---
 
 ## 7. AI Implementation Tips
-- **Testing**: Use `FlutterAccounting.forTesting()` for an in-memory database during unit/integration tests.
-- **Patterns**: When creating UI for entries, always use `JournalEntryLineModel.debitLine()` and `creditLine()` factory constructors to avoid mixups.
-- **Errors**: Catch `AccountingException` and its subclasses (e.g., `UnbalancedEntryException`) to provide user feedback.
-- **Localization**: If the user is in an Arabic locale, prefer using `nameAr` from `AccountModel`.
+- **Testing**: Use `FlutterAccounting.forTesting()` and create a period (`fa.periods.createFiscalYear(year)`) before writing entries.
+- **Schema changes**: bump `schemaVersion`, add an `onUpgrade` step, regenerate with build_runner, and extend `test/migration_test.dart`.
+- **Enums** are stored by index: only append new values.
+- **Errors**: Catch `AccountingException` (sealed) and show `e.message` (Arabic).
+- **Localization**: Prefer `displayName` (Arabic when available) on accounts and report rows.
