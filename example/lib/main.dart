@@ -1,127 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_accounting/flutter_accounting.dart';
-import 'package:flutter_accounting/src/seed/accounting_seed_data.dart';
+
+import 'accounting_setup.dart';
+import 'sales_accounting_service.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/journal_screen.dart';
+import 'screens/ledger_screen.dart';
+import 'screens/reports_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Initialize the library
-  // This sets up the database and default chart of accounts (if first time)
-  final accounting = await FlutterAccounting.initialize();
+  // 1. تهيئة المكتبة + دليل الحسابات + الفترة المالية (مرة واحدة)
+  final fa = await setupAccounting();
 
-  // 2. Optionally seed default accounts
-  await AccountingSeedData.seed(accounting.accounts);
-
-  runApp(const MyApp());
+  runApp(AccountingExampleApp(service: SalesAccountingService(fa)));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AccountingExampleApp extends StatelessWidget {
+  const AccountingExampleApp({super.key, required this.service});
+
+  final SalesAccountingService service;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Accounting Example',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: const AccountingDashboard(),
+      builder: (context, child) =>
+          Directionality(textDirection: TextDirection.rtl, child: child!),
+      home: HomeShell(service: service),
     );
   }
 }
 
-class AccountingDashboard extends StatefulWidget {
-  const AccountingDashboard({super.key});
+class HomeShell extends StatefulWidget {
+  const HomeShell({super.key, required this.service});
+
+  final SalesAccountingService service;
 
   @override
-  State<AccountingDashboard> createState() => _AccountingDashboardState();
+  State<HomeShell> createState() => _HomeShellState();
 }
 
-class _AccountingDashboardState extends State<AccountingDashboard> {
-  final fa = FlutterAccounting.instance;
-  double totalAssets = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBalance();
-  }
-
-  Future<void> _loadBalance() async {
-    final report = await fa.reports.getBalanceSheet(asOf: DateTime.now());
-    if (mounted) {
-      setState(() {
-        totalAssets = report.totalAssets;
-      });
-    }
-  }
-
-  Future<void> _createQuickEntry() async {
-    try {
-      // Find cash and revenue accounts
-      final accounts = await fa.accounts.getAllAccounts();
-      final cashAcc = accounts.firstWhere((a) => a.code == '111'); // Cash
-      final salesAcc = accounts.firstWhere((a) => a.code == '41'); // Sales
-
-      // Create a simple journal entry: Debit Cash 100, Credit Sales 100
-      final entry = JournalEntryModel(
-        date: DateTime.now(),
-        description: 'Example Sale',
-        status: EntryStatus.posted,
-        lines: [
-          JournalEntryLineModel(
-            accountId: cashAcc.id!,
-            debit: 100,
-            credit: 0,
-            description: 'Received cash',
-          ),
-          JournalEntryLineModel(
-            accountId: salesAcc.id!,
-            debit: 0,
-            credit: 100,
-            description: 'Revenue recognized',
-          ),
-        ],
-      );
-
-      await fa.journalEntries.createEntry(entry);
-      await _loadBalance();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Entry created successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
+class _HomeShellState extends State<HomeShell> {
+  int _index = 0;
 
   @override
   Widget build(BuildContext context) {
+    final fa = FlutterAccounting.instance;
+    final pages = [
+      DashboardScreen(service: widget.service),
+      JournalScreen(fa: fa),
+      ReportsScreen(fa: fa),
+      LedgerScreen(fa: fa),
+    ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Accounting Dashboard')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Total Assets:', style: TextStyle(fontSize: 20)),
-            Text(
-              '\$${totalAssets.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _createQuickEntry,
-              icon: const Icon(Icons.add),
-              label: const Text('Add \$100 Sale Entry'),
-            ),
-          ],
-        ),
+      appBar: AppBar(title: const Text('مثال flutter_accounting')),
+      body: pages[_index],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.point_of_sale), label: 'العمليات'),
+          NavigationDestination(icon: Icon(Icons.receipt_long), label: 'القيود'),
+          NavigationDestination(icon: Icon(Icons.assessment), label: 'التقارير'),
+          NavigationDestination(icon: Icon(Icons.menu_book), label: 'كشف حساب'),
+        ],
       ),
     );
   }
