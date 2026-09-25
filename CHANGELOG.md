@@ -91,6 +91,8 @@ several accounting bugs in 0.3.0 produced wrong report figures.
   entry date, source, and line entry/account ids.
 
 ### Changed
+- **Minimum drift version raised to 2.31.0** to match the bundled generated database
+  code; this raises the minimum toolchain to Dart 3.5 / Flutter 3.24.
 - **Database schema v2** with automatic migration from v1 (new journal entry columns
   `entry_type`, `source_type`, `source_id`, `reversal_of_id`, table `entry_templates`, indexes).
 - `applyTemplate` throws `InvalidTemplateException` / `AccountNotFoundException` instead of

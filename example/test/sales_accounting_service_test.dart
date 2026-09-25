@@ -1,7 +1,11 @@
 import 'package:flutter_accounting/flutter_accounting.dart';
-import 'package:flutter_accounting_example/accounting_setup.dart';
-import 'package:flutter_accounting_example/sales_accounting_service.dart';
+
 import 'package:flutter_test/flutter_test.dart';
+
+// ignore: avoid_relative_lib_imports
+import '../lib/accounting_setup.dart';
+// ignore: avoid_relative_lib_imports
+import '../lib/sales_accounting_service.dart';
 
 void main() {
   late FlutterAccounting fa;

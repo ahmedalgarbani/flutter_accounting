@@ -1,5 +1,10 @@
 # flutter_accounting 📊
 
+**Offline double-entry accounting for Flutter** — chart of accounts, journal entries,
+posting and reversal, fiscal periods, account ledgers, and financial reports
+(Trial Balance, Balance Sheet, Income Statement), with accounting rules enforced in code.
+Works on Android, iOS, Windows, macOS, and Linux.
+
 **محرك محاسبي كامل (قيد مزدوج) لتطبيقات Flutter — يعمل أوفلاين.**
 
 ركّز على تطوير نظامك (مبيعات، مخازن، عيادة، مدرسة...) واترك المحاسبة للمكتبة:
@@ -69,10 +74,7 @@ await fa.record(
 ```yaml
 # pubspec.yaml
 dependencies:
-  flutter_accounting:
-    git:
-      url: https://github.com/ahmedalgarbani/flutter_accounting
-    # أو path: ../flutter_accounting
+  flutter_accounting: ^0.4.0
 ```
 
 المنصات المدعومة: Android, iOS, Windows, macOS, Linux (عبر `sqlite3_flutter_libs`).
@@ -626,4 +628,4 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## الترخيص
 
-MIT License © 2025
+MIT License © 2026

@@ -1,0 +1,16 @@
+# Development-only files that should not be published to pub.dev.
+# Note: when .pubignore exists, pub does not read .gitignore, so build
+# artifacts must be listed here too.
+AGENTS.md
+Ai/
+analysis_output.txt
+
+# Build and tooling artifacts
+build/
+.dart_tool/
+coverage/
+doc/api/
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/

@@ -3,8 +3,8 @@ description: An example for flutter_accounting package.
 publish_to: 'none'
 
 environment:
-  sdk: ^3.0.0
-  flutter: ">=3.3.0"
+  sdk: ^3.5.0
+  flutter: ">=3.24.0"
 
 dependencies:
   flutter:

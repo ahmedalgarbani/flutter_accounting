@@ -2486,8 +2486,8 @@ final class $$AccountsTableReferences
     extends BaseReferences<_$AccountingDatabase, $AccountsTable, Account> {
   $$AccountsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $AccountsTable _parentIdTable(_$AccountingDatabase db) =>
-      db.accounts.createAlias('accounts__parent_id__accounts__id');
+  static $AccountsTable _parentIdTable(_$AccountingDatabase db) => db.accounts
+      .createAlias($_aliasNameGenerator(db.accounts.parentId, db.accounts.id));
 
   $$AccountsTableProcessedTableManager? get parentId {
     final $_column = $_itemColumn<int>('parent_id');
@@ -2503,7 +2503,8 @@ final class $$AccountsTableReferences
   static MultiTypedResultKey<$JournalEntryLinesTable, List<JournalEntryLine>>
       _journalEntryLinesRefsTable(_$AccountingDatabase db) =>
           MultiTypedResultKey.fromTable(db.journalEntryLines,
-              aliasName: 'accounts__id__journal_entry_lines__account_id');
+              aliasName: $_aliasNameGenerator(
+                  db.accounts.id, db.journalEntryLines.accountId));
 
   $$JournalEntryLinesTableProcessedTableManager get journalEntryLinesRefs {
     final manager =
@@ -2817,10 +2818,8 @@ class $$AccountsTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable<$AccountsTable, Account>(table),
-                    $$AccountsTableReferences(db, table, e)
-                  ))
+              .map((e) =>
+                  (e.readTable(table), $$AccountsTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: (
               {parentId = false, journalEntryLinesRefs = false}) {
@@ -2936,7 +2935,8 @@ final class $$JournalEntriesTableReferences extends BaseReferences<
   static MultiTypedResultKey<$JournalEntryLinesTable, List<JournalEntryLine>>
       _journalEntryLinesRefsTable(_$AccountingDatabase db) =>
           MultiTypedResultKey.fromTable(db.journalEntryLines,
-              aliasName: 'journal_entries__id__journal_entry_lines__entry_id');
+              aliasName: $_aliasNameGenerator(
+                  db.journalEntries.id, db.journalEntryLines.entryId));
 
   $$JournalEntryLinesTableProcessedTableManager get journalEntryLinesRefs {
     final manager =
@@ -3270,7 +3270,7 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable<$JournalEntriesTable, JournalEntry>(table),
+                    e.readTable(table),
                     $$JournalEntriesTableReferences(db, table, e)
                   ))
               .toList(),
@@ -3342,8 +3342,8 @@ final class $$JournalEntryLinesTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $JournalEntriesTable _entryIdTable(_$AccountingDatabase db) =>
-      db.journalEntries
-          .createAlias('journal_entry_lines__entry_id__journal_entries__id');
+      db.journalEntries.createAlias($_aliasNameGenerator(
+          db.journalEntryLines.entryId, db.journalEntries.id));
 
   $$JournalEntriesTableProcessedTableManager get entryId {
     final $_column = $_itemColumn<int>('entry_id')!;
@@ -3357,7 +3357,8 @@ final class $$JournalEntryLinesTableReferences extends BaseReferences<
   }
 
   static $AccountsTable _accountIdTable(_$AccountingDatabase db) =>
-      db.accounts.createAlias('journal_entry_lines__account_id__accounts__id');
+      db.accounts.createAlias(
+          $_aliasNameGenerator(db.journalEntryLines.accountId, db.accounts.id));
 
   $$AccountsTableProcessedTableManager get accountId {
     final $_column = $_itemColumn<int>('account_id')!;
@@ -3628,8 +3629,7 @@ class $$JournalEntryLinesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable<$JournalEntryLinesTable, JournalEntryLine>(
-                        table),
+                    e.readTable(table),
                     $$JournalEntryLinesTableReferences(db, table, e)
                   ))
               .toList(),
@@ -3858,12 +3858,7 @@ class $$AccountingPeriodsTableTableManager extends RootTableManager<
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable<$AccountingPeriodsTable, AccountingPeriod>(
-                        table),
-                    BaseReferences<_$AccountingDatabase,
-                        $AccountingPeriodsTable, AccountingPeriod>(db, table, e)
-                  ))
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -4049,11 +4044,7 @@ class $$EntryTemplatesTableTableManager extends RootTableManager<
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable<$EntryTemplatesTable, EntryTemplate>(table),
-                    BaseReferences<_$AccountingDatabase, $EntryTemplatesTable,
-                        EntryTemplate>(db, table, e)
-                  ))
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
         ));
