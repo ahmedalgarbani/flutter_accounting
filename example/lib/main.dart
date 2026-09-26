@@ -66,9 +66,12 @@ class _HomeShellState extends State<HomeShell> {
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.point_of_sale), label: 'العمليات'),
-          NavigationDestination(icon: Icon(Icons.receipt_long), label: 'القيود'),
-          NavigationDestination(icon: Icon(Icons.assessment), label: 'التقارير'),
+          NavigationDestination(
+              icon: Icon(Icons.point_of_sale), label: 'العمليات'),
+          NavigationDestination(
+              icon: Icon(Icons.receipt_long), label: 'القيود'),
+          NavigationDestination(
+              icon: Icon(Icons.assessment), label: 'التقارير'),
           NavigationDestination(icon: Icon(Icons.menu_book), label: 'كشف حساب'),
         ],
       ),

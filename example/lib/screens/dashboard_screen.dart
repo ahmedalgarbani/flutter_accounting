@@ -34,7 +34,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _newInvoiceId() => DateTime.now().millisecondsSinceEpoch % 1000000;
 
   /// كل استدعاء للمكتبة يمر من هنا: أي خطأ محاسبي يُعرض برسالته العربية الجاهزة
-  Future<void> _run(String successMessage, Future<void> Function() action) async {
+  Future<void> _run(
+      String successMessage, Future<void> Function() action) async {
     try {
       await action();
       await _refresh();
@@ -63,36 +64,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(children: [
               const Text('رصيد الصندوق', style: TextStyle(fontSize: 18)),
               Text(_cash.toStringAsFixed(2),
-                  style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(
+                      fontSize: 40, fontWeight: FontWeight.bold)),
             ]),
           ),
         ),
         const SizedBox(height: 16),
-        _action(Icons.shopping_cart, 'فاتورة نقدية 1000 + ضريبة 150 (تكلفة 600)', () {
+        _action(
+            Icons.shopping_cart, 'فاتورة نقدية 1000 + ضريبة 150 (تكلفة 600)',
+            () {
           final id = _newInvoiceId();
           return _run('تم ترحيل الفاتورة $id', () async {
             await _service.onInvoiceCreated(
-              invoiceId: id, netAmount: 1000, vatAmount: 150, costAmount: 600, user: 'demo');
+                invoiceId: id,
+                netAmount: 1000,
+                vatAmount: 150,
+                costAmount: 600,
+                user: 'demo');
             _lastInvoiceId = id;
           });
         }),
         _action(Icons.person, 'فاتورة آجلة 500 لعميل', () {
           final id = _newInvoiceId();
           return _run('تم ترحيل الفاتورة الآجلة $id', () async {
-            await _service.onInvoiceCreated(invoiceId: id, netAmount: 500, paidInCash: false);
+            await _service.onInvoiceCreated(
+                invoiceId: id, netAmount: 500, paidInCash: false);
             _lastInvoiceId = id;
           });
         }),
         _action(Icons.payments, 'تحصيل 200 من العميل', () {
           return _run('تم تسجيل سند القبض', () async {
             await _service.onPaymentReceived(
-              paymentId: _newInvoiceId(), invoiceId: _lastInvoiceId ?? 0, amount: 200);
+                paymentId: _newInvoiceId(),
+                invoiceId: _lastInvoiceId ?? 0,
+                amount: 200);
           });
         }),
         _action(Icons.home_work, 'دفع إيجار 300', () {
           return _run('تم تسجيل سند الصرف', () async {
             await _service.onExpensePaid(
-              expenseCode: AppAccounts.rent, amount: 300, description: 'إيجار المحل');
+                expenseCode: AppAccounts.rent,
+                amount: 300,
+                description: 'إيجار المحل');
           });
         }),
         _action(Icons.cancel, 'إلغاء آخر فاتورة (قيد عكسي)', () {
@@ -124,7 +137,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: FilledButton.tonalIcon(
         onPressed: onTap,
         icon: Icon(icon),
-        label: Align(alignment: AlignmentDirectional.centerStart, child: Text(label)),
+        label: Align(
+            alignment: AlignmentDirectional.centerStart, child: Text(label)),
       ),
     );
   }

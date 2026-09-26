@@ -15,21 +15,30 @@ Future<FlutterAccounting> createTestAccounting({
 }
 
 AccountModel cashAccount() => AccountModel.create(
-      code: '111', name: 'Cash', nameAr: 'الصندوق', type: AccountType.asset);
+    code: '111', name: 'Cash', nameAr: 'الصندوق', type: AccountType.asset);
 
 AccountModel revenueAccount() => AccountModel.create(
-      code: '41', name: 'Sales Revenue', nameAr: 'إيرادات المبيعات', type: AccountType.revenue);
+    code: '41',
+    name: 'Sales Revenue',
+    nameAr: 'إيرادات المبيعات',
+    type: AccountType.revenue);
 
 AccountModel expenseAccount() => AccountModel.create(
-      code: '53', name: 'Rent Expense', nameAr: 'مصاريف الإيجار', type: AccountType.expense);
+    code: '53',
+    name: 'Rent Expense',
+    nameAr: 'مصاريف الإيجار',
+    type: AccountType.expense);
 
-JournalEntryModel saleEntry(int cashId, int revenueId, {double amount = 5000, DateTime? date}) =>
+JournalEntryModel saleEntry(int cashId, int revenueId,
+        {double amount = 5000, DateTime? date}) =>
     JournalEntryModel(
-      date:        date ?? DateTime.now(),
+      date: date ?? DateTime.now(),
       description: 'قيد مبيعات نقدية',
-      reference:   'INV-001',
+      reference: 'INV-001',
       lines: [
-        JournalEntryLineModel.debitLine(accountId: cashId, amount: amount, description: 'استلام نقدي'),
-        JournalEntryLineModel.creditLine(accountId: revenueId, amount: amount, description: 'إيراد مبيعات'),
+        JournalEntryLineModel.debitLine(
+            accountId: cashId, amount: amount, description: 'استلام نقدي'),
+        JournalEntryLineModel.creditLine(
+            accountId: revenueId, amount: amount, description: 'إيراد مبيعات'),
       ],
     );

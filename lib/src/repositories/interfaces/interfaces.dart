@@ -18,8 +18,8 @@ abstract class IAccountRepository {
   // القراءة
   Future<List<AccountModel>> getAllAccounts();
   Future<List<AccountModel>> getActiveAccounts();
-  Future<AccountModel?>      getAccountById(int id);
-  Future<AccountModel?>      getAccountByCode(String code);
+  Future<AccountModel?> getAccountById(int id);
+  Future<AccountModel?> getAccountByCode(String code);
   Future<List<AccountModel>> getAccountsByType(AccountType type);
   Future<List<AccountModel>> getChildAccounts(int parentId);
   Stream<List<AccountModel>> watchAllAccounts();
@@ -37,8 +37,8 @@ abstract class IAccountRepository {
   // الكتابة
   Future<AccountModel> createAccount(AccountModel account);
   Future<AccountModel> updateAccount(AccountModel account);
-  Future<void>         setAccountActive(int id, {required bool isActive});
-  Future<void>         deleteAccount(int id);
+  Future<void> setAccountActive(int id, {required bool isActive});
+  Future<void> deleteAccount(int id);
 
   /// يُعيد الحساب إن كان رمزه موجوداً، وإلا ينشئه.
   /// مفيد لتعريف حسابات نظامك عند بدء التطبيق دون تكرار.
@@ -55,7 +55,7 @@ abstract class IAccountRepository {
   });
 
   // إحصائيات
-  Future<int>  countAccounts();
+  Future<int> countAccounts();
 
   /// هل توجد بنود قيود (بأي حالة) على الحساب؟
   Future<bool> hasTransactions(int accountId);
@@ -68,18 +68,20 @@ abstract class IAccountRepository {
 abstract class IJournalEntryRepository {
   // القراءة
   Future<List<JournalEntryModel>> getAllEntries();
-  Future<JournalEntryModel?>      getEntryById(int id);
-  Future<JournalEntryModel?>      getEntryBySerial(String serialNumber);
+  Future<JournalEntryModel?> getEntryById(int id);
+  Future<JournalEntryModel?> getEntryBySerial(String serialNumber);
   Future<List<JournalEntryModel>> getEntriesByStatus(EntryStatus status);
 
   /// القيود بين تاريخين (شاملة لكامل يومَي البداية والنهاية)
-  Future<List<JournalEntryModel>> getEntriesInDateRange(DateTime from, DateTime to);
+  Future<List<JournalEntryModel>> getEntriesInDateRange(
+      DateTime from, DateTime to);
 
   /// القيود التي تحمل رقم مرجع معيّن
   Future<List<JournalEntryModel>> getEntriesByReference(String reference);
 
   /// القيود المرتبطة بمستند في نظامك (مثال: 'invoice', '15')
-  Future<List<JournalEntryModel>> getEntriesBySource(String sourceType, String sourceId);
+  Future<List<JournalEntryModel>> getEntriesBySource(
+      String sourceType, String sourceId);
 
   Stream<List<JournalEntryModel>> watchAllEntries();
 
@@ -89,13 +91,14 @@ abstract class IJournalEntryRepository {
 
   /// تعديل قيد مسودة (الحالة تبقى مسودة؛ للترحيل استخدم [postEntry])
   Future<JournalEntryModel> updateEntry(JournalEntryModel entry);
-  Future<void>              deleteEntry(int id);
+  Future<void> deleteEntry(int id);
 
   // ترحيل وعكس
   Future<JournalEntryModel> postEntry(int id, {String? postedBy});
 
   /// إنشاء القيد وترحيله في عملية ذرّية واحدة
-  Future<JournalEntryModel> createAndPost(JournalEntryModel entry, {String? postedBy});
+  Future<JournalEntryModel> createAndPost(JournalEntryModel entry,
+      {String? postedBy});
 
   /// إنشاء قيد عكسي مرحّل للقيد [id] وتعليم الأصلي كـ "معكوس" (عملية ذرّية)
   Future<JournalEntryModel> reverseEntry(
@@ -112,29 +115,30 @@ abstract class IJournalEntryRepository {
 
 abstract class IAccountingPeriodRepository {
   Future<List<AccountingPeriodModel>> getAllPeriods();
-  Future<AccountingPeriodModel?>      getPeriodById(int id);
-  Future<AccountingPeriodModel?>      getPeriodForDate(DateTime date);
+  Future<AccountingPeriodModel?> getPeriodById(int id);
+  Future<AccountingPeriodModel?> getPeriodForDate(DateTime date);
 
   /// إنشاء فترة (يُرفض التداخل مع فترة موجودة أو بداية بعد النهاية)
-  Future<AccountingPeriodModel>       createPeriod(AccountingPeriodModel period);
-  Future<AccountingPeriodModel>       updatePeriod(AccountingPeriodModel period);
+  Future<AccountingPeriodModel> createPeriod(AccountingPeriodModel period);
+  Future<AccountingPeriodModel> updatePeriod(AccountingPeriodModel period);
 
   /// إغلاق الفترة (يُرفض إن كانت تحتوي على مسودات)
-  Future<void>                        closePeriod(int id);
+  Future<void> closePeriod(int id);
 
   /// إعادة فتح فترة مغلقة
-  Future<void>                        reopenPeriod(int id);
+  Future<void> reopenPeriod(int id);
 
   /// حذف فترة لا تحتوي على قيود
-  Future<void>                        deletePeriod(int id);
+  Future<void> deletePeriod(int id);
 
   /// إنشاء سنة مالية كاملة كفترة واحدة، أو 12 فترة شهرية إن كان [monthly] = true.
   /// تُتجاهل الفترات الموجودة مسبقاً بنفس النطاق.
-  Future<List<AccountingPeriodModel>> createFiscalYear(int year, {bool monthly = false});
+  Future<List<AccountingPeriodModel>> createFiscalYear(int year,
+      {bool monthly = false});
 
   /// تُعيد الفترة المفتوحة التي تغطي [date]، وإن لم توجد فترة تُنشئ
   /// سنة مالية كاملة لسنة التاريخ.
-  Future<AccountingPeriodModel>       ensureOpenPeriodFor(DateTime date);
+  Future<AccountingPeriodModel> ensureOpenPeriodFor(DateTime date);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -143,9 +147,10 @@ abstract class IAccountingPeriodRepository {
 
 abstract class IReportsRepository {
   /// ميزان المراجعة. الافتراضي: من بداية السنة الحالية حتى اليوم.
-  Future<TrialBalanceReport>     getTrialBalance({DateTime? from, DateTime? to});
-  Future<BalanceSheetReport>     getBalanceSheet({required DateTime asOf});
-  Future<IncomeStatementReport>  getIncomeStatement({required DateTime from, required DateTime to});
+  Future<TrialBalanceReport> getTrialBalance({DateTime? from, DateTime? to});
+  Future<BalanceSheetReport> getBalanceSheet({required DateTime asOf});
+  Future<IncomeStatementReport> getIncomeStatement(
+      {required DateTime from, required DateTime to});
 
   /// رصيد حساب بالاتجاه الطبيعي (موجب = رصيد طبيعي).
   /// [includeChildren] يجمع أرصدة الحسابات الفرعية (مفيد للحسابات الرئيسية).

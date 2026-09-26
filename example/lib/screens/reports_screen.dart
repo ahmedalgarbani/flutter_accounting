@@ -12,7 +12,8 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  late Future<(TrialBalanceReport, IncomeStatementReport, BalanceSheetReport)> _future;
+  late Future<(TrialBalanceReport, IncomeStatementReport, BalanceSheetReport)>
+      _future;
 
   @override
   void initState() {
@@ -20,7 +21,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
     _future = _load();
   }
 
-  Future<(TrialBalanceReport, IncomeStatementReport, BalanceSheetReport)> _load() async {
+  Future<(TrialBalanceReport, IncomeStatementReport, BalanceSheetReport)>
+      _load() async {
     final now = DateTime.now();
     final yearStart = DateTime(now.year, 1, 1);
     return (
@@ -37,28 +39,38 @@ class _ReportsScreenState extends State<ReportsScreen> {
       child: FutureBuilder(
         future: _future,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
           final (tb, income, bs) = snapshot.data!;
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               _section('ميزان المراجعة', [
                 for (final r in tb.rows)
-                  _row('${r.accountCode} ${r.displayName}',
-                      r.isDebitBalance ? 'مدين ${_f(r.debitBalance)}' : 'دائن ${_f(r.creditBalance)}'),
-                _row('الإجمالي', '${_f(tb.totalDebitBalances)} / ${_f(tb.totalCreditBalances)}', bold: true),
+                  _row(
+                      '${r.accountCode} ${r.displayName}',
+                      r.isDebitBalance
+                          ? 'مدين ${_f(r.debitBalance)}'
+                          : 'دائن ${_f(r.creditBalance)}'),
+                _row('الإجمالي',
+                    '${_f(tb.totalDebitBalances)} / ${_f(tb.totalCreditBalances)}',
+                    bold: true),
                 _row('متوازن؟', tb.isBalanced ? '✅' : '❌'),
               ]),
               _section('قائمة الدخل', [
                 _row('الإيرادات', _f(income.totalRevenue)),
                 _row('المصروفات', _f(income.totalExpenses)),
-                _row(income.isProfitable ? 'صافي الربح' : 'صافي الخسارة', _f(income.netIncome), bold: true),
+                _row(income.isProfitable ? 'صافي الربح' : 'صافي الخسارة',
+                    _f(income.netIncome),
+                    bold: true),
               ]),
               _section('الميزانية العمومية', [
                 _row('الأصول', _f(bs.totalAssets)),
                 _row('الخصوم', _f(bs.totalLiabilities)),
                 _row('حقوق الملكية (شاملة الأرباح)', _f(bs.totalEquity)),
-                _row('أصول = خصوم + حقوق ملكية؟', bs.isBalanced ? '✅' : '❌', bold: true),
+                _row('أصول = خصوم + حقوق ملكية؟', bs.isBalanced ? '✅' : '❌',
+                    bold: true),
               ]),
             ],
           );
@@ -73,8 +85,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
         margin: const EdgeInsets.only(bottom: 16),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(title,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const Divider(),
             ...children,
           ]),

@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.0] - 2026-09-23
+## [0.4.1] - 2026-09-23
 
 A correctness and integration release. **Upgrading is strongly recommended**:
 several accounting bugs in 0.3.0 produced wrong report figures.

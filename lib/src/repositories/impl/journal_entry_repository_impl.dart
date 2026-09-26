@@ -53,7 +53,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   }
 
   @override
-  Future<List<JournalEntryModel>> getEntriesByStatus(EntryStatus status) async =>
+  Future<List<JournalEntryModel>> getEntriesByStatus(
+          EntryStatus status) async =>
       _buildAllWithLines(await _entriesDao.getEntriesByStatus(status));
 
   @override
@@ -66,7 +67,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       );
 
   @override
-  Future<List<JournalEntryModel>> getEntriesByReference(String reference) async =>
+  Future<List<JournalEntryModel>> getEntriesByReference(
+          String reference) async =>
       _buildAllWithLines(await _entriesDao.getEntriesByReference(reference));
 
   @override
@@ -74,7 +76,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     String sourceType,
     String sourceId,
   ) async =>
-      _buildAllWithLines(await _entriesDao.getEntriesBySource(sourceType, sourceId));
+      _buildAllWithLines(
+          await _entriesDao.getEntriesBySource(sourceType, sourceId));
 
   @override
   Stream<List<JournalEntryModel>> watchAllEntries() =>
@@ -113,7 +116,7 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     final serial = entry.serialNumber ??
         await _entriesDao.generateNextSerialNumber(
           entry.date,
-          prefix:  _config.serialPrefix,
+          prefix: _config.serialPrefix,
           padding: _config.serialPadding,
         );
 
@@ -125,9 +128,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     final isPosted = entry.status == EntryStatus.posted;
     final toSave = entry.copyWith(
       serialNumber: serial,
-      postedAt:     isPosted ? (entry.postedAt ?? now) : null,
-      createdAt:    now,
-      updatedAt:    now,
+      postedAt: isPosted ? (entry.postedAt ?? now) : null,
+      createdAt: now,
+      updatedAt: now,
     );
 
     final lines = _withSortOrder(entry.lines);
@@ -154,20 +157,20 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       // الحالة والرقم التسلسلي وبيانات الترحيل لا تتغير عبر التعديل
       // (الترحيل يتم فقط عبر postEntry كي لا تُتجاوز قواعده)
       final updated = JournalEntryModel(
-        id:           existing.id,
+        id: existing.id,
         serialNumber: existing.serialNumber,
-        date:         entry.date,
-        description:  entry.description,
-        reference:    entry.reference,
-        status:       EntryStatus.draft,
-        lines:        _withSortOrder(entry.lines),
-        notes:        entry.notes,
-        createdBy:    existing.createdBy ?? entry.createdBy,
-        entryType:    entry.entryType,
-        sourceType:   entry.sourceType,
-        sourceId:     entry.sourceId,
-        createdAt:    existing.createdAt,
-        updatedAt:    DateTime.now(),
+        date: entry.date,
+        description: entry.description,
+        reference: entry.reference,
+        status: EntryStatus.draft,
+        lines: _withSortOrder(entry.lines),
+        notes: entry.notes,
+        createdBy: existing.createdBy ?? entry.createdBy,
+        entryType: entry.entryType,
+        sourceType: entry.sourceType,
+        sourceId: entry.sourceId,
+        createdAt: existing.createdAt,
+        updatedAt: DateTime.now(),
       );
 
       // التحقق من القواعد المحاسبية والفترة
@@ -216,9 +219,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
 
       final now = DateTime.now();
       final updated = entry.copyWith(
-        status:    EntryStatus.posted,
-        postedBy:  postedBy,
-        postedAt:  now,
+        status: EntryStatus.posted,
+        postedBy: postedBy,
+        postedAt: now,
         updatedAt: now,
       );
 
@@ -248,27 +251,28 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       final reversalLines = [
         for (final line in original.lines)
           JournalEntryLineModel(
-            accountId:   line.accountId,
+            accountId: line.accountId,
             accountCode: line.accountCode,
             accountName: line.accountName,
-            debit:       line.credit, // مبادلة
-            credit:      line.debit,  // مبادلة
+            debit: line.credit, // مبادلة
+            credit: line.debit, // مبادلة
             description: line.description,
-            sortOrder:   line.sortOrder,
+            sortOrder: line.sortOrder,
           ),
       ];
 
       final created = await _insert(JournalEntryModel(
-        date:         reversalDate ?? DateTime.now(),
-        description:  description ?? 'عكس: ${original.description}',
-        reference:    original.reference != null ? 'REV-${original.reference}' : null,
-        status:       EntryStatus.posted,
-        postedBy:     postedBy,
-        lines:        reversalLines,
-        notes:        'قيد عكسي للقيد رقم ${original.serialNumber ?? original.id}',
-        entryType:    EntryType.reversal,
-        sourceType:   original.sourceType,
-        sourceId:     original.sourceId,
+        date: reversalDate ?? DateTime.now(),
+        description: description ?? 'عكس: ${original.description}',
+        reference:
+            original.reference != null ? 'REV-${original.reference}' : null,
+        status: EntryStatus.posted,
+        postedBy: postedBy,
+        lines: reversalLines,
+        notes: 'قيد عكسي للقيد رقم ${original.serialNumber ?? original.id}',
+        entryType: EntryType.reversal,
+        sourceType: original.sourceType,
+        sourceId: original.sourceId,
         reversalOfId: original.id,
       ));
 
@@ -290,7 +294,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   }
 
   /// يضمن ترتيب البنود كما أُدخلت إن لم يُحدَّد sortOrder
-  List<JournalEntryLineModel> _withSortOrder(List<JournalEntryLineModel> lines) {
+  List<JournalEntryLineModel> _withSortOrder(
+      List<JournalEntryLineModel> lines) {
     final allZero = lines.every((l) => l.sortOrder == 0);
     if (!allZero) return lines;
     return [
@@ -305,7 +310,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     return JournalEntryMapper.fromData(data, lines: lines);
   }
 
-  Future<List<JournalEntryModel>> _buildAllWithLines(List<JournalEntry> entries) async {
+  Future<List<JournalEntryModel>> _buildAllWithLines(
+      List<JournalEntry> entries) async {
     final linesByEntry =
         await _entriesDao.getLinesForEntries(entries.map((e) => e.id).toList());
     return [
@@ -326,7 +332,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     // 2. التحقق من الفترة المحاسبية (Period Control)
     final period = await _entriesDao.getPeriodForDate(entry.date);
     if (period == null) {
-      if (_config.requireOpenPeriod) throw DateOutsidePeriodException(entry.date);
+      if (_config.requireOpenPeriod) {
+        throw DateOutsidePeriodException(entry.date);
+      }
       return;
     }
     if (period.isClosed) {

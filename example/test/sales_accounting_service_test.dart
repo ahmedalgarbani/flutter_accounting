@@ -20,12 +20,16 @@ void main() {
 
   tearDown(() => fa.dispose());
 
-  Future<double> balance(String code) async =>
-      fa.reports.getAccountBalance((await fa.accounts.getAccountByCode(code))!.id!);
+  Future<double> balance(String code) async => fa.reports
+      .getAccountBalance((await fa.accounts.getAccountByCode(code))!.id!);
 
   test('دورة فاتورة كاملة: بيع، تحصيل، إلغاء', () async {
     await service.onInvoiceCreated(
-      invoiceId: 1, netAmount: 1000, vatAmount: 150, costAmount: 600, paidInCash: false);
+        invoiceId: 1,
+        netAmount: 1000,
+        vatAmount: 150,
+        costAmount: 600,
+        paidInCash: false);
 
     expect(await balance(AppAccounts.customers), 1150);
     expect(await balance(AppAccounts.vatPayable), 150);

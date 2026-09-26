@@ -13,7 +13,7 @@ class JournalEntryModel {
   final String? serialNumber; // رقم القيد المتسلسل (Unique)
   final DateTime date;
   final String description;
-  final String? reference;     // رقم المرجع (فاتورة، سند، ...)
+  final String? reference; // رقم المرجع (فاتورة، سند، ...)
   final EntryStatus status;
   final List<JournalEntryLineModel> lines;
   final String? notes;
@@ -61,15 +61,15 @@ class JournalEntryModel {
   // خصائص مشتقة
   // ─────────────────────────────────────────────────────────────
 
-  double get totalDebits  => lines.fold(0, (s, l) => s + l.debit);
+  double get totalDebits => lines.fold(0, (s, l) => s + l.debit);
   double get totalCredits => lines.fold(0, (s, l) => s + l.credit);
-  bool   get isBalanced   => (totalDebits - totalCredits).abs() < 0.001;
-  bool   get isEditable   => status.isEditable;
-  bool   get isPosted     => status.isPosted;
-  bool   get isReversed   => status == EntryStatus.reversed;
+  bool get isBalanced => (totalDebits - totalCredits).abs() < 0.001;
+  bool get isEditable => status.isEditable;
+  bool get isPosted => status.isPosted;
+  bool get isReversed => status == EntryStatus.reversed;
 
   /// هل هذا القيد قيد عكسي لقيد آخر؟
-  bool   get isReversal   => reversalOfId != null;
+  bool get isReversal => reversalOfId != null;
 
   /// يتحقق من صحة القيد ويرفع استثناءً في حال وجود خطأ (Double-Entry rules)
   void validate() {
@@ -99,23 +99,23 @@ class JournalEntryModel {
     String? serialNumber,
   }) {
     return JournalEntryModel(
-      id:           id           ?? this.id,
+      id: id ?? this.id,
       serialNumber: serialNumber ?? this.serialNumber,
-      date:         date         ?? this.date,
-      description:  description  ?? this.description,
-      reference:    reference    ?? this.reference,
-      status:       status       ?? this.status,
-      lines:        lines        ?? this.lines,
-      notes:        notes        ?? this.notes,
-      createdBy:    createdBy    ?? this.createdBy,
-      postedBy:     postedBy     ?? this.postedBy,
-      postedAt:     postedAt     ?? this.postedAt,
-      entryType:    entryType    ?? this.entryType,
-      sourceType:   sourceType   ?? this.sourceType,
-      sourceId:     sourceId     ?? this.sourceId,
+      date: date ?? this.date,
+      description: description ?? this.description,
+      reference: reference ?? this.reference,
+      status: status ?? this.status,
+      lines: lines ?? this.lines,
+      notes: notes ?? this.notes,
+      createdBy: createdBy ?? this.createdBy,
+      postedBy: postedBy ?? this.postedBy,
+      postedAt: postedAt ?? this.postedAt,
+      entryType: entryType ?? this.entryType,
+      sourceType: sourceType ?? this.sourceType,
+      sourceId: sourceId ?? this.sourceId,
       reversalOfId: reversalOfId ?? this.reversalOfId,
-      createdAt:    createdAt    ?? this.createdAt,
-      updatedAt:    updatedAt    ?? this.updatedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -124,50 +124,52 @@ class JournalEntryModel {
   // ─────────────────────────────────────────────────────────────
 
   Map<String, dynamic> toMap() => {
-        'id':           id,
+        'id': id,
         'serialNumber': serialNumber,
-        'date':         date.toIso8601String(),
-        'description':  description,
-        'reference':    reference,
-        'status':       status.name,
-        'notes':        notes,
-        'createdBy':    createdBy,
-        'postedBy':     postedBy,
-        'postedAt':     postedAt?.toIso8601String(),
-        'entryType':    entryType?.name,
-        'sourceType':   sourceType,
-        'sourceId':     sourceId,
+        'date': date.toIso8601String(),
+        'description': description,
+        'reference': reference,
+        'status': status.name,
+        'notes': notes,
+        'createdBy': createdBy,
+        'postedBy': postedBy,
+        'postedAt': postedAt?.toIso8601String(),
+        'entryType': entryType?.name,
+        'sourceType': sourceType,
+        'sourceId': sourceId,
         'reversalOfId': reversalOfId,
-        'createdAt':    createdAt?.toIso8601String(),
-        'updatedAt':    updatedAt?.toIso8601String(),
-        'lines':        lines.map((l) => l.toMap()).toList(),
+        'createdAt': createdAt?.toIso8601String(),
+        'updatedAt': updatedAt?.toIso8601String(),
+        'lines': lines.map((l) => l.toMap()).toList(),
       };
 
   factory JournalEntryModel.fromMap(Map<String, dynamic> map) {
-    DateTime? parseDate(Object? v) => v == null ? null : DateTime.parse(v as String);
+    DateTime? parseDate(Object? v) =>
+        v == null ? null : DateTime.parse(v as String);
     return JournalEntryModel(
-      id:           map['id'] as int?,
+      id: map['id'] as int?,
       serialNumber: map['serialNumber'] as String?,
-      date:         DateTime.parse(map['date'] as String),
-      description:  map['description'] as String,
-      reference:    map['reference'] as String?,
-      status:       map['status'] == null
+      date: DateTime.parse(map['date'] as String),
+      description: map['description'] as String,
+      reference: map['reference'] as String?,
+      status: map['status'] == null
           ? EntryStatus.draft
           : EntryStatus.values.byName(map['status'] as String),
-      notes:        map['notes'] as String?,
-      createdBy:    map['createdBy'] as String?,
-      postedBy:     map['postedBy'] as String?,
-      postedAt:     parseDate(map['postedAt']),
-      entryType:    map['entryType'] == null
+      notes: map['notes'] as String?,
+      createdBy: map['createdBy'] as String?,
+      postedBy: map['postedBy'] as String?,
+      postedAt: parseDate(map['postedAt']),
+      entryType: map['entryType'] == null
           ? null
           : EntryType.values.byName(map['entryType'] as String),
-      sourceType:   map['sourceType'] as String?,
-      sourceId:     map['sourceId'] as String?,
+      sourceType: map['sourceType'] as String?,
+      sourceId: map['sourceId'] as String?,
       reversalOfId: map['reversalOfId'] as int?,
-      createdAt:    parseDate(map['createdAt']),
-      updatedAt:    parseDate(map['updatedAt']),
+      createdAt: parseDate(map['createdAt']),
+      updatedAt: parseDate(map['updatedAt']),
       lines: ((map['lines'] as List?) ?? const [])
-          .map((l) => JournalEntryLineModel.fromMap(Map<String, dynamic>.from(l as Map)))
+          .map((l) => JournalEntryLineModel.fromMap(
+              Map<String, dynamic>.from(l as Map)))
           .toList(),
     );
   }

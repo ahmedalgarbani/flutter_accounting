@@ -9,16 +9,16 @@ import 'package:flutter_accounting/flutter_accounting.dart';
 /// رموز الحسابات التي يستخدمها التطبيق (من دليل الحسابات الافتراضي).
 /// ضعها في مكان واحد كي لا تنتشر الأرقام السحرية في الكود.
 abstract final class AppAccounts {
-  static const cash            = '111'; // الصندوق
-  static const bank            = '112'; // البنك
-  static const customers       = '113'; // العملاء (مدينون)
-  static const inventory       = '115'; // المخزون
-  static const suppliers       = '211'; // الموردون (دائنون)
-  static const vatPayable      = '215'; // الضريبة المستحقة
-  static const capital         = '31';  // رأس المال
-  static const sales           = '41';  // المبيعات
-  static const costOfGoodsSold = '51';  // تكلفة البضاعة المباعة
-  static const rent            = '53';  // الإيجار
+  static const cash = '111'; // الصندوق
+  static const bank = '112'; // البنك
+  static const customers = '113'; // العملاء (مدينون)
+  static const inventory = '115'; // المخزون
+  static const suppliers = '211'; // الموردون (دائنون)
+  static const vatPayable = '215'; // الضريبة المستحقة
+  static const capital = '31'; // رأس المال
+  static const sales = '41'; // المبيعات
+  static const costOfGoodsSold = '51'; // تكلفة البضاعة المباعة
+  static const rent = '53'; // الإيجار
 }
 
 Future<FlutterAccounting> setupAccounting() async {

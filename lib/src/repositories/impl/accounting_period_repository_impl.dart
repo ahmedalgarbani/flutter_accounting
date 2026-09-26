@@ -16,8 +16,18 @@ class AccountingPeriodRepositoryImpl implements IAccountingPeriodRepository {
   AccountingPeriodRepositoryImpl(this._entriesDao);
 
   static const _monthNamesAr = [
-    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
   ];
 
   @override
@@ -39,7 +49,8 @@ class AccountingPeriodRepositoryImpl implements IAccountingPeriodRepository {
   }
 
   @override
-  Future<AccountingPeriodModel> createPeriod(AccountingPeriodModel period) async {
+  Future<AccountingPeriodModel> createPeriod(
+      AccountingPeriodModel period) async {
     final normalized = await _validate(period);
     final id = await _entriesDao.insertPeriod(
       AccountingPeriodMapper.toCompanion(normalized),
@@ -48,7 +59,8 @@ class AccountingPeriodRepositoryImpl implements IAccountingPeriodRepository {
   }
 
   @override
-  Future<AccountingPeriodModel> updatePeriod(AccountingPeriodModel period) async {
+  Future<AccountingPeriodModel> updatePeriod(
+      AccountingPeriodModel period) async {
     if (period.id == null) throw const PeriodNotFoundException(-1);
     final existing = await _getOrThrow(period.id!);
 
@@ -59,13 +71,16 @@ class AccountingPeriodRepositoryImpl implements IAccountingPeriodRepository {
     final boundsChanged = normalized.startDate != existing.startDate ||
         normalized.endDate != existing.endDate;
     if (boundsChanged &&
-        await _entriesDao.countEntriesInRange(existing.startDate, existing.endDate) > 0) {
+        await _entriesDao.countEntriesInRange(
+                existing.startDate, existing.endDate) >
+            0) {
       throw const InvalidPeriodException(
         'لا يمكن تغيير حدود فترة تحتوي على قيود.',
       );
     }
 
-    await _entriesDao.updatePeriod(AccountingPeriodMapper.toCompanion(normalized));
+    await _entriesDao
+        .updatePeriod(AccountingPeriodMapper.toCompanion(normalized));
     return normalized;
   }
 
@@ -98,7 +113,9 @@ class AccountingPeriodRepositoryImpl implements IAccountingPeriodRepository {
   @override
   Future<void> deletePeriod(int id) async {
     final period = await _getOrThrow(id);
-    if (await _entriesDao.countEntriesInRange(period.startDate, period.endDate) > 0) {
+    if (await _entriesDao.countEntriesInRange(
+            period.startDate, period.endDate) >
+        0) {
       throw const PeriodHasEntriesException();
     }
     await _entriesDao.deletePeriod(id);
@@ -183,7 +200,7 @@ class AccountingPeriodRepositoryImpl implements IAccountingPeriodRepository {
 
     final normalized = period.copyWith(
       startDate: startOfDay(period.startDate),
-      endDate:   endOfDay(period.endDate),
+      endDate: endOfDay(period.endDate),
     );
 
     if (normalized.endDate.isBefore(normalized.startDate)) {

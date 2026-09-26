@@ -1,6 +1,7 @@
 /// accounting_test.dart
 /// اختبارات شاملة للمكتبة المحاسبية
 library;
+
 ///
 /// التشغيل:
 /// ```bash
@@ -34,7 +35,7 @@ void main() {
     test('إنشاء حساب جديد بنجاح', () async {
       final account = await fa.accounts.createAccount(cashAccount());
 
-      expect(account.id,   isNotNull);
+      expect(account.id, isNotNull);
       expect(account.code, '111');
       expect(account.type, AccountType.asset);
       expect(account.normalBalance, NormalBalance.debit);
@@ -50,11 +51,11 @@ void main() {
     });
 
     test('الرصيد الطبيعي صحيح لكل نوع حساب', () {
-      expect(AccountType.asset.normalBalance,     NormalBalance.debit);
-      expect(AccountType.expense.normalBalance,   NormalBalance.debit);
+      expect(AccountType.asset.normalBalance, NormalBalance.debit);
+      expect(AccountType.expense.normalBalance, NormalBalance.debit);
       expect(AccountType.liability.normalBalance, NormalBalance.credit);
-      expect(AccountType.equity.normalBalance,    NormalBalance.credit);
-      expect(AccountType.revenue.normalBalance,   NormalBalance.credit);
+      expect(AccountType.equity.normalBalance, NormalBalance.credit);
+      expect(AccountType.revenue.normalBalance, NormalBalance.credit);
     });
 
     test('حذف حساب بدون قيود', () async {
@@ -63,7 +64,7 @@ void main() {
     });
 
     test('رفض حذف حساب يحتوي على قيود', () async {
-      final cash    = await fa.accounts.createAccount(cashAccount());
+      final cash = await fa.accounts.createAccount(cashAccount());
       final revenue = await fa.accounts.createAccount(revenueAccount());
 
       // إنشاء قيد يستخدم حساب الصندوق
@@ -160,7 +161,7 @@ void main() {
         JournalEntryLineModel.creditLine(accountId: 3, amount: 1000),
       ];
 
-      expect(AccountingValidator.totalDebits(lines),  1000);
+      expect(AccountingValidator.totalDebits(lines), 1000);
       expect(AccountingValidator.totalCredits(lines), 1000);
     });
   });
@@ -173,9 +174,9 @@ void main() {
     late int revenueId;
 
     setUp(() async {
-      final cash    = await fa.accounts.createAccount(cashAccount());
+      final cash = await fa.accounts.createAccount(cashAccount());
       final revenue = await fa.accounts.createAccount(revenueAccount());
-      cashId    = cash.id!;
+      cashId = cash.id!;
       revenueId = revenue.id!;
     });
 
@@ -184,22 +185,24 @@ void main() {
         saleEntry(cashId, revenueId),
       );
 
-      expect(entry.id,     isNotNull);
+      expect(entry.id, isNotNull);
       expect(entry.status, EntryStatus.draft);
-      expect(entry.lines,  hasLength(2));
+      expect(entry.lines, hasLength(2));
       expect(entry.isBalanced, isTrue);
     });
 
     test('ترحيل القيد بنجاح', () async {
-      final draft  = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
+      final draft =
+          await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
       final posted = await fa.journalEntries.postEntry(draft.id!);
 
-      expect(posted.status,   EntryStatus.posted);
+      expect(posted.status, EntryStatus.posted);
       expect(posted.isPosted, isTrue);
     });
 
     test('رفض تعديل القيد المرحّل', () async {
-      final draft  = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
+      final draft =
+          await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
       final posted = await fa.journalEntries.postEntry(draft.id!);
 
       expect(
@@ -209,7 +212,8 @@ void main() {
     });
 
     test('رفض حذف القيد المرحّل', () async {
-      final draft = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
+      final draft =
+          await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
       await fa.journalEntries.postEntry(draft.id!);
 
       expect(
@@ -219,18 +223,20 @@ void main() {
     });
 
     test('القيد العكسي يُنشئ قيداً جديداً ويعكس البنود', () async {
-      final draft    = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
-      final posted   = await fa.journalEntries.postEntry(draft.id!);
+      final draft =
+          await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
+      final posted = await fa.journalEntries.postEntry(draft.id!);
       final reversal = await fa.journalEntries.reverseEntry(posted.id!);
 
       // القيد العكسي يجب أن يكون متوازناً
       expect(reversal.isBalanced, isTrue);
-      expect(reversal.status,     EntryStatus.posted);
+      expect(reversal.status, EntryStatus.posted);
       expect(reversal.description, contains('عكس'));
 
       // بنود القيد العكسي تكون معكوسة
-      final origDebit  = posted.lines.firstWhere((l) => l.isDebit);
-      final revCredit  = reversal.lines.firstWhere((l) => l.isCredit && l.accountId == origDebit.accountId);
+      final origDebit = posted.lines.firstWhere((l) => l.isDebit);
+      final revCredit = reversal.lines
+          .firstWhere((l) => l.isCredit && l.accountId == origDebit.accountId);
       expect(revCredit.credit, origDebit.debit);
 
       // الحالة الأصلية تصبح "معكوس"
@@ -239,7 +245,8 @@ void main() {
     });
 
     test('رفض الترحيل على حساب غير نشط', () async {
-      final draft = await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
+      final draft =
+          await fa.journalEntries.createEntry(saleEntry(cashId, revenueId));
       await fa.accounts.setAccountActive(cashId, isActive: false);
 
       expect(
@@ -254,12 +261,13 @@ void main() {
   // ═══════════════════════════════════════════════════════════════
   group('ReportsRepository', () {
     setUp(() async {
-      final cash     = await fa.accounts.createAccount(cashAccount());
-      final revenue  = await fa.accounts.createAccount(revenueAccount());
+      final cash = await fa.accounts.createAccount(cashAccount());
+      final revenue = await fa.accounts.createAccount(revenueAccount());
       final expenses = await fa.accounts.createAccount(expenseAccount());
 
       // قيد مبيعات: صندوق مدين / إيرادات دائن - 5000
-      final sale = await fa.journalEntries.createEntry(saleEntry(cash.id!, revenue.id!));
+      final sale =
+          await fa.journalEntries.createEntry(saleEntry(cash.id!, revenue.id!));
       await fa.journalEntries.postEntry(sale.id!);
 
       // قيد مصاريف: مصاريف مدين / صندوق دائن - 2000
@@ -268,7 +276,8 @@ void main() {
           date: DateTime.now(),
           description: 'دفع مصاريف إيجار',
           lines: [
-            JournalEntryLineModel.debitLine(accountId: expenses.id!, amount: 2000),
+            JournalEntryLineModel.debitLine(
+                accountId: expenses.id!, amount: 2000),
             JournalEntryLineModel.creditLine(accountId: cash.id!, amount: 2000),
           ],
         ),
@@ -284,13 +293,13 @@ void main() {
     test('قائمة الدخل: صافي الربح صحيح', () async {
       final report = await fa.reports.getIncomeStatement(
         from: DateTime(2000),
-        to:   DateTime(2100),
+        to: DateTime(2100),
       );
 
-      expect(report.totalRevenue,  5000);
+      expect(report.totalRevenue, 5000);
       expect(report.totalExpenses, 2000);
-      expect(report.netIncome,     3000);
-      expect(report.isProfitable,  isTrue);
+      expect(report.netIncome, 3000);
+      expect(report.isProfitable, isTrue);
     });
 
     test('الميزانية العمومية متوازنة', () async {

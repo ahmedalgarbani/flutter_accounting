@@ -74,7 +74,8 @@ class AccountRepositoryImpl implements IAccountRepository {
   }
 
   @override
-  Future<bool> hasChildren(int accountId) => _accountsDao.hasChildren(accountId);
+  Future<bool> hasChildren(int accountId) =>
+      _accountsDao.hasChildren(accountId);
 
   // ─────────────────────────────────────────────────────────────
   // الكتابة مع قواعد العمل
@@ -104,10 +105,11 @@ class AccountRepositoryImpl implements IAccountRepository {
       level = parent.level + 1;
     }
 
-    final now       = DateTime.now();
-    final withLevel = account.copyWith(level: level, createdAt: now, updatedAt: now);
+    final now = DateTime.now();
+    final withLevel =
+        account.copyWith(level: level, createdAt: now, updatedAt: now);
     final companion = AccountMapper.toCompanion(withLevel);
-    final id        = await _accountsDao.insertAccount(companion);
+    final id = await _accountsDao.insertAccount(companion);
 
     return withLevel.copyWith(id: id);
   }
@@ -135,7 +137,8 @@ class AccountRepositoryImpl implements IAccountRepository {
     int level = 1;
     if (account.parentId != null) {
       if (account.parentId == account.id) {
-        throw const InvalidAccountHierarchyException('لا يمكن أن يكون الحساب أباً لنفسه.');
+        throw const InvalidAccountHierarchyException(
+            'لا يمكن أن يكون الحساب أباً لنفسه.');
       }
       final descendants = await _accountsDao.getDescendantIds(account.id!);
       if (descendants.contains(account.parentId)) {
@@ -155,7 +158,7 @@ class AccountRepositoryImpl implements IAccountRepository {
       level = parent.level + 1;
     }
 
-    final updated   = account.copyWith(level: level, updatedAt: DateTime.now());
+    final updated = account.copyWith(level: level, updatedAt: DateTime.now());
     final companion = AccountMapper.toCompanion(updated);
 
     await _accountsDao.transaction(() async {
@@ -195,11 +198,11 @@ class AccountRepositoryImpl implements IAccountRepository {
     }
 
     return createAccount(AccountModel.create(
-      code:        code,
-      name:        name,
-      nameAr:      nameAr,
-      type:        type,
-      parentId:    resolvedParentId,
+      code: code,
+      name: name,
+      nameAr: nameAr,
+      type: type,
+      parentId: resolvedParentId,
       description: description,
     ));
   }

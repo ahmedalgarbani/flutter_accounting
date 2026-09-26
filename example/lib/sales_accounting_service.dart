@@ -26,7 +26,8 @@ class SalesAccountingService {
     String? user,
   }) {
     final total = netAmount + vatAmount;
-    final entry = JournalEntryBuilder(description: 'فاتورة مبيعات رقم $invoiceId')
+    final entry = JournalEntryBuilder(
+            description: 'فاتورة مبيعات رقم $invoiceId')
         .reference('INV-$invoiceId')
         .type(paidInCash ? EntryType.sale : EntryType.saleAgil)
         .source(_invoice, invoiceId)
@@ -81,7 +82,8 @@ class SalesAccountingService {
   }
 
   /// إلغاء فاتورة: يعكس كل قيودها المرحّلة (آمن للاستدعاء أكثر من مرة)
-  Future<List<JournalEntryModel>> onInvoiceCancelled(int invoiceId, {String? user}) =>
+  Future<List<JournalEntryModel>> onInvoiceCancelled(int invoiceId,
+          {String? user}) =>
       _fa.reverseSource(_invoice, invoiceId, postedBy: user);
 
   /// رصيد الصندوق الحالي

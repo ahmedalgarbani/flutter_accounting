@@ -18,10 +18,13 @@ void main() {
 
   group('AccountRepository - شجرة الحسابات', () {
     test('المستوى يُحسب تلقائياً', () async {
-      final root = await fa.accounts.createAccount(
-        AccountModel.create(code: '1', name: 'Assets', type: AccountType.asset));
-      final child = await fa.accounts.createAccount(
-        AccountModel.create(code: '11', name: 'Current', type: AccountType.asset, parentId: root.id));
+      final root = await fa.accounts.createAccount(AccountModel.create(
+          code: '1', name: 'Assets', type: AccountType.asset));
+      final child = await fa.accounts.createAccount(AccountModel.create(
+          code: '11',
+          name: 'Current',
+          type: AccountType.asset,
+          parentId: root.id));
       expect(root.level, 1);
       expect(child.level, 2);
       expect(root.isRoot, isTrue);
@@ -30,32 +33,38 @@ void main() {
     });
 
     test('رفض حساب فرعي بنوع مختلف عن الأب', () async {
-      final root = await fa.accounts.createAccount(
-        AccountModel.create(code: '1', name: 'Assets', type: AccountType.asset));
+      final root = await fa.accounts.createAccount(AccountModel.create(
+          code: '1', name: 'Assets', type: AccountType.asset));
       await expectLater(
         fa.accounts.createAccount(AccountModel.create(
-          code: '11', name: 'X', type: AccountType.revenue, parentId: root.id)),
+            code: '11',
+            name: 'X',
+            type: AccountType.revenue,
+            parentId: root.id)),
         throwsA(isA<AccountTypeMismatchException>()),
       );
     });
 
     test('رفض إضافة حساب فرعي تحت حساب عليه قيود', () async {
       final cash = await fa.accounts.createAccount(cashAccount());
-      final rev  = await fa.accounts.createAccount(revenueAccount());
+      final rev = await fa.accounts.createAccount(revenueAccount());
       await fa.journalEntries.createEntry(saleEntry(cash.id!, rev.id!));
 
       await expectLater(
         fa.accounts.createAccount(AccountModel.create(
-          code: '1111', name: 'Sub cash', type: AccountType.asset, parentId: cash.id)),
+            code: '1111',
+            name: 'Sub cash',
+            type: AccountType.asset,
+            parentId: cash.id)),
         throwsA(isA<ParentAccountHasTransactionsException>()),
       );
     });
 
     test('رفض جعل الحساب أباً لنفسه أو لأحد أسلافه', () async {
       final a = await fa.accounts.createAccount(
-        AccountModel.create(code: '1', name: 'A', type: AccountType.asset));
-      final b = await fa.accounts.createAccount(
-        AccountModel.create(code: '11', name: 'B', type: AccountType.asset, parentId: a.id));
+          AccountModel.create(code: '1', name: 'A', type: AccountType.asset));
+      final b = await fa.accounts.createAccount(AccountModel.create(
+          code: '11', name: 'B', type: AccountType.asset, parentId: a.id));
 
       await expectLater(fa.accounts.updateAccount(a.copyWith(parentId: a.id)),
           throwsA(isA<InvalidAccountHierarchyException>()));
@@ -64,9 +73,12 @@ void main() {
     });
 
     test('نقل حساب يعيد حساب مستويات الأبناء', () async {
-      final a  = await fa.accounts.createAccount(AccountModel.create(code: '1', name: 'A', type: AccountType.asset));
-      final b  = await fa.accounts.createAccount(AccountModel.create(code: '2', name: 'B', type: AccountType.asset));
-      final b1 = await fa.accounts.createAccount(AccountModel.create(code: '21', name: 'B1', type: AccountType.asset, parentId: b.id));
+      final a = await fa.accounts.createAccount(
+          AccountModel.create(code: '1', name: 'A', type: AccountType.asset));
+      final b = await fa.accounts.createAccount(
+          AccountModel.create(code: '2', name: 'B', type: AccountType.asset));
+      final b1 = await fa.accounts.createAccount(AccountModel.create(
+          code: '21', name: 'B1', type: AccountType.asset, parentId: b.id));
 
       final moved = await fa.accounts.updateAccount(b.copyWith(parentId: a.id));
       expect(moved.level, 2);
@@ -75,7 +87,7 @@ void main() {
 
     test('رفض تغيير نوع حساب عليه قيود', () async {
       final cash = await fa.accounts.createAccount(cashAccount());
-      final rev  = await fa.accounts.createAccount(revenueAccount());
+      final rev = await fa.accounts.createAccount(revenueAccount());
       await fa.journalEntries.createEntry(saleEntry(cash.id!, rev.id!));
 
       await expectLater(
@@ -86,7 +98,7 @@ void main() {
 
     test('رفض حذف حساب عليه مسودة (بدلاً من خطأ SQLite)', () async {
       final cash = await fa.accounts.createAccount(cashAccount());
-      final rev  = await fa.accounts.createAccount(revenueAccount());
+      final rev = await fa.accounts.createAccount(revenueAccount());
       await fa.journalEntries.createEntry(saleEntry(cash.id!, rev.id!));
 
       await expectLater(fa.accounts.deleteAccount(cash.id!),
@@ -95,11 +107,17 @@ void main() {
 
     test('ensureAccount لا يكرر الحساب ويدعم parentCode', () async {
       final parent = await fa.accounts.ensureAccount(
-        code: '113', name: 'Customers', type: AccountType.asset);
+          code: '113', name: 'Customers', type: AccountType.asset);
       final c1 = await fa.accounts.ensureAccount(
-        code: '113001', name: 'Customer Ali', type: AccountType.asset, parentCode: '113');
+          code: '113001',
+          name: 'Customer Ali',
+          type: AccountType.asset,
+          parentCode: '113');
       final again = await fa.accounts.ensureAccount(
-        code: '113001', name: 'ignored', type: AccountType.asset, parentCode: '113');
+          code: '113001',
+          name: 'ignored',
+          type: AccountType.asset,
+          parentCode: '113');
 
       expect(c1.parentId, parent.id);
       expect(again.id, c1.id);
@@ -107,16 +125,21 @@ void main() {
     });
 
     test('getPostableAccounts يعيد الحسابات النهائية النشطة فقط', () async {
-      await fa.accounts.ensureAccount(code: '1', name: 'Assets', type: AccountType.asset);
-      await fa.accounts.ensureAccount(code: '111', name: 'Cash', type: AccountType.asset, parentCode: '1');
-      final bank = await fa.accounts.ensureAccount(code: '112', name: 'Bank', type: AccountType.asset, parentCode: '1');
-      await fa.accounts.ensureAccount(code: '41', name: 'Sales', type: AccountType.revenue);
+      await fa.accounts
+          .ensureAccount(code: '1', name: 'Assets', type: AccountType.asset);
+      await fa.accounts.ensureAccount(
+          code: '111', name: 'Cash', type: AccountType.asset, parentCode: '1');
+      final bank = await fa.accounts.ensureAccount(
+          code: '112', name: 'Bank', type: AccountType.asset, parentCode: '1');
+      await fa.accounts
+          .ensureAccount(code: '41', name: 'Sales', type: AccountType.revenue);
       await fa.accounts.setAccountActive(bank.id!, isActive: false);
 
       final all = await fa.accounts.getPostableAccounts();
       expect(all.map((a) => a.code), ['111', '41']);
 
-      final assets = await fa.accounts.getPostableAccounts(type: AccountType.asset);
+      final assets =
+          await fa.accounts.getPostableAccounts(type: AccountType.asset);
       expect(assets.map((a) => a.code), ['111']);
     });
 
@@ -148,7 +171,9 @@ void main() {
     test('رفض الفترات المتداخلة', () async {
       await expectLater(
         fa.periods.createPeriod(AccountingPeriodModel(
-          name: 'x', startDate: DateTime(DateTime.now().year, 6, 1), endDate: DateTime(DateTime.now().year + 1, 1, 31))),
+            name: 'x',
+            startDate: DateTime(DateTime.now().year, 6, 1),
+            endDate: DateTime(DateTime.now().year + 1, 1, 31))),
         throwsA(isA<PeriodOverlapException>()),
       );
     });
@@ -156,35 +181,43 @@ void main() {
     test('رفض فترة تبدأ بعد نهايتها', () async {
       await expectLater(
         fa.periods.createPeriod(AccountingPeriodModel(
-          name: 'x', startDate: DateTime(2040, 2, 1), endDate: DateTime(2040, 1, 1))),
+            name: 'x',
+            startDate: DateTime(2040, 2, 1),
+            endDate: DateTime(2040, 1, 1))),
         throwsA(isA<InvalidPeriodException>()),
       );
     });
 
     test('يوم نهاية الفترة مشمول بالكامل', () async {
       await fa.periods.createPeriod(AccountingPeriodModel(
-        name: 'Q1 2040', startDate: DateTime(2040, 1, 1), endDate: DateTime(2040, 3, 31)));
-      final p = await fa.periods.getPeriodForDate(DateTime(2040, 3, 31, 22, 15));
+          name: 'Q1 2040',
+          startDate: DateTime(2040, 1, 1),
+          endDate: DateTime(2040, 3, 31)));
+      final p =
+          await fa.periods.getPeriodForDate(DateTime(2040, 3, 31, 22, 15));
       expect(p, isNotNull);
       expect(p!.isDateInPeriod(DateTime(2040, 3, 31, 22, 15)), isTrue);
     });
 
     test('رفض القيد في فترة مغلقة، والسماح بعد إعادة الفتح', () async {
       final cash = await fa.accounts.createAccount(cashAccount());
-      final rev  = await fa.accounts.createAccount(revenueAccount());
+      final rev = await fa.accounts.createAccount(revenueAccount());
       final period = (await fa.periods.getPeriodForDate(DateTime.now()))!;
 
       await fa.periods.closePeriod(period.id!);
-      await expectLater(fa.journalEntries.createEntry(saleEntry(cash.id!, rev.id!)),
+      await expectLater(
+          fa.journalEntries.createEntry(saleEntry(cash.id!, rev.id!)),
           throwsA(isA<PeriodClosedException>()));
 
       await fa.periods.reopenPeriod(period.id!);
-      await expectLater(fa.journalEntries.createEntry(saleEntry(cash.id!, rev.id!)), completes);
+      await expectLater(
+          fa.journalEntries.createEntry(saleEntry(cash.id!, rev.id!)),
+          completes);
     });
 
     test('رفض إغلاق فترة بها مسودات', () async {
       final cash = await fa.accounts.createAccount(cashAccount());
-      final rev  = await fa.accounts.createAccount(revenueAccount());
+      final rev = await fa.accounts.createAccount(revenueAccount());
       await fa.journalEntries.createEntry(saleEntry(cash.id!, rev.id!));
       final period = (await fa.periods.getPeriodForDate(DateTime.now()))!;
 
@@ -194,7 +227,7 @@ void main() {
 
     test('رفض حذف فترة بها قيود', () async {
       final cash = await fa.accounts.createAccount(cashAccount());
-      final rev  = await fa.accounts.createAccount(revenueAccount());
+      final rev = await fa.accounts.createAccount(revenueAccount());
       await fa.journalEntries.createEntry(saleEntry(cash.id!, rev.id!));
       final period = (await fa.periods.getPeriodForDate(DateTime.now()))!;
 
@@ -204,12 +237,13 @@ void main() {
 
     test('requireOpenPeriod: false يسمح بالقيود بدون فترات', () async {
       final simple = FlutterAccounting.forTesting(
-        config: const AccountingConfig(requireOpenPeriod: false));
+          config: const AccountingConfig(requireOpenPeriod: false));
       addTearDown(simple.dispose);
       final cash = await simple.accounts.createAccount(cashAccount());
-      final rev  = await simple.accounts.createAccount(revenueAccount());
+      final rev = await simple.accounts.createAccount(revenueAccount());
       await expectLater(
-        simple.journalEntries.createAndPost(saleEntry(cash.id!, rev.id!)), completes);
+          simple.journalEntries.createAndPost(saleEntry(cash.id!, rev.id!)),
+          completes);
     });
 
     test('ensureOpenPeriodFor ينشئ السنة المالية عند الحاجة', () async {
@@ -226,9 +260,12 @@ void main() {
         name: 'بيع مع ضريبة',
         type: EntryType.sale,
         lines: [
-          EntryTemplateLineModel(isDebit: true,  label: 'الصندوق', defaultRatio: 1.15),
-          EntryTemplateLineModel(isDebit: false, label: 'المبيعات', defaultRatio: 1.0),
-          EntryTemplateLineModel(isDebit: false, label: 'الضريبة', defaultRatio: 0.15),
+          EntryTemplateLineModel(
+              isDebit: true, label: 'الصندوق', defaultRatio: 1.15),
+          EntryTemplateLineModel(
+              isDebit: false, label: 'المبيعات', defaultRatio: 1.0),
+          EntryTemplateLineModel(
+              isDebit: false, label: 'الضريبة', defaultRatio: 0.15),
         ],
       ));
       expect(saved.id, isNotNull);
@@ -244,10 +281,12 @@ void main() {
     test('رفض قالب غير متوازن', () async {
       await expectLater(
         fa.templates.saveTemplate(const EntryTemplateModel(
-          name: 'x', type: EntryType.sale,
+          name: 'x',
+          type: EntryType.sale,
           lines: [
-            EntryTemplateLineModel(isDebit: true,  label: 'a', defaultRatio: 1),
-            EntryTemplateLineModel(isDebit: false, label: 'b', defaultRatio: 0.5),
+            EntryTemplateLineModel(isDebit: true, label: 'a', defaultRatio: 1),
+            EntryTemplateLineModel(
+                isDebit: false, label: 'b', defaultRatio: 0.5),
           ],
         )),
         throwsA(isA<InvalidTemplateException>()),
@@ -256,11 +295,14 @@ void main() {
 
     test('تطبيق قالب قياسي ثم ترحيله', () async {
       final cash = await fa.accounts.createAccount(cashAccount());
-      final rev  = await fa.accounts.createAccount(revenueAccount());
+      final rev = await fa.accounts.createAccount(revenueAccount());
 
       final draft = await fa.templates.applyTemplate(
         template: StandardTemplates.cashSale,
-        accountIdMap: {'Cash/Bank Account': cash.id!, 'Sales Revenue Account': rev.id!},
+        accountIdMap: {
+          'Cash/Bank Account': cash.id!,
+          'Sales Revenue Account': rev.id!
+        },
         totalAmount: 400,
       );
       expect(draft.entryType, EntryType.sale);
@@ -270,11 +312,14 @@ void main() {
 
     test('تطبيق قالب بحساب من نوع خاطئ', () async {
       final cash = await fa.accounts.createAccount(cashAccount());
-      final rev  = await fa.accounts.createAccount(revenueAccount());
+      final rev = await fa.accounts.createAccount(revenueAccount());
       await expectLater(
         fa.templates.applyTemplate(
           template: StandardTemplates.cashSale,
-          accountIdMap: {'Cash/Bank Account': rev.id!, 'Sales Revenue Account': cash.id!},
+          accountIdMap: {
+            'Cash/Bank Account': rev.id!,
+            'Sales Revenue Account': cash.id!
+          },
           totalAmount: 400,
         ),
         throwsA(isA<InvalidTemplateException>()),

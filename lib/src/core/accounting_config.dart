@@ -33,7 +33,7 @@ class AccountingConfig {
   }) =>
       AccountingConfig(
         requireOpenPeriod: requireOpenPeriod ?? this.requireOpenPeriod,
-        serialPrefix:      serialPrefix      ?? this.serialPrefix,
-        serialPadding:     serialPadding     ?? this.serialPadding,
+        serialPrefix: serialPrefix ?? this.serialPrefix,
+        serialPadding: serialPadding ?? this.serialPadding,
       );
 }

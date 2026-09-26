@@ -116,14 +116,14 @@ class StandardTemplates {
 
   /// قائمة بجميع القوالب القياسية
   static List<EntryTemplateModel> get all => [
-    cashSale,
-    cashPurchase,
-    creditSale,
-    creditPurchase,
-    paymentVoucher,
-    receiptVoucher,
-    journalEntry,
-  ];
+        cashSale,
+        cashPurchase,
+        creditSale,
+        creditPurchase,
+        paymentVoucher,
+        receiptVoucher,
+        journalEntry,
+      ];
 
   /// قالب قيد عام (القيد الشهير)
   static const EntryTemplateModel journalEntry = EntryTemplateModel(

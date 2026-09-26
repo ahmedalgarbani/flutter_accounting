@@ -64,7 +64,8 @@ class EntryTemplateRepositoryImpl implements IEntryTemplateRepository {
   }) async {
     _validateTemplate(template);
     if (totalAmount <= 0) {
-      throw const InvalidTemplateException('المبلغ الإجمالي يجب أن يكون أكبر من صفر.');
+      throw const InvalidTemplateException(
+          'المبلغ الإجمالي يجب أن يكون أكبر من صفر.');
     }
 
     final List<JournalEntryLineModel> lines = [];
@@ -75,7 +76,8 @@ class EntryTemplateRepositoryImpl implements IEntryTemplateRepository {
       // الأولوية للحساب المختار في الخريطة، ثم الحساب الثابت في القالب
       final accountId = accountIdMap[tLine.label] ?? tLine.accountId;
       if (accountId == null) {
-        throw InvalidTemplateException('لم يتم اختيار حساب للبند "${tLine.label}".');
+        throw InvalidTemplateException(
+            'لم يتم اختيار حساب للبند "${tLine.label}".');
       }
 
       final account = await _accountRepo.getAccountById(accountId);
@@ -90,22 +92,22 @@ class EntryTemplateRepositoryImpl implements IEntryTemplateRepository {
       final amount = _round(totalAmount * tLine.defaultRatio);
 
       lines.add(JournalEntryLineModel(
-        accountId:   account.id!,
+        accountId: account.id!,
         accountCode: account.code,
         accountName: account.nameAr ?? account.name,
-        debit:       tLine.isDebit ? amount : 0,
-        credit:      tLine.isDebit ? 0 : amount,
+        debit: tLine.isDebit ? amount : 0,
+        credit: tLine.isDebit ? 0 : amount,
         description: tLine.label,
-        sortOrder:   i,
+        sortOrder: i,
       ));
     }
 
     return JournalEntryModel(
-      date:        date ?? DateTime.now(),
+      date: date ?? DateTime.now(),
       description: description ?? template.name,
-      reference:   reference,
-      entryType:   template.type,
-      lines:       lines,
+      reference: reference,
+      entryType: template.type,
+      lines: lines,
     );
   }
 
@@ -120,7 +122,8 @@ class EntryTemplateRepositoryImpl implements IEntryTemplateRepository {
       );
     }
     if (template.lines.any((l) => l.defaultRatio <= 0)) {
-      throw const InvalidTemplateException('نسب البنود يجب أن تكون أكبر من صفر.');
+      throw const InvalidTemplateException(
+          'نسب البنود يجب أن تكون أكبر من صفر.');
     }
     if (!template.isBalanced) {
       throw const InvalidTemplateException(
@@ -129,7 +132,8 @@ class EntryTemplateRepositoryImpl implements IEntryTemplateRepository {
     }
     final labels = template.lines.map((l) => l.label).toList();
     if (labels.toSet().length != labels.length) {
-      throw const InvalidTemplateException('تسميات بنود القالب يجب أن تكون فريدة.');
+      throw const InvalidTemplateException(
+          'تسميات بنود القالب يجب أن تكون فريدة.');
     }
   }
 

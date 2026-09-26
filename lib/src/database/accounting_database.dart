@@ -30,6 +30,7 @@ class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase(super.e);
 
   @override
+
   /// سجل الإصدارات:
   /// - 1: الإصدار الأولي
   /// - 2: نوع القيد، ربط المصدر (sourceType/sourceId)، ربط القيد العكسي،
@@ -72,7 +73,8 @@ class AccountingDatabase extends _$AccountingDatabase {
     String databaseName = 'flutter_accounting.db',
     String? directory,
   }) async {
-    final dbFolder = directory ?? (await getApplicationDocumentsDirectory()).path;
+    final dbFolder =
+        directory ?? (await getApplicationDocumentsDirectory()).path;
     final file = File(p.join(dbFolder, databaseName));
     return AccountingDatabase(NativeDatabase.createInBackground(file));
   }

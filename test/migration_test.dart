@@ -24,12 +24,20 @@ void main() {
       for (final sql in _v1Schema) {
         raw.execute(sql);
       }
-      raw.execute("INSERT INTO accounts (id, code, name, type) VALUES (1, '111', 'Cash', 0), (2, '41', 'Sales', 3)");
-      raw.execute('INSERT INTO accounting_periods (name, start_date, end_date) VALUES (?, ?, ?)',
-          ['2024', _epoch(DateTime(2024)), _epoch(DateTime(2024, 12, 31, 23, 59, 59))]);
-      raw.execute('INSERT INTO journal_entries (id, serial_number, date, description, status) VALUES (1, ?, ?, ?, 1)',
+      raw.execute(
+          "INSERT INTO accounts (id, code, name, type) VALUES (1, '111', 'Cash', 0), (2, '41', 'Sales', 3)");
+      raw.execute(
+          'INSERT INTO accounting_periods (name, start_date, end_date) VALUES (?, ?, ?)',
+          [
+            '2024',
+            _epoch(DateTime(2024)),
+            _epoch(DateTime(2024, 12, 31, 23, 59, 59))
+          ]);
+      raw.execute(
+          'INSERT INTO journal_entries (id, serial_number, date, description, status) VALUES (1, ?, ?, ?, 1)',
           ['JV-2024-0001', _epoch(DateTime(2024, 5, 1)), 'old sale']);
-      raw.execute('INSERT INTO journal_entry_lines (entry_id, account_id, debit, credit) VALUES (1, 1, 100, 0), (1, 2, 0, 100)');
+      raw.execute(
+          'INSERT INTO journal_entry_lines (entry_id, account_id, debit, credit) VALUES (1, 1, 100, 0), (1, 2, 0, 100)');
       raw.userVersion = 1;
     });
 
@@ -44,15 +52,20 @@ void main() {
     expect(await fa.reports.getAccountBalance(1), 100);
 
     // الأعمدة والجداول الجديدة تعمل
-    final e = await fa.record(JournalEntryBuilder(description: 'new', date: DateTime(2024, 6, 1))
-        .source('invoice', 1).debit(1, 5).credit(2, 5));
+    final e = await fa.record(
+        JournalEntryBuilder(description: 'new', date: DateTime(2024, 6, 1))
+            .source('invoice', 1)
+            .debit(1, 5)
+            .credit(2, 5));
     expect(e.serialNumber, 'JV-2024-0002');
-    expect((await fa.journalEntries.getEntriesBySource('invoice', '1')), hasLength(1));
+    expect((await fa.journalEntries.getEntriesBySource('invoice', '1')),
+        hasLength(1));
 
     await fa.templates.saveTemplate(StandardTemplates.cashSale);
     expect(await fa.templates.getCustomTemplates(), hasLength(1));
 
-    final version = await fa.database.customSelect('PRAGMA user_version').getSingle();
+    final version =
+        await fa.database.customSelect('PRAGMA user_version').getSingle();
     expect(version.data.values.first, 2);
   });
 }

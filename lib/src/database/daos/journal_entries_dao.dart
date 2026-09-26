@@ -17,8 +17,7 @@ class EntryLineWithAccount {
   EntryLineWithAccount({required this.line, required this.account});
 }
 
-@DriftAccessor(
-    tables: [
+@DriftAccessor(tables: [
   JournalEntries,
   JournalEntryLines,
   Accounts,
@@ -162,11 +161,10 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
           .get();
 
   /// القيد العكسي لقيد أصلي (إن وُجد)
-  Future<JournalEntry?> getReversalOf(int originalId) =>
-      (select(journalEntries)
-            ..where((t) => t.reversalOfId.equals(originalId))
-            ..limit(1))
-          .getSingleOrNull();
+  Future<JournalEntry?> getReversalOf(int originalId) => (select(journalEntries)
+        ..where((t) => t.reversalOfId.equals(originalId))
+        ..limit(1))
+      .getSingleOrNull();
 
   Future<List<JournalEntry>> getEntriesByStatus(EntryStatus status) =>
       (select(journalEntries)
@@ -235,7 +233,8 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
       for (final row in await query.get()) {
         final line = row.readTable(journalEntryLines);
         result.putIfAbsent(line.entryId, () => []).add(
-              EntryLineWithAccount(line: line, account: row.readTable(accounts)),
+              EntryLineWithAccount(
+                  line: line, account: row.readTable(accounts)),
             );
       }
     }
@@ -427,15 +426,15 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
 
     return result
         .map((row) => LedgerLineRow(
-              entryId:         row.read<int>('entry_id'),
-              serialNumber:    row.read<String>('serial_number'),
-              date:            row.read<DateTime>('date'),
+              entryId: row.read<int>('entry_id'),
+              serialNumber: row.read<String>('serial_number'),
+              date: row.read<DateTime>('date'),
               entryDescription: row.read<String>('entry_description'),
-              reference:       row.read<String?>('reference'),
-              lineId:          row.read<int>('line_id'),
-              accountId:       row.read<int>('account_id'),
-              debit:           row.read<double>('debit'),
-              credit:          row.read<double>('credit'),
+              reference: row.read<String?>('reference'),
+              lineId: row.read<int>('line_id'),
+              accountId: row.read<int>('account_id'),
+              debit: row.read<double>('debit'),
+              credit: row.read<double>('credit'),
               lineDescription: row.read<String?>('line_description'),
             ))
         .toList();

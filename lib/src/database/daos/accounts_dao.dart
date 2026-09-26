@@ -19,14 +19,14 @@ class AccountsDao extends DatabaseAccessor<AccountingDatabase>
 
   /// جلب جميع الحسابات
   Future<List<Account>> getAllAccounts() =>
-      (select(accounts)..orderBy([(t) => OrderingTerm(expression: t.code)])).get();
+      (select(accounts)..orderBy([(t) => OrderingTerm(expression: t.code)]))
+          .get();
 
   /// جلب الحسابات النشطة فقط
-  Future<List<Account>> getActiveAccounts() =>
-      (select(accounts)
-            ..where((t) => t.isActive.equals(true))
-            ..orderBy([(t) => OrderingTerm(expression: t.code)]))
-          .get();
+  Future<List<Account>> getActiveAccounts() => (select(accounts)
+        ..where((t) => t.isActive.equals(true))
+        ..orderBy([(t) => OrderingTerm(expression: t.code)]))
+      .get();
 
   /// جلب حساب بالمعرّف
   Future<Account?> getAccountById(int id) =>
@@ -37,21 +37,20 @@ class AccountsDao extends DatabaseAccessor<AccountingDatabase>
       (select(accounts)..where((t) => t.code.equals(code))).getSingleOrNull();
 
   /// جلب الحسابات حسب النوع
-  Future<List<Account>> getAccountsByType(int typeIndex) =>
-      (select(accounts)
-            ..where((t) => t.type.equals(typeIndex))
-            ..orderBy([(t) => OrderingTerm(expression: t.code)]))
-          .get();
+  Future<List<Account>> getAccountsByType(int typeIndex) => (select(accounts)
+        ..where((t) => t.type.equals(typeIndex))
+        ..orderBy([(t) => OrderingTerm(expression: t.code)]))
+      .get();
 
   /// جلب الحسابات الفرعية لحساب أب
-  Future<List<Account>> getChildAccounts(int parentId) =>
-      (select(accounts)
-            ..where((t) => t.parentId.equals(parentId))
-            ..orderBy([(t) => OrderingTerm(expression: t.code)]))
-          .get();
+  Future<List<Account>> getChildAccounts(int parentId) => (select(accounts)
+        ..where((t) => t.parentId.equals(parentId))
+        ..orderBy([(t) => OrderingTerm(expression: t.code)]))
+      .get();
 
   /// الحسابات الفرعية النهائية (Leaf) - الحسابات التي يُسمح بالتسجيل عليها
-  Future<List<Account>> getLeafAccounts({int? typeIndex, bool activeOnly = true}) {
+  Future<List<Account>> getLeafAccounts(
+      {int? typeIndex, bool activeOnly = true}) {
     final query = select(accounts)
       ..where((t) => notExistsQuery(
             select(alias(accounts, 'c'))
@@ -68,7 +67,9 @@ class AccountsDao extends DatabaseAccessor<AccountingDatabase>
     final pattern = '%${text.trim()}%';
     return (select(accounts)
           ..where((t) =>
-              t.code.like(pattern) | t.name.like(pattern) | t.nameAr.like(pattern))
+              t.code.like(pattern) |
+              t.name.like(pattern) |
+              t.nameAr.like(pattern))
           ..orderBy([(t) => OrderingTerm(expression: t.code)]))
         .get();
   }
@@ -92,7 +93,8 @@ class AccountsDao extends DatabaseAccessor<AccountingDatabase>
 
   /// مشاهدة جميع الحسابات (Stream)
   Stream<List<Account>> watchAllAccounts() =>
-      (select(accounts)..orderBy([(t) => OrderingTerm(expression: t.code)])).watch();
+      (select(accounts)..orderBy([(t) => OrderingTerm(expression: t.code)]))
+          .watch();
 
   /// هل رمز الحساب موجود مسبقاً؟
   Future<bool> codeExists(String code, {int? excludeId}) async {
@@ -119,13 +121,14 @@ class AccountsDao extends DatabaseAccessor<AccountingDatabase>
 
   /// تحديث حساب
   Future<void> updateAccount(AccountsCompanion entry) =>
-      (update(accounts)..where((t) => t.id.equals(entry.id.value))).write(entry);
+      (update(accounts)..where((t) => t.id.equals(entry.id.value)))
+          .write(entry);
 
   /// تفعيل/تعطيل حساب
   Future<void> setAccountActive(int id, bool isActive) =>
       (update(accounts)..where((t) => t.id.equals(id))).write(
         AccountsCompanion(
-          isActive:  Value(isActive),
+          isActive: Value(isActive),
           updatedAt: Value(DateTime.now()),
         ),
       );
@@ -146,8 +149,8 @@ class AccountsDao extends DatabaseAccessor<AccountingDatabase>
   /// عدد الحسابات الكلي
   Future<int> countAccounts() async {
     final count = countAll();
-    final query  = selectOnly(accounts)..addColumns([count]);
-    final row    = await query.getSingle();
+    final query = selectOnly(accounts)..addColumns([count]);
+    final row = await query.getSingle();
     return row.read(count) ?? 0;
   }
 }

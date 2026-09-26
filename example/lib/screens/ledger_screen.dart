@@ -31,7 +31,12 @@ class _LedgerScreenState extends State<LedgerScreen> {
 
   Future<void> _select(AccountModel account) async {
     final ledger = await widget.fa.reports.getAccountLedger(account.id!);
-    if (mounted) setState(() { _selected = account; _ledger = ledger; });
+    if (mounted) {
+      setState(() {
+        _selected = account;
+        _ledger = ledger;
+      });
+    }
   }
 
   @override
@@ -45,7 +50,8 @@ class _LedgerScreenState extends State<LedgerScreen> {
           value: _selected,
           items: [
             for (final a in _accounts)
-              DropdownMenuItem(value: a, child: Text('${a.code} - ${a.displayName}')),
+              DropdownMenuItem(
+                  value: a, child: Text('${a.code} - ${a.displayName}')),
           ],
           onChanged: (a) => a != null ? _select(a) : null,
         ),
@@ -70,7 +76,8 @@ class _LedgerScreenState extends State<LedgerScreen> {
         ),
         ListTile(
           tileColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-          title: const Text('الرصيد الختامي', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text('الرصيد الختامي',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           trailing: Text(ledger.closingBalance.toStringAsFixed(2),
               style: const TextStyle(fontWeight: FontWeight.bold)),
         ),

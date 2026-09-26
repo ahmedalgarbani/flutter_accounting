@@ -44,15 +44,41 @@ class JournalEntryBuilder {
   // بيانات القيد
   // ─────────────────────────────────────────────────────────────
 
-  JournalEntryBuilder description(String value) { _description = value; return this; }
-  JournalEntryBuilder date(DateTime value)       { _date = value;        return this; }
-  JournalEntryBuilder reference(String? value)   { _reference = value;   return this; }
-  JournalEntryBuilder notes(String? value)       { _notes = value;       return this; }
-  JournalEntryBuilder createdBy(String? value)   { _createdBy = value;   return this; }
-  JournalEntryBuilder type(EntryType? value)     { _entryType = value;   return this; }
+  JournalEntryBuilder description(String value) {
+    _description = value;
+    return this;
+  }
+
+  JournalEntryBuilder date(DateTime value) {
+    _date = value;
+    return this;
+  }
+
+  JournalEntryBuilder reference(String? value) {
+    _reference = value;
+    return this;
+  }
+
+  JournalEntryBuilder notes(String? value) {
+    _notes = value;
+    return this;
+  }
+
+  JournalEntryBuilder createdBy(String? value) {
+    _createdBy = value;
+    return this;
+  }
+
+  JournalEntryBuilder type(EntryType? value) {
+    _entryType = value;
+    return this;
+  }
 
   /// رقم تسلسلي يدوي (إن لم يُحدَّد يُولَّد تلقائياً)
-  JournalEntryBuilder serialNumber(String? value) { _serialNumber = value; return this; }
+  JournalEntryBuilder serialNumber(String? value) {
+    _serialNumber = value;
+    return this;
+  }
 
   /// ربط القيد بمستند في نظامك، مثل `source('invoice', '15')`
   JournalEntryBuilder source(String type, Object id) {
@@ -66,20 +92,28 @@ class JournalEntryBuilder {
   // ─────────────────────────────────────────────────────────────
 
   /// بند مدين على حساب بالمعرّف
-  JournalEntryBuilder debit(int accountId, double amount, {String? description}) =>
-      _add(_PendingLine(accountId: accountId, debit: amount, description: description));
+  JournalEntryBuilder debit(int accountId, double amount,
+          {String? description}) =>
+      _add(_PendingLine(
+          accountId: accountId, debit: amount, description: description));
 
   /// بند دائن على حساب بالمعرّف
-  JournalEntryBuilder credit(int accountId, double amount, {String? description}) =>
-      _add(_PendingLine(accountId: accountId, credit: amount, description: description));
+  JournalEntryBuilder credit(int accountId, double amount,
+          {String? description}) =>
+      _add(_PendingLine(
+          accountId: accountId, credit: amount, description: description));
 
   /// بند مدين على حساب بالرمز (يُحلّ عند [resolve] أو `fa.record`)
-  JournalEntryBuilder debitCode(String accountCode, double amount, {String? description}) =>
-      _add(_PendingLine(accountCode: accountCode, debit: amount, description: description));
+  JournalEntryBuilder debitCode(String accountCode, double amount,
+          {String? description}) =>
+      _add(_PendingLine(
+          accountCode: accountCode, debit: amount, description: description));
 
   /// بند دائن على حساب بالرمز (يُحلّ عند [resolve] أو `fa.record`)
-  JournalEntryBuilder creditCode(String accountCode, double amount, {String? description}) =>
-      _add(_PendingLine(accountCode: accountCode, credit: amount, description: description));
+  JournalEntryBuilder creditCode(String accountCode, double amount,
+          {String? description}) =>
+      _add(_PendingLine(
+          accountCode: accountCode, credit: amount, description: description));
 
   /// إضافة بند جاهز
   JournalEntryBuilder line(JournalEntryLineModel line) => _add(_PendingLine(
@@ -98,12 +132,13 @@ class JournalEntryBuilder {
   // معلومات مساعدة للواجهة
   // ─────────────────────────────────────────────────────────────
 
-  double get totalDebits  => _lines.fold(0.0, (s, l) => s + l.debit);
+  double get totalDebits => _lines.fold(0.0, (s, l) => s + l.debit);
   double get totalCredits => _lines.fold(0.0, (s, l) => s + l.credit);
-  bool   get isBalanced   => AccountingValidator.isBalanced(totalDebits, totalCredits);
+  bool get isBalanced =>
+      AccountingValidator.isBalanced(totalDebits, totalCredits);
 
   /// الفرق بين المدين والدائن (موجب = المدين أكبر)
-  double get difference   => totalDebits - totalCredits;
+  double get difference => totalDebits - totalCredits;
 
   /// هل توجد بنود تشير لحسابات بالرمز وتحتاج إلى [resolve]؟
   bool get needsResolution => _lines.any((l) => l.accountId == null);
@@ -129,7 +164,9 @@ class JournalEntryBuilder {
     final ids = <String, int>{};
     for (final line in _lines) {
       final code = line.accountCode;
-      if (line.accountId != null || code == null || ids.containsKey(code)) continue;
+      if (line.accountId != null || code == null || ids.containsKey(code)) {
+        continue;
+      }
       final account = await accounts.getAccountByCode(code);
       if (account == null) throw AccountNotFoundException(code);
       ids[code] = account.id!;
@@ -142,25 +179,25 @@ class JournalEntryBuilder {
     for (var i = 0; i < _lines.length; i++) {
       final l = _lines[i];
       lines.add(JournalEntryLineModel(
-        accountId:   l.accountId ?? codeIds[l.accountCode]!,
+        accountId: l.accountId ?? codeIds[l.accountCode]!,
         accountCode: l.accountCode ?? '',
-        debit:       l.debit,
-        credit:      l.credit,
+        debit: l.debit,
+        credit: l.credit,
         description: l.description,
-        sortOrder:   i,
+        sortOrder: i,
       ));
     }
     return JournalEntryModel(
       serialNumber: _serialNumber,
-      date:         _date,
-      description:  _description,
-      reference:    _reference,
-      notes:        _notes,
-      createdBy:    _createdBy,
-      entryType:    _entryType,
-      sourceType:   _sourceType,
-      sourceId:     _sourceId,
-      lines:        lines,
+      date: _date,
+      description: _description,
+      reference: _reference,
+      notes: _notes,
+      createdBy: _createdBy,
+      entryType: _entryType,
+      sourceType: _sourceType,
+      sourceId: _sourceId,
+      lines: lines,
     );
   }
 }

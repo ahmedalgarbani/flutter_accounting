@@ -29,11 +29,11 @@ class EntryTemplateModel {
     List<EntryTemplateLineModel>? lines,
   }) {
     return EntryTemplateModel(
-      id:          id          ?? this.id,
-      name:        name        ?? this.name,
+      id: id ?? this.id,
+      name: name ?? this.name,
       description: description ?? this.description,
-      type:        type        ?? this.type,
-      lines:       lines       ?? this.lines,
+      type: type ?? this.type,
+      lines: lines ?? this.lines,
     );
   }
 
@@ -49,21 +49,22 @@ class EntryTemplateModel {
   bool get isBalanced => (totalDebitRatio - totalCreditRatio).abs() < 0.0001;
 
   Map<String, dynamic> toMap() => {
-        'id':          id,
-        'name':        name,
+        'id': id,
+        'name': name,
         'description': description,
-        'type':        type.name,
-        'lines':       lines.map((l) => l.toMap()).toList(),
+        'type': type.name,
+        'lines': lines.map((l) => l.toMap()).toList(),
       };
 
   factory EntryTemplateModel.fromMap(Map<String, dynamic> map) =>
       EntryTemplateModel(
-        id:          map['id'] as int?,
-        name:        map['name'] as String,
+        id: map['id'] as int?,
+        name: map['name'] as String,
         description: map['description'] as String?,
-        type:        EntryType.values.byName(map['type'] as String),
+        type: EntryType.values.byName(map['type'] as String),
         lines: ((map['lines'] as List?) ?? const [])
-            .map((l) => EntryTemplateLineModel.fromMap(Map<String, dynamic>.from(l as Map)))
+            .map((l) => EntryTemplateLineModel.fromMap(
+                Map<String, dynamic>.from(l as Map)))
             .toList(),
       );
 }
@@ -71,10 +72,10 @@ class EntryTemplateModel {
 @immutable
 class EntryTemplateLineModel {
   final int? id;
-  final int? accountId;      // حساب محدد مسبقاً (مثلاً حساب المبيعات دائماً ثابت)
+  final int? accountId; // حساب محدد مسبقاً (مثلاً حساب المبيعات دائماً ثابت)
   final AccountType? accountType; // نوع الحساب المطلوب (للفلترة في الواجهة)
   final bool isDebit;
-  final String label;        // تسمية توضيحية (مثلاً "حساب الصندوق")
+  final String label; // تسمية توضيحية (مثلاً "حساب الصندوق")
   final double defaultRatio; // نسبة افتراضية من المبلغ الإجمالي (1.0 = 100%)
 
   const EntryTemplateLineModel({
@@ -95,33 +96,33 @@ class EntryTemplateLineModel {
     double? defaultRatio,
   }) {
     return EntryTemplateLineModel(
-      id:           id           ?? this.id,
-      accountId:    accountId    ?? this.accountId,
-      accountType:  accountType  ?? this.accountType,
-      isDebit:      isDebit      ?? this.isDebit,
-      label:        label        ?? this.label,
+      id: id ?? this.id,
+      accountId: accountId ?? this.accountId,
+      accountType: accountType ?? this.accountType,
+      isDebit: isDebit ?? this.isDebit,
+      label: label ?? this.label,
       defaultRatio: defaultRatio ?? this.defaultRatio,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'id':           id,
-        'accountId':    accountId,
-        'accountType':  accountType?.name,
-        'isDebit':      isDebit,
-        'label':        label,
+        'id': id,
+        'accountId': accountId,
+        'accountType': accountType?.name,
+        'isDebit': isDebit,
+        'label': label,
         'defaultRatio': defaultRatio,
       };
 
   factory EntryTemplateLineModel.fromMap(Map<String, dynamic> map) =>
       EntryTemplateLineModel(
-        id:           map['id'] as int?,
-        accountId:    map['accountId'] as int?,
-        accountType:  map['accountType'] == null
+        id: map['id'] as int?,
+        accountId: map['accountId'] as int?,
+        accountType: map['accountType'] == null
             ? null
             : AccountType.values.byName(map['accountType'] as String),
-        isDebit:      map['isDebit'] as bool,
-        label:        map['label'] as String,
+        isDebit: map['isDebit'] as bool,
+        label: map['label'] as String,
         defaultRatio: ((map['defaultRatio'] as num?) ?? 1.0).toDouble(),
       );
 }

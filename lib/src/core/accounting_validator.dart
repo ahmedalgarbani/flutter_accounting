@@ -23,7 +23,7 @@ class AccountingValidator {
   static void validateEntryLines(List<JournalEntryLineModel> lines) {
     if (lines.isEmpty) throw const InsufficientLinesException();
 
-    double totalDebits  = 0;
+    double totalDebits = 0;
     double totalCredits = 0;
 
     // فحص كل بند أولاً كي تكون رسالة الخطأ دقيقة
@@ -43,7 +43,7 @@ class AccountingValidator {
         throw const InvalidLineAmountsException();
       }
 
-      totalDebits  += line.debit;
+      totalDebits += line.debit;
       totalCredits += line.credit;
     }
 

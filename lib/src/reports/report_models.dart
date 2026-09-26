@@ -36,9 +36,9 @@ class TrialBalanceRow {
   /// الاسم المعروض (العربي إن وُجد، وإلا الإنجليزي)
   String get displayName => accountNameAr ?? accountName;
 
-  bool get isDebitBalance  => balance > 0;
+  bool get isDebitBalance => balance > 0;
   bool get isCreditBalance => balance < 0;
-  double get debitBalance  => balance > 0 ? balance  : 0;
+  double get debitBalance => balance > 0 ? balance : 0;
   double get creditBalance => balance < 0 ? -balance : 0;
 }
 
@@ -56,15 +56,17 @@ class TrialBalanceReport {
     required this.rows,
   });
 
-  double get totalDebitBalances  => rows.fold(0.0, (s, r) => s + r.debitBalance);
-  double get totalCreditBalances => rows.fold(0.0, (s, r) => s + r.creditBalance);
-  bool   get isBalanced => (totalDebitBalances - totalCreditBalances).abs() < 0.001;
+  double get totalDebitBalances => rows.fold(0.0, (s, r) => s + r.debitBalance);
+  double get totalCreditBalances =>
+      rows.fold(0.0, (s, r) => s + r.creditBalance);
+  bool get isBalanced =>
+      (totalDebitBalances - totalCreditBalances).abs() < 0.001;
 
-  List<TrialBalanceRow> get assetRows     => _byType(AccountType.asset);
+  List<TrialBalanceRow> get assetRows => _byType(AccountType.asset);
   List<TrialBalanceRow> get liabilityRows => _byType(AccountType.liability);
-  List<TrialBalanceRow> get equityRows    => _byType(AccountType.equity);
-  List<TrialBalanceRow> get revenueRows   => _byType(AccountType.revenue);
-  List<TrialBalanceRow> get expenseRows   => _byType(AccountType.expense);
+  List<TrialBalanceRow> get equityRows => _byType(AccountType.equity);
+  List<TrialBalanceRow> get revenueRows => _byType(AccountType.revenue);
+  List<TrialBalanceRow> get expenseRows => _byType(AccountType.expense);
 
   List<TrialBalanceRow> _byType(AccountType t) =>
       rows.where((r) => r.accountType == t).toList();
@@ -116,12 +118,15 @@ class BalanceSheetReport {
     required this.retainedEarnings,
   });
 
-  double get totalAssets      => assetRows.fold(0.0, (s, r) => s + r.balance);
-  double get totalLiabilities => liabilityRows.fold(0.0, (s, r) => s + r.balance);
-  double get totalEquity      => equityRows.fold(0.0, (s, r) => s + r.balance) + retainedEarnings;
+  double get totalAssets => assetRows.fold(0.0, (s, r) => s + r.balance);
+  double get totalLiabilities =>
+      liabilityRows.fold(0.0, (s, r) => s + r.balance);
+  double get totalEquity =>
+      equityRows.fold(0.0, (s, r) => s + r.balance) + retainedEarnings;
 
   /// أصول = خصوم + حقوق ملكية (مبدأ المعادلة المحاسبية)
-  bool get isBalanced => (totalAssets - (totalLiabilities + totalEquity)).abs() < 0.01;
+  bool get isBalanced =>
+      (totalAssets - (totalLiabilities + totalEquity)).abs() < 0.01;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -168,12 +173,12 @@ class IncomeStatementReport {
     required this.expenseRows,
   });
 
-  double get totalRevenue  => revenueRows.fold(0.0, (s, r) => s + r.balance);
+  double get totalRevenue => revenueRows.fold(0.0, (s, r) => s + r.balance);
   double get totalExpenses => expenseRows.fold(0.0, (s, r) => s + r.balance);
 
   /// صافي الربح (أو الخسارة إذا كانت سالبة)
-  double get netIncome     => totalRevenue - totalExpenses;
-  bool   get isProfitable  => netIncome >= 0;
+  double get netIncome => totalRevenue - totalExpenses;
+  bool get isProfitable => netIncome >= 0;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -245,7 +250,7 @@ class AccountLedgerReport {
 
   String get displayName => accountNameAr ?? accountName;
 
-  double get totalDebits  => lines.fold(0.0, (s, l) => s + l.debit);
+  double get totalDebits => lines.fold(0.0, (s, l) => s + l.debit);
   double get totalCredits => lines.fold(0.0, (s, l) => s + l.credit);
 
   /// الرصيد الختامي بالاتجاه الطبيعي للحساب

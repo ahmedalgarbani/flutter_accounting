@@ -1,89 +1,90 @@
 # flutter_accounting 📊
 
-**Offline double-entry accounting for Flutter** — chart of accounts, journal entries,
-posting and reversal, fiscal periods, account ledgers, and financial reports
-(Trial Balance, Balance Sheet, Income Statement), with accounting rules enforced in code.
-Works on Android, iOS, Windows, macOS, and Linux.
+**Offline double-entry accounting engine for Flutter** — chart of accounts, journal entries, posting and reversal, fiscal periods, account ledgers, and financial reports (Trial Balance, Balance Sheet, Income Statement), with accounting rules enforced in code.
 
-**محرك محاسبي كامل (قيد مزدوج) لتطبيقات Flutter — يعمل أوفلاين.**
+Works offline on **Android, iOS, Windows, macOS, and Linux**.
 
-ركّز على تطوير نظامك (مبيعات، مخازن، عيادة، مدرسة...) واترك المحاسبة للمكتبة:
-دليل الحسابات، القيود، الترحيل، العكس، الفترات المالية، والتقارير — كلها جاهزة ومحمية بقواعد محاسبية.
+[العربية (Arabic Documentation)](README_AR.md)
+
+Focus on building your core domain (POS, inventory, clinic, school, ERP) and let `flutter_accounting` handle the bookkeeping:
+Chart of accounts, journal entries, posting, reversals, fiscal periods, and financial reports — ready out-of-the-box and guarded by double-entry invariants.
 
 ```dart
 await fa.record(
-  JournalEntryBuilder(description: 'فاتورة مبيعات 15')
+  JournalEntryBuilder(description: 'Sales Invoice #15')
     .source('invoice', 15)
-    .debitCode('111', 1150)   // الصندوق
-    .creditCode('41', 1000)   // المبيعات
-    .creditCode('215', 150),  // الضريبة
+    .debitCode('111', 1150)   // Cash
+    .creditCode('41', 1000)   // Sales Revenue
+    .creditCode('215', 150),  // VAT Output
 );
 ```
 
 ---
 
-## المحتويات
+## Contents
 
-- [المميزات](#المميزات-)
-- [التثبيت](#التثبيت-)
-- [البدء السريع (5 دقائق)](#البدء-السريع-5-دقائق-)
-- [المفاهيم الأساسية](#المفاهيم-الأساسية-)
-- [دليل الاستخدام](#دليل-الاستخدام-)
-  - [دليل الحسابات](#1-دليل-الحسابات)
-  - [القيود اليومية](#2-القيود-اليومية)
-  - [الباني JournalEntryBuilder](#3-الباني-journalentrybuilder)
-  - [الربط بمستندات نظامك](#4-الربط-بمستندات-نظامك)
-  - [الفترات المحاسبية](#5-الفترات-المحاسبية)
-  - [التقارير](#6-التقارير)
-  - [القوالب](#7-القوالب)
-  - [الإعدادات](#8-الإعدادات)
-- [دليل التكامل مع نظامك](#دليل-التكامل-مع-نظامك-)
-- [مرجع الـ API](#مرجع-الـ-api-)
-- [القواعد المحاسبية المدمجة](#القواعد-المحاسبية-المدمجة-️)
-- [الاستثناءات](#الاستثناءات-)
-- [الاختبار](#الاختبار-)
-- [الترقية من 0.3.x](#الترقية-من-03x-)
-- [بنية المشروع](#بنية-المشروع-️)
-- [أسئلة شائعة](#أسئلة-شائعة-)
-
----
-
-## المميزات ✨
-
-| | الميزة |
-|---|--------|
-| ⚖️ | **القيد المزدوج** — تحقق تلقائي: توازن، لا مبالغ صفرية أو سالبة، مدين ودائن في كل قيد |
-| 🌳 | **دليل حسابات هرمي** — مستويات غير محدودة، حماية الشجرة (نوع موحّد، لا دورات، لا تسجيل على حساب أب) |
-| 📦 | **دليل حسابات جاهز** — 40+ حساب عربي/إنجليزي بسطر واحد |
-| 🧾 | **دورة حياة القيد** — مسودة ← مرحّل ← معكوس، مع أثر تدقيقي (`createdBy`, `postedBy`, `postedAt`) |
-| 🔗 | **الربط بمستنداتك** — `source('invoice', 15)` ثم البحث والعكس بمعرّف المستند |
-| 🧱 | **باني قيود سلس** — `JournalEntryBuilder` يقبل معرّفات أو **رموز** الحسابات |
-| ⚡ | **عمليات ذرّية** — `record` و`createAndPost` و`reverseEntry` و`fa.transaction` (كل شيء أو لا شيء) |
-| 🔢 | **ترقيم تلقائي** — `JV-2026-0001` لكل سنة، وبادئة قابلة للتخصيص |
-| 📅 | **الفترات المالية** — سنوية أو شهرية، إقفال/إعادة فتح، منع التداخل |
-| 📈 | **التقارير** — ميزان المراجعة، قائمة الدخل، الميزانية العمومية، **كشف حساب** برصيد تراكمي، ورصيد أي حساب (مع أبنائه) |
-| 🧩 | **القوالب** — 7 قوالب قياسية + قوالب مخصصة محفوظة في قاعدة البيانات |
-| 🔄 | **تحويل إلى Map** — `toMap()` / `fromMap()` للمزامنة والتصدير |
-| 🗄️ | **Drift (SQLite)** — أوفلاين بالكامل، type-safe، WAL، فهارس للأداء، ترقية تلقائية للمخطط |
-| 🧪 | **سهولة الاختبار** — `FlutterAccounting.forTesting()` قاعدة في الذاكرة + واجهات مجردة للـ DI |
+- [Features](#features-)
+- [Installation](#installation-)
+- [Quick Start (5 Minutes)](#quick-start-5-minutes-)
+- [Core Concepts](#core-concepts-)
+- [Usage Guide](#usage-guide-)
+  - [1. Chart of Accounts](#1-chart-of-accounts)
+  - [2. Journal Entries](#2-journal-entries)
+  - [3. JournalEntryBuilder](#3-journalentrybuilder)
+  - [4. Linking with Source Documents](#4-linking-with-source-documents)
+  - [5. Fiscal Periods](#5-fiscal-periods)
+  - [6. Financial Reports & Ledgers](#6-financial-reports--ledgers)
+  - [7. Entry Templates](#7-entry-templates)
+  - [8. Configuration](#8-configuration)
+- [Integration Guide](#integration-guide-)
+- [API Reference](#api-reference-)
+- [Enforced Accounting Rules](#enforced-accounting-rules-️)
+- [Exceptions](#exceptions-)
+- [Testing](#testing-)
+- [Upgrading from 0.3.x](#upgrading-from-03x-)
+- [Project Structure](#project-structure-️)
+- [FAQ](#faq-)
+- [License](#license)
 
 ---
 
-## التثبيت 📦
+## Features ✨
+
+| | Feature |
+|---|---|
+| ⚖️ | **Double-Entry Engine** — Automatic enforcement: total debits = total credits, no zero/negative amounts, at least one debit and credit per entry. |
+| 🌳 | **Hierarchical Chart of Accounts** — Unlimited depth, tree integrity protection (unified type, cycle prevention, parent accounts cannot hold transactions). |
+| 📦 | **Ready-to-Use Seed Accounts** — 40+ standard bilingual (Arabic / English) accounts seeded with one flag. |
+| 🧾 | **Audit-Ready Lifecycle** — Draft → Posted → Reversed workflow with audit trail (`createdBy`, `postedBy`, `postedAt`). |
+| 🔗 | **Source Document Tracking** — Tag entries with `.source('invoice', 15)` to query, trace, and reverse entries by source document. |
+| 🧱 | **Fluent Entry Builder** — `JournalEntryBuilder` resolves account IDs or account codes, tracking balance deltas in real-time. |
+| ⚡ | **Atomic Operations** — `record`, `createAndPost`, `reverseEntry`, and `fa.transaction(...)` guarantee all-or-nothing execution. |
+| 🔢 | **Auto-Sequenced Serials** — Yearly serial numbering (e.g. `JV-2026-0001`) with configurable prefixes and padding. |
+| 📅 | **Fiscal Period Control** — Annual or monthly periods, open/close safeguards, and overlap prevention. |
+| 📈 | **Financial Reports** — Trial Balance, Income Statement (P&L), Balance Sheet, Account Balance (recursive), and Account Ledger with opening/running balances. |
+| 🧩 | **Entry Templates** — 7 built-in standard templates plus persistent database custom templates. |
+| 🔄 | **Serialization Support** — `toMap()` and `fromMap()` across all models for exports and sync. |
+| 🗄️ | **Drift (SQLite) Storage** — Fully offline, type-safe, WAL enabled, indexed for high performance, with automatic migrations. |
+| 🧪 | **Test-Friendly** — `FlutterAccounting.forTesting()` in-memory database and clean repository interfaces for dependency injection. |
+
+---
+
+## Installation 📦
+
+Add `flutter_accounting` to your `pubspec.yaml`:
 
 ```yaml
-# pubspec.yaml
 dependencies:
   flutter_accounting: ^0.4.0
 ```
 
-المنصات المدعومة: Android, iOS, Windows, macOS, Linux (عبر `sqlite3_flutter_libs`).
+Supported platforms: **Android, iOS, Windows, macOS, Linux** (powered by `sqlite3_flutter_libs`).
 
 ---
 
-## البدء السريع (5 دقائق) 🚀
+## Quick Start (5 Minutes) 🚀
 
-### 1. التهيئة (مرة واحدة في `main`)
+### 1. Initialize (Once in `main`)
 
 ```dart
 import 'package:flutter_accounting/flutter_accounting.dart';
@@ -92,295 +93,309 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final fa = await FlutterAccounting.initialize(
-    seedDefaultAccounts: true, // دليل الحسابات الافتراضي (أول تشغيل فقط)
+    seedDefaultAccounts: true, // Seeds default standard accounts on first run
   );
 
-  // فترة مالية مفتوحة للسنة الحالية (تُنشأ إن لم توجد)
+  // Ensure an open fiscal period exists for the current year
   await fa.periods.ensureOpenPeriodFor(DateTime.now());
 
   runApp(const MyApp());
 }
 ```
 
-### 2. سجّل عملية
+### 2. Record a Transaction
 
 ```dart
 final fa = FlutterAccounting.instance;
 
-// بيع نقدي بـ 500: الصندوق مدين / المبيعات دائن — يُحفظ ويُرحَّل مباشرة
+// Cash sale of 500: Debit Cash / Credit Sales Revenue — created & posted atomically
 await fa.record(
-  JournalEntryBuilder(description: 'بيع نقدي')
+  JournalEntryBuilder(description: 'Cash Sale')
     .debitCode('111', 500)
     .creditCode('41', 500),
 );
 ```
 
-### 3. اعرض النتائج
+### 3. Fetch Reports & Balances
 
 ```dart
 final income = await fa.reports.getIncomeStatement(
   from: DateTime(2026, 1, 1),
   to:   DateTime.now(),
 );
-print('صافي الربح: ${income.netIncome}');
+print('Net Income: ${income.netIncome}');
 
 final cash = await fa.accounts.getAccountByCode('111');
-print('رصيد الصندوق: ${await fa.reports.getAccountBalance(cash!.id!)}');
+print('Cash Balance: ${await fa.reports.getAccountBalance(cash!.id!)}');
 ```
 
-هذا كل شيء. 🎉 للتكامل الكامل مع نظامك راجع [**دليل التكامل**](doc/INTEGRATION.md).
+For complete architectural patterns and real-world recipes, see the [**Integration Guide**](doc/INTEGRATION.md).
 
 ---
 
-## المفاهيم الأساسية 📚
+## Core Concepts 📚
 
-### أنواع الحسابات والرصيد الطبيعي
+### Account Types and Normal Balance
 
-| النوع | `AccountType` | الرصيد الطبيعي | يزيد بـ | يظهر في |
-|-------|---------------|---------------|---------|---------|
-| أصول | `asset` | مدين | المدين | الميزانية |
-| خصوم | `liability` | دائن | الدائن | الميزانية |
-| حقوق ملكية | `equity` | دائن | الدائن | الميزانية |
-| إيرادات | `revenue` | دائن | الدائن | قائمة الدخل |
-| مصروفات | `expense` | مدين | المدين | قائمة الدخل |
+| Type | `AccountType` | Normal Balance | Increases With | Displayed In |
+|---|---|---|---|---|
+| Asset | `asset` | Debit | Debit | Balance Sheet |
+| Liability | `liability` | Credit | Credit | Balance Sheet |
+| Equity | `equity` | Credit | Credit | Balance Sheet |
+| Revenue | `revenue` | Credit | Credit | Income Statement |
+| Expense | `expense` | Debit | Debit | Income Statement |
 
-> كل الأرصدة التي تُعيدها المكتبة (`getAccountBalance`، كشف الحساب، الميزانية، قائمة الدخل)
-> تكون **بالاتجاه الطبيعي**: الرقم الموجب يعني رصيداً طبيعياً.
-> الاستثناء: `TrialBalanceRow.balance` حيث الموجب = مدين والسالب = دائن.
+> All balances returned by `getAccountBalance`, `getAccountLedger`, `getBalanceSheet`, and `getIncomeStatement` follow their **normal direction** (a positive number reflects a healthy normal balance).
+> The only exception is `TrialBalanceRow.balance`, where positive represents Debit and negative represents Credit.
 
-### دورة حياة القيد
+### Journal Entry Lifecycle
 
-```
+```text
              postEntry / createAndPost / record
   ┌───────┐ ────────────────────────────────► ┌────────┐   reverseEntry   ┌──────────┐
-  │ مسودة │                                    │ مرحّل  │ ───────────────► │ معكوس    │
+  │ Draft │                                    │ Posted │ ───────────────► │ Reversed │
   │ draft │ ◄─ updateEntry / deleteEntry       │ posted │                  │ reversed │
   └───────┘                                    └────────┘                  └──────────┘
-                                                               + قيد عكسي جديد (مرحّل)
+                                                               + New Reversal Entry (posted)
 ```
 
-- **المسودة** قابلة للتعديل والحذف ولا تؤثر على الأرصدة.
-- **المرحّل** يؤثر على الأرصدة ولا يُعدَّل ولا يُحذف — يُعكس فقط.
-- **العكس** ينشئ قيداً مرحّلاً بمبالغ معكوسة مرتبطاً بالأصلي (`reversalOfId`)، ويبقى الاثنان في الدفتر ويلغي أحدهما الآخر.
+- **Draft**: Can be updated or deleted. Does not affect account balances or reports.
+- **Posted**: Immutable. Affects account balances and financial reports. Cannot be edited or deleted — only reversed.
+- **Reversed**: Linked to a new reversal entry (`reversalOfId`) with inverted amounts. Both entries remain in the ledger for an immutable audit trail.
 
-### الفترات المحاسبية
+### Fiscal Periods
 
-كل قيد يجب أن يقع تاريخه في فترة **مفتوحة** (افتراضياً). الفترة المغلقة تمنع أي تسجيل بتاريخ داخلها.
-يمكن تعطيل اشتراط وجود فترة بـ `AccountingConfig(requireOpenPeriod: false)` للتطبيقات البسيطة.
+By default, every entry's date must fall within an **open** fiscal period. Closed periods reject new entries.
+If you prefer not to enforce periods in simpler apps, set `AccountingConfig(requireOpenPeriod: false)`.
 
 ---
 
-## دليل الاستخدام 📖
+## Usage Guide 📖
 
-### 1. دليل الحسابات
+### 1. Chart of Accounts
 
 ```dart
-// زرع الدليل الافتراضي (إن كانت القاعدة فارغة)
+// Seed the default standard chart of accounts
 await AccountingSeedData.seed(fa.accounts);
 
-// إنشاء حساب (بدون الحاجة لتمرير التواريخ)
+// Create a new account
 final wallet = await fa.accounts.createAccount(AccountModel.create(
-  code: '1121', name: 'Wallet', nameAr: 'المحفظة', type: AccountType.asset,
+  code: '1121',
+  name: 'Digital Wallet',
+  nameAr: 'المحفظة الإلكترونية',
+  type: AccountType.asset,
   parentId: currentAssetsId,
 ));
 
-// إنشاء إن لم يوجد (آمن للاستدعاء في كل تشغيل) — مع الأب بالرمز
-final ali = await fa.accounts.ensureAccount(
-  code: '113001', name: 'Customer Ali', nameAr: 'العميل علي',
-  type: AccountType.asset, parentCode: '113',
+// Ensure an account exists (safe to call idempotently on app launch)
+final customerAccount = await fa.accounts.ensureAccount(
+  code: '113001',
+  name: 'Customer Ali',
+  nameAr: 'العميل علي',
+  type: AccountType.asset,
+  parentCode: '113',
 );
 
-// الاستعلام
+// Query accounts
 await fa.accounts.getAccountByCode('111');
-await fa.accounts.getPostableAccounts(type: AccountType.expense); // لقوائم الاختيار
-await fa.accounts.searchAccounts('صندوق');
+await fa.accounts.getPostableAccounts(type: AccountType.expense); // Leaf accounts only
+await fa.accounts.searchAccounts('cash');
 await fa.accounts.getChildAccounts(parentId);
-fa.accounts.watchAllAccounts(); // Stream
+fa.accounts.watchAllAccounts(); // Reactive Stream
 
-// التعديل
-await fa.accounts.updateAccount(wallet.copyWith(nameAr: 'المحفظة الإلكترونية'));
+// Updates & Deletion
+await fa.accounts.updateAccount(wallet.copyWith(name: 'Main Digital Wallet'));
 await fa.accounts.setAccountActive(wallet.id!, isActive: false);
-await fa.accounts.deleteAccount(wallet.id!); // فقط إن لم يكن عليه قيود أو أبناء
+await fa.accounts.deleteAccount(wallet.id!); // Allowed only if no transactions or children exist
 ```
 
-### 2. القيود اليومية
+### 2. Journal Entries
 
 ```dart
-// مسودة
+// 1. Create a draft entry
 final draft = await fa.journalEntries.createEntry(JournalEntryModel(
   date: DateTime.now(),
-  description: 'دفع إيجار',
+  description: 'Office Rent',
   reference: 'RENT-01',
   lines: [
-    JournalEntryLineModel.debitLine(accountId: rentId, amount: 3000),
-    JournalEntryLineModel.creditLine(accountId: cashId, amount: 3000),
+    JournalEntryLineModel.debitLine(accountId: rentExpenseId, amount: 3000),
+    JournalEntryLineModel.creditLine(accountId: cashAccountId, amount: 3000),
   ],
 ));
 
-await fa.journalEntries.updateEntry(draft.copyWith(description: 'إيجار مارس'));
-final posted = await fa.journalEntries.postEntry(draft.id!, postedBy: 'ahmed');
+// Update and post draft
+await fa.journalEntries.updateEntry(draft.copyWith(description: 'Office Rent - March'));
+final posted = await fa.journalEntries.postEntry(draft.id!, postedBy: 'admin');
 
-// أو إنشاء وترحيل في خطوة ذرّية واحدة
-await fa.journalEntries.createAndPost(entry, postedBy: 'ahmed');
+// 2. Or create and post in a single atomic step
+await fa.journalEntries.createAndPost(entry, postedBy: 'admin');
 
-// عكس قيد مرحّل
+// 3. Reverse a posted entry
 final reversal = await fa.journalEntries.reverseEntry(
   posted.id!,
   reversalDate: DateTime.now(),
+  description: 'Reversal: Office Rent - March',
 );
 
-// الاستعلام
+// Queries
 await fa.journalEntries.getEntryById(id);
 await fa.journalEntries.getEntryBySerial('JV-2026-0001');
 await fa.journalEntries.getEntriesByStatus(EntryStatus.draft);
-await fa.journalEntries.getEntriesInDateRange(from, to); // يشمل كامل يوم النهاية
+await fa.journalEntries.getEntriesInDateRange(from, to);
 await fa.journalEntries.getEntriesByReference('INV-15');
-fa.journalEntries.watchAllEntries(); // Stream
+fa.journalEntries.watchAllEntries(); // Reactive Stream
 ```
 
-### 3. الباني `JournalEntryBuilder`
+### 3. JournalEntryBuilder
 
-أسهل طريقة لبناء قيد — يقبل **معرّفات** أو **رموز** الحسابات، ويعطيك معلومات التوازن أثناء الإدخال:
+The fluent `JournalEntryBuilder` simplifies creating balanced entries using either IDs or account codes:
 
 ```dart
-final builder = JournalEntryBuilder(description: 'شراء بضاعة', date: DateTime.now())
+final builder = JournalEntryBuilder(description: 'Purchase Goods', date: DateTime.now())
   .reference('PO-88')
   .type(EntryType.purchaseAgil)
   .source('purchase_order', 88)
   .createdBy('ahmed')
-  .notes('دفعة أولى')
-  .debitCode('115', 8000)                        // المخزون
-  .debitCode('215', 1200, description: 'ضريبة')  // ضريبة المدخلات
-  .creditCode('211', 9200);                      // الموردون
+  .notes('First installment')
+  .debitCode('115', 8000)                        // Inventory
+  .debitCode('215', 1200, description: 'VAT')    // Input Tax
+  .creditCode('211', 9200);                      // Accounts Payable
 
-builder.totalDebits;   // 9200
+builder.totalDebits;   // 9200.0
 builder.isBalanced;    // true
-builder.difference;    // 0
+builder.difference;    // 0.0
 
-await fa.record(builder);                          // حل الرموز + إنشاء + ترحيل (ذرّي)
-await fa.record(builder, post: false);             // حفظ كمسودة فقط
-final model = await builder.resolve(fa.accounts);  // JournalEntryModel بدون حفظ
-final model2 = builderWithIdsOnly.build();         // إن كانت كل البنود بالمعرّفات
+// Resolve codes + create + post atomically
+await fa.record(builder);
+
+// Or save as draft only
+await fa.record(builder, post: false);
+
+// Or resolve to a JournalEntryModel without saving
+final model = await builder.resolve(fa.accounts);
 ```
 
-### 4. الربط بمستندات نظامك
+### 4. Linking with Source Documents
 
-اربط كل قيد بمستنده (فاتورة، سند، طلب...) لتتمكن من إيجاده وعكسه لاحقاً:
+Link journal entries directly to business entities (invoices, receipts, orders) to query or reverse them later:
 
 ```dart
 await fa.record(
-  JournalEntryBuilder(description: 'فاتورة 15').source('invoice', 15)
-    .debitCode('113', 1000).creditCode('41', 1000),
+  JournalEntryBuilder(description: 'Invoice #15')
+    .source('invoice', 15)
+    .debitCode('113', 1000)
+    .creditCode('41', 1000),
 );
 
-// جلب كل قيود الفاتورة
+// Retrieve all entries for Invoice #15
 final entries = await fa.journalEntries.getEntriesBySource('invoice', '15');
 
-// إلغاء الفاتورة: عكس كل قيودها المرحّلة (ذرّي، وآمن للتكرار)
-await fa.reverseSource('invoice', 15, postedBy: 'ahmed');
+// Void / Cancel invoice: Reverses all posted entries linked to this document atomically
+await fa.reverseSource('invoice', 15, postedBy: 'admin');
 
-// عدة عمليات معاً: إما أن تنجح كلها أو تُلغى كلها
+// Atomic multi-step operations
 await fa.transaction(() async {
   await fa.reverseSource('invoice', 15);
   await fa.record(correctedInvoiceEntry);
 });
 ```
 
-### 5. الفترات المحاسبية
+### 5. Fiscal Periods
 
 ```dart
-await fa.periods.createFiscalYear(2026);                 // فترة سنوية
-await fa.periods.createFiscalYear(2026, monthly: true);  // 12 فترة شهرية
-await fa.periods.ensureOpenPeriodFor(DateTime.now());    // أنشئ عند الحاجة
+await fa.periods.createFiscalYear(2026);                 // Annual period (Jan 1 - Dec 31)
+await fa.periods.createFiscalYear(2026, monthly: true);  // 12 monthly periods
+await fa.periods.ensureOpenPeriodFor(DateTime.now());    // Auto-create if missing
 
 await fa.periods.createPeriod(AccountingPeriodModel(
-  name: 'الربع الأول', startDate: DateTime(2027, 1, 1), endDate: DateTime(2027, 3, 31),
-)); // نهاية الفترة تشمل كامل يوم 31 مارس
+  name: 'Q1 2027',
+  startDate: DateTime(2027, 1, 1),
+  endDate: DateTime(2027, 3, 31),
+));
 
-await fa.periods.closePeriod(id);   // يُرفض إن وُجدت مسودات
+await fa.periods.closePeriod(id);   // Rejected if draft entries exist within the period
 await fa.periods.reopenPeriod(id);
-await fa.periods.deletePeriod(id);  // فقط إن لم تحتوِ قيوداً
+await fa.periods.deletePeriod(id);  // Allowed only if no entries exist in period
 await fa.periods.getPeriodForDate(DateTime.now());
 ```
 
-### 6. التقارير
+### 6. Financial Reports & Ledgers
 
-كل التقارير تعتمد على **القيود المرحّلة فقط** (المسودات مستبعدة)، وتعمل على مستوى اليوم
-(`to` / `asOf` يشملان كامل اليوم).
+All reports aggregate **posted entries only** and operate on full day boundaries (`to` and `asOf` include the entire day through 23:59:59.999).
 
 ```dart
 final now = DateTime.now();
 
-// ميزان المراجعة (الافتراضي: من بداية السنة حتى اليوم)
+// 1. Trial Balance (defaults to beginning of year to current date)
 final tb = await fa.reports.getTrialBalance(from: DateTime(now.year), to: now);
-tb.isBalanced; tb.totalDebitBalances; tb.totalCreditBalances;
-for (final r in tb.rows) {
-  print('${r.accountCode} ${r.displayName}  مدين: ${r.debitBalance}  دائن: ${r.creditBalance}');
+print('TB Balanced: ${tb.isBalanced}');
+for (final row in tb.rows) {
+  print('${row.accountCode} ${row.displayName}: Debit ${row.debitBalance}, Credit ${row.creditBalance}');
 }
 
-// قائمة الدخل
+// 2. Income Statement (P&L)
 final income = await fa.reports.getIncomeStatement(from: DateTime(now.year), to: now);
-income.totalRevenue; income.totalExpenses; income.netIncome; income.isProfitable;
+print('Revenue: ${income.totalRevenue}, Expenses: ${income.totalExpenses}, Net: ${income.netIncome}');
 
-// الميزانية العمومية (الأرباح المحتجزة محسوبة تلقائياً)
+// 3. Balance Sheet (automatically calculates retained earnings)
 final bs = await fa.reports.getBalanceSheet(asOf: now);
-bs.totalAssets; bs.totalLiabilities; bs.totalEquity; bs.retainedEarnings; bs.isBalanced;
+print('Assets: ${bs.totalAssets}, Liabilities: ${bs.totalLiabilities}, Equity: ${bs.totalEquity}');
 
-// رصيد حساب (يجمع الحسابات الفرعية افتراضياً)
-final receivables = await fa.reports.getAccountBalance(customersId, asOf: now);
+// 4. Account Balance (recursive across child accounts by default)
+final totalReceivables = await fa.reports.getAccountBalance(customersParentId, asOf: now);
 
-// كشف حساب مع رصيد افتتاحي وتراكمي
-final ledger = await fa.reports.getAccountLedger(cashId, from: DateTime(now.year, now.month), to: now);
-print('افتتاحي: ${ledger.openingBalance}');
-for (final l in ledger.lines) {
-  print('${l.date} ${l.serialNumber} ${l.description}  ${l.debit} / ${l.credit}  = ${l.runningBalance}');
+// 5. Account Ledger (Statement with opening balance and running balances)
+final ledger = await fa.reports.getAccountLedger(
+  cashId,
+  from: DateTime(now.year, now.month),
+  to: now,
+);
+print('Opening: ${ledger.openingBalance}');
+for (final line in ledger.lines) {
+  print('${line.date} | ${line.serialNumber} | ${line.description} | Debit: ${line.debit} Credit: ${line.credit} | Running: ${line.runningBalance}');
 }
-print('ختامي: ${ledger.closingBalance}');
+print('Closing: ${ledger.closingBalance}');
 ```
 
-كل صفوف التقارير توفّر `accountName` (إنجليزي) و`accountNameAr` و`displayName` (العربي إن وُجد).
-
-### 7. القوالب
+### 7. Entry Templates
 
 ```dart
-// قالب قياسي
+// Apply a built-in standard template
 final draft = await fa.templates.applyTemplate(
   template: StandardTemplates.cashSale,
-  accountIdMap: {'Cash/Bank Account': cashId, 'Sales Revenue Account': salesId},
+  accountIdMap: {
+    'Cash/Bank Account': cashId,
+    'Sales Revenue Account': salesId,
+  },
   totalAmount: 1500,
 );
 await fa.journalEntries.createAndPost(draft);
 
-// قالب مخصص يُحفظ في قاعدة البيانات
+// Save a custom template to the database
 await fa.templates.saveTemplate(const EntryTemplateModel(
-  name: 'بيع مع ضريبة 15%',
+  name: 'Sale with 15% VAT',
   type: EntryType.sale,
   lines: [
-    EntryTemplateLineModel(isDebit: true,  label: 'الصندوق',  accountType: AccountType.asset,     defaultRatio: 1.15),
-    EntryTemplateLineModel(isDebit: false, label: 'المبيعات', accountType: AccountType.revenue,   defaultRatio: 1.0),
-    EntryTemplateLineModel(isDebit: false, label: 'الضريبة',  accountType: AccountType.liability, defaultRatio: 0.15),
+    EntryTemplateLineModel(isDebit: true,  label: 'Cash',    accountType: AccountType.asset,     defaultRatio: 1.15),
+    EntryTemplateLineModel(isDebit: false, label: 'Revenue', accountType: AccountType.revenue,   defaultRatio: 1.0),
+    EntryTemplateLineModel(isDebit: false, label: 'VAT',     accountType: AccountType.liability, defaultRatio: 0.15),
   ],
 ));
-final custom = await fa.templates.getCustomTemplates();
+final customTemplates = await fa.templates.getCustomTemplates();
 ```
 
-القوالب القياسية: `cashSale`, `cashPurchase`, `creditSale`, `creditPurchase`,
-`paymentVoucher` (سند صرف), `receiptVoucher` (سند قبض), `journalEntry`.
+Built-in templates include: `cashSale`, `cashPurchase`, `creditSale`, `creditPurchase`, `paymentVoucher`, `receiptVoucher`, and `journalEntry`.
 
-- يمكن تثبيت حساب في بند القالب عبر `accountId` فلا يحتاج إلى إدخال في الخريطة.
-- `accountType` في البند يُتحقق منه عند التطبيق.
-- يُرفض القالب غير المتوازن (مجموع نسب المدين ≠ الدائن).
-
-### 8. الإعدادات
+### 8. Configuration
 
 ```dart
 await FlutterAccounting.initialize(
   databaseName: 'accounting.db',
-  databaseDirectory: '/custom/path',          // اختياري
+  databaseDirectory: '/custom/path',          // Optional
   seedDefaultAccounts: true,
   config: const AccountingConfig(
-    requireOpenPeriod: true,   // اشتراط فترة مفتوحة لكل قيد
-    serialPrefix: 'JV',        // JV-2026-0001
+    requireOpenPeriod: true,   // Requires entries to fall into an open fiscal period
+    serialPrefix: 'JV',        // e.g. JV-2026-0001
     serialPadding: 4,
   ),
 );
@@ -388,244 +403,222 @@ await FlutterAccounting.initialize(
 
 ---
 
-## دليل التكامل مع نظامك 🔌
+## Integration Guide 🔌
 
-الدليل الكامل: **[doc/INTEGRATION.md](doc/INTEGRATION.md)** — يشمل النمط المعماري المقترح،
-وصفات قيود جاهزة لأكثر العمليات شيوعاً، الإلغاء والتعديل، حسابات العملاء الفرعية،
-حقن الاعتماديات (get_it / Riverpod / Provider)، اختبار التكامل، وقائمة تحقق قبل الإطلاق.
+See the full [**Integration Guide (doc/INTEGRATION.md)**](doc/INTEGRATION.md) for architectural patterns, accounting recipes for common workflows, dependency injection setup, and production checklists.
 
-**الملخص:**
+**Architecture summary:**
 
-1. `FlutterAccounting.initialize(...)` مرة واحدة.
-2. اجمع رموز حساباتك في ملف واحد (`AppAccounts`).
-3. أنشئ **خدمة محاسبية** واحدة تحوّل أحداث نظامك إلى `fa.record(...)` مع `.source(type, id)`.
-4. عند الإلغاء: `fa.reverseSource(type, id)`.
-5. التقط `AccountingException` واعرض `e.message`.
+1. Call `FlutterAccounting.initialize(...)` once at startup.
+2. Group your account codes into a centralized class (`AppAccounts`).
+3. Create an **Accounting Service** in your app that maps business events to `fa.record(...)` with `.source(type, id)`.
+4. Cancel or void transactions using `fa.reverseSource(type, id)`.
+5. Catch `AccountingException` and display user-friendly error messages with `e.message`.
 
-المثال الكامل في [`example/`](example/): خدمة مبيعات ([`sales_accounting_service.dart`](example/lib/sales_accounting_service.dart))،
-شاشات القيود والتقارير وكشف الحساب، واختبار للخدمة.
+Check the [`example/`](example/) directory for a full working Flutter app including sales service integration, journal screens, financial reports, and integration tests.
 
 ---
 
-## مرجع الـ API 📘
+## API Reference 📘
 
 ### `FlutterAccounting`
 
-| العضو | الوصف |
-|-------|-------|
-| `initialize({databaseName, databaseDirectory, customExecutor, config, seedDefaultAccounts})` | تهيئة المكتبة وتسجيل النسخة العامة |
-| `instance` / `isInitialized` | الوصول للنسخة (`StateError` إن لم تُهيّأ) |
-| `forTesting({config})` | نسخة بقاعدة في الذاكرة |
-| `accounts` / `journalEntries` / `reports` / `templates` / `periods` | المستودعات |
-| `record(builder, {post, postedBy})` | إنشاء (وترحيل) قيد من باني |
-| `reverseSource(type, id, {reversalDate, postedBy})` | عكس كل قيود مستند |
-| `transaction(action)` | تنفيذ عمليات متعددة ذرّياً |
-| `dispose()` | إغلاق قاعدة البيانات |
+| Member | Description |
+|---|---|
+| `initialize({databaseName, databaseDirectory, customExecutor, config, seedDefaultAccounts})` | Initializes the database and sets the singleton instance |
+| `instance` / `isInitialized` | Accesses the initialized instance (`StateError` if uninitialized) |
+| `forTesting({config})` | Creates an in-memory test instance |
+| `accounts` / `journalEntries` / `reports` / `templates` / `periods` | Repository accessors |
+| `record(builder, {post, postedBy})` | Resolves, creates, and optionally posts an entry |
+| `reverseSource(type, id, {reversalDate, postedBy})` | Reverses all posted entries for a source document |
+| `transaction(action)` | Executes multiple database operations in an atomic transaction |
+| `dispose()` | Closes the underlying database |
 
 ### `IAccountRepository` — `fa.accounts`
 
-| الدالة | الوصف |
-|--------|-------|
-| `getAllAccounts()` / `getActiveAccounts()` | كل الحسابات / النشطة |
-| `getAccountById(id)` / `getAccountByCode(code)` | حساب واحد |
-| `getAccountsByType(type)` / `getChildAccounts(parentId)` | تصفية |
-| `getPostableAccounts({type})` | الحسابات النهائية النشطة (للاختيار في القيود) |
-| `searchAccounts(query)` | بحث بالرمز أو الاسم |
-| `hasChildren(id)` / `hasTransactions(id)` / `countAccounts()` | استعلامات مساعدة |
-| `watchAllAccounts()` | Stream |
-| `createAccount(model)` / `updateAccount(model)` | إنشاء / تعديل (مع حماية الشجرة) |
-| `ensureAccount({code, name, type, parentId, parentCode, ...})` | إنشاء إن لم يوجد |
-| `setAccountActive(id, isActive:)` / `deleteAccount(id)` | تفعيل / حذف |
+| Method | Description |
+|---|---|
+| `getAllAccounts()` / `getActiveAccounts()` | Retrieves all or active accounts |
+| `getAccountById(id)` / `getAccountByCode(code)` | Retrieves a single account |
+| `getAccountsByType(type)` / `getChildAccounts(parentId)` | Filters accounts by type or parent |
+| `getPostableAccounts({type})` | Retrieves leaf accounts eligible for journal entries |
+| `searchAccounts(query)` | Searches by code or name |
+| `hasChildren(id)` / `hasTransactions(id)` / `countAccounts()` | Account tree introspection |
+| `watchAllAccounts()` | Streams account list updates |
+| `createAccount(model)` / `updateAccount(model)` | Creates or updates an account with hierarchy validation |
+| `ensureAccount({code, name, type, parentId, parentCode, ...})` | Idempotent account creation |
+| `setAccountActive(id, isActive:)` / `deleteAccount(id)` | Activates, deactivates, or deletes accounts |
 
 ### `IJournalEntryRepository` — `fa.journalEntries`
 
-| الدالة | الوصف |
-|--------|-------|
-| `getAllEntries()` / `getEntryById(id)` / `getEntryBySerial(serial)` | القراءة |
-| `getEntriesByStatus(status)` / `getEntriesInDateRange(from, to)` | تصفية |
-| `getEntriesByReference(ref)` / `getEntriesBySource(type, id)` | البحث بالمرجع / المستند |
-| `watchAllEntries()` | Stream |
-| `createEntry(entry)` | إنشاء مسودة (أو مرحّل إن مُرِّرت الحالة `posted`) |
-| `updateEntry(entry)` / `deleteEntry(id)` | للمسودات فقط |
-| `postEntry(id, {postedBy})` | ترحيل |
-| `createAndPost(entry, {postedBy})` | إنشاء + ترحيل ذرّياً |
-| `reverseEntry(id, {reversalDate, description, postedBy})` | عكس ذرّي |
+| Method | Description |
+|---|---|
+| `getAllEntries()` / `getEntryById(id)` / `getEntryBySerial(serial)` | Retrieves entries |
+| `getEntriesByStatus(status)` / `getEntriesInDateRange(from, to)` | Filters by status or date range |
+| `getEntriesByReference(ref)` / `getEntriesBySource(type, id)` | Finds entries by reference or source document |
+| `watchAllEntries()` | Streams entry list updates |
+| `createEntry(entry)` | Creates a draft entry |
+| `updateEntry(entry)` / `deleteEntry(id)` | Updates or deletes draft entries |
+| `postEntry(id, {postedBy})` | Posts a draft entry |
+| `createAndPost(entry, {postedBy})` | Creates and posts an entry atomically |
+| `reverseEntry(id, {reversalDate, description, postedBy})` | Reverses a posted entry atomically |
 
 ### `IReportsRepository` — `fa.reports`
 
-| الدالة | يُعيد |
-|--------|-------|
+| Method | Returns |
+|---|---|
 | `getTrialBalance({from, to})` | `TrialBalanceReport` |
 | `getIncomeStatement({from, to})` | `IncomeStatementReport` |
 | `getBalanceSheet({asOf})` | `BalanceSheetReport` |
-| `getAccountBalance(id, {asOf, includeChildren})` | `double` بالاتجاه الطبيعي |
+| `getAccountBalance(id, {asOf, includeChildren})` | `double` (Normal balance direction) |
 | `getAccountLedger(id, {from, to, includeChildren})` | `AccountLedgerReport` |
 
 ### `IAccountingPeriodRepository` — `fa.periods`
 
-| الدالة | الوصف |
-|--------|-------|
-| `getAllPeriods()` / `getPeriodById(id)` / `getPeriodForDate(date)` | القراءة |
-| `createPeriod(p)` / `updatePeriod(p)` / `deletePeriod(id)` | الإدارة (مع منع التداخل) |
-| `closePeriod(id)` / `reopenPeriod(id)` | الإقفال |
-| `createFiscalYear(year, {monthly})` | سنة مالية كاملة |
-| `ensureOpenPeriodFor(date)` | فترة مفتوحة للتاريخ (تُنشأ عند الحاجة) |
+| Method | Description |
+|---|---|
+| `getAllPeriods()` / `getPeriodById(id)` / `getPeriodForDate(date)` | Reads fiscal periods |
+| `createPeriod(p)` / `updatePeriod(p)` / `deletePeriod(id)` | Manages periods with overlap checks |
+| `closePeriod(id)` / `reopenPeriod(id)` | Closes or reopens fiscal periods |
+| `createFiscalYear(year, {monthly})` | Generates full fiscal year (annual or 12 months) |
+| `ensureOpenPeriodFor(date)` | Ensures an open period covers the given date |
 
 ### `IEntryTemplateRepository` — `fa.templates`
 
-| الدالة | الوصف |
-|--------|-------|
-| `getStandardTemplates()` | القوالب المدمجة |
-| `getCustomTemplates()` / `saveTemplate(t)` / `deleteTemplate(id)` | القوالب المخصصة (محفوظة) |
-| `applyTemplate({template, accountIdMap, totalAmount, date, description, reference})` | ينتج مسودة قيد |
-
-### أدوات مساعدة
-
-| العنصر | الوصف |
-|--------|-------|
-| `AccountingValidator.validateEntryLines(lines)` | يرمي استثناء عند الخطأ |
-| `AccountingValidator.checkEntryLines(lines)` | يُعيد رسالة الخطأ أو `null` (للواجهات) |
-| `AccountModel.create(...)` | إنشاء نموذج حساب بدون تواريخ |
-| `JournalEntryLineModel.debitLine(...)` / `.creditLine(...)` | بنود جاهزة |
-| `toMap()` / `fromMap()` | في `AccountModel`, `JournalEntryModel`, `JournalEntryLineModel`, `AccountingPeriodModel`, `EntryTemplateModel` |
-| `AccountType.displayNameAr` / `EntryStatus.displayNameAr` / `EntryType.displayNameAr` | أسماء عربية للعرض |
+| Method | Description |
+|---|---|
+| `getStandardTemplates()` | Built-in template collection |
+| `getCustomTemplates()` / `saveTemplate(t)` / `deleteTemplate(id)` | Persistent custom templates |
+| `applyTemplate({template, accountIdMap, totalAmount, ...})` | Generates a balanced draft entry from a template |
 
 ---
 
-## القواعد المحاسبية المدمجة ⚖️
+## Enforced Accounting Rules ⚖️
 
-| القاعدة | الاستثناء |
-|---------|-----------|
-| `Σ مدين = Σ دائن` | `UnbalancedEntryException` |
-| بند مدين وبند دائن على الأقل | `InsufficientLinesException` |
-| لا مبالغ صفرية | `ZeroAmountLineException` |
-| لا مبالغ سالبة | `NegativeAmountException` |
-| البند مدين أو دائن وليس الاثنين | `InvalidLineAmountsException` |
-| الحساب موجود ونشط | `AccountNotFoundException` / `InactiveAccountException` |
-| لا تسجيل على حساب أب | `AccountIsParentException` |
-| لا تعديل/حذف للقيد المرحّل | `CannotModifyPostedEntryException` |
-| لا ترحيل لمعكوس، لا عكس لمسودة | `InvalidEntryStateException` |
-| لا عكس مرتين | `EntryAlreadyReversedException` |
-| التاريخ في فترة مفتوحة | `PeriodClosedException` / `DateOutsidePeriodException` |
-| رقم قيد فريد | `DuplicateSerialNumberException` |
-| رمز حساب فريد | `DuplicateAccountCodeException` |
-| الحساب الفرعي بنفس نوع الأب | `AccountTypeMismatchException` |
-| لا أبناء تحت حساب عليه قيود | `ParentAccountHasTransactionsException` |
-| لا دورات في الشجرة | `InvalidAccountHierarchyException` |
-| لا تغيير لنوع حساب مستخدم | `CannotChangeAccountTypeException` |
-| لا حذف لحساب عليه قيود أو أبناء | `AccountHasTransactionsException` / `AccountHasChildrenException` |
-| الفترات لا تتداخل وبدايتها قبل نهايتها | `PeriodOverlapException` / `InvalidPeriodException` |
-| لا إقفال لفترة بها مسودات | `PeriodHasDraftEntriesException` |
-| القالب متوازن وصالح | `InvalidTemplateException` |
+| Invariant / Rule | Exception Thrown |
+|---|---|
+| `Total Debits == Total Credits` | `UnbalancedEntryException` |
+| At least one Debit line and one Credit line | `InsufficientLinesException` |
+| Line amount cannot be zero | `ZeroAmountLineException` |
+| Line amount cannot be negative | `NegativeAmountException` |
+| Line cannot have both Debit and Credit amounts | `InvalidLineAmountsException` |
+| Account must exist and be active | `AccountNotFoundException` / `InactiveAccountException` |
+| Transactions cannot be posted to parent accounts | `AccountIsParentException` |
+| Posted entries cannot be edited or deleted directly | `CannotModifyPostedEntryException` |
+| Cannot post reversed entries / cannot reverse draft entries | `InvalidEntryStateException` |
+| Cannot reverse an already reversed entry | `EntryAlreadyReversedException` |
+| Entry date must fall into an open fiscal period | `PeriodClosedException` / `DateOutsidePeriodException` |
+| Unique serial numbers per year | `DuplicateSerialNumberException` |
+| Unique account code | `DuplicateAccountCodeException` |
+| Child account must match parent account type | `AccountTypeMismatchException` |
+| Parent account cannot have transactions before adding children | `ParentAccountHasTransactionsException` |
+| No cycles allowed in account hierarchy | `InvalidAccountHierarchyException` |
+| Account type cannot be changed once transactions exist | `CannotChangeAccountTypeException` |
+| Account with transactions or child accounts cannot be deleted | `AccountHasTransactionsException` / `AccountHasChildrenException` |
+| Fiscal periods cannot overlap; start date must precede end date | `PeriodOverlapException` / `InvalidPeriodException` |
+| Fiscal period cannot be closed if draft entries exist | `PeriodHasDraftEntriesException` |
+| Template line ratios must be balanced | `InvalidTemplateException` |
 
 ---
 
-## الاستثناءات 🚨
+## Exceptions 🚨
 
-كل الاستثناءات ترث من `AccountingException` (sealed class) ولها `message` عربية جاهزة للعرض:
+All exceptions inherit from the sealed class `AccountingException` and provide human-readable messages in `message`:
 
 ```dart
 try {
   await fa.record(builder);
 } on UnbalancedEntryException catch (e) {
-  print('الفرق: ${e.totalDebits - e.totalCredits}');
+  print('Unbalanced delta: ${e.totalDebits - e.totalCredits}');
 } on AccountingException catch (e) {
-  showSnackBar(e.message);
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
 }
 ```
 
 ---
 
-## الاختبار 🧪
+## Testing 🧪
 
 ```bash
-flutter test                 # اختبارات المكتبة
-cd example && flutter test   # اختبار خدمة المثال
+flutter test                 # Run package test suite
+cd example && flutter test   # Run example app tests
 ```
+
+Use `FlutterAccounting.forTesting()` to spin up an isolated SQLite in-memory database per test:
 
 ```dart
 setUp(() async {
-  fa = FlutterAccounting.forTesting();                 // قاعدة في الذاكرة
+  fa = FlutterAccounting.forTesting();
   await AccountingSeedData.seed(fa.accounts);
   await fa.periods.ensureOpenPeriodFor(DateTime.now());
 });
+
 tearDown(() => fa.dispose());
 ```
 
 ---
 
-## الترقية من 0.3.x ⬆️
+## Upgrading from 0.3.x ⬆️
 
-- **ترقية قاعدة البيانات تلقائية** (المخطط v1 → v2) عند أول فتح؛ البيانات الحالية محفوظة.
-- **التقارير أصبحت صحيحة**: كانت تحتسب المسودات وتتجاهل فلترة التاريخ — قد تختلف الأرقام عن السابق (الأرقام الجديدة هي الصحيحة).
-- `TrialBalanceRow.balance`: موجب = مدين، سالب = دائن لكل الأنواع (كما في التوثيق).
-- `applyTemplate` يرمي `InvalidTemplateException` / `AccountNotFoundException` بدلاً من `ArgumentError`.
-- `updateEntry` لم يعد يغيّر حالة القيد؛ استخدم `postEntry`.
-- `AccountModel.isParent` مُهمل (كان يعني "جذري")؛ استخدم `isRoot` أو `accounts.hasChildren(id)`.
-- الواجهات المجردة أضيفت لها دوال جديدة؛ إن كنت تطبّقها بنفسك (Mocks) أضف الدوال الجديدة.
-- إن كان لديك فترات متداخلة من قبل فستستمر بالعمل، لكن لن يُسمح بإنشاء تداخل جديد.
+- **Automatic Schema Migration**: Database migrations (v1 → v2) execute automatically on startup preserving your data.
+- **Accurate Financial Reports**: Reports strictly filter out drafts and enforce date ranges.
+- `TrialBalanceRow.balance`: Positive = Debit, Negative = Credit across all account types.
+- `applyTemplate` throws `InvalidTemplateException` and `AccountNotFoundException` instead of generic `ArgumentError`.
+- `updateEntry` no longer mutates entry status; use `postEntry` to transition drafts to posted.
+- `AccountModel.isParent` is deprecated; use `isRoot` or `accounts.hasChildren(id)`.
 
-التفاصيل الكاملة في [CHANGELOG](CHANGELOG.md).
+See the full [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 
-## بنية المشروع 🏗️
+## Project Structure 🏗️
 
-```
+```text
 lib/
-├── flutter_accounting.dart            ← الـ Public API (استورد هذا فقط)
+├── flutter_accounting.dart            ← Public package API (import this)
 └── src/
-    ├── flutter_accounting_init.dart   ← FlutterAccounting (نقطة الدخول)
+    ├── flutter_accounting_init.dart   ← FlutterAccounting singleton & coordinator
     ├── core/
     │   ├── enums.dart                 ← AccountType, EntryStatus, EntryType
-    │   ├── exceptions.dart            ← AccountingException وأنواعها
-    │   ├── accounting_validator.dart  ← قواعد القيد المزدوج
+    │   ├── exceptions.dart            ← AccountingException sealed hierarchy
+    │   ├── accounting_validator.dart  ← Double-entry validation rules
     │   ├── accounting_config.dart     ← AccountingConfig
     │   ├── journal_entry_builder.dart ← JournalEntryBuilder
-    │   ├── standard_templates.dart    ← القوالب القياسية
-    │   └── date_utils.dart            ← (داخلي) حدود الأيام
-    ├── models/                        ← نماذج Dart نقية
-    ├── reports/report_models.dart     ← نماذج التقارير
+    │   ├── standard_templates.dart    ← Standard templates collection
+    │   └── date_utils.dart            ← Day boundary utilities
+    ├── models/                        ← Pure domain models
+    ├── reports/report_models.dart     ← Report DTOs
     ├── repositories/
-    │   ├── interfaces/interfaces.dart ← العقود المجردة
-    │   └── impl/                      ← التنفيذ
-    ├── database/                      ← Drift (داخلي): tables, daos, mappers
-    └── seed/accounting_seed_data.dart ← دليل الحسابات الافتراضي
+    │   ├── interfaces/                ← Repository contracts
+    │   └── impl/                      ← Repository implementations
+    ├── database/                      ← Drift (SQLite): tables, DAOs, mappers
+    └── seed/accounting_seed_data.dart ← Standard chart of accounts seed
 doc/
-└── INTEGRATION.md                     ← دليل التكامل
-example/                               ← تطبيق مثال كامل + اختبار
+└── INTEGRATION.md                     ← Integration guide & recipes
+example/                               ← Full example app & integration tests
 ```
-
-### للمساهمين: توليد كود Drift
-
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
-
-عند تعديل الجداول: ارفع `schemaVersion` في `accounting_database.dart` وأضف خطوة الترقية في `onUpgrade`
-واختبرها في `test/migration_test.dart`.
 
 ---
 
-## أسئلة شائعة ❓
+## FAQ ❓
 
-**هل أستطيع استخدام أرقام حسابات خاصة بي؟**
-نعم. الدليل الافتراضي اختياري. أنشئ دليلك بـ `ensureAccount` / `createAccount`.
+**Can I use my own custom account numbering?**
+Yes. Seeding default accounts is optional. You can build your custom chart of accounts using `createAccount` or `ensureAccount`.
 
-**كيف أعدّل فاتورة مرحّلة؟**
-اعكس قيودها ثم سجّل الجديدة داخل `fa.transaction`. انظر [دليل التكامل §6](doc/INTEGRATION.md#6-الإلغاء-والتعديل-بعد-الترحيل).
+**How do I edit a posted invoice or transaction?**
+Reverse the previous entry and record a new corrected entry inside `fa.transaction(...)`. See [Integration Guide §6](doc/INTEGRATION.md).
 
-**لماذا رُفض قيدي بـ `DateOutsidePeriodException`؟**
-لا توجد فترة تغطي تاريخه. استدعِ `fa.periods.ensureOpenPeriodFor(date)` أو استخدم `requireOpenPeriod: false`.
+**Why am I receiving a `DateOutsidePeriodException`?**
+No open fiscal period covers the entry's date. Call `fa.periods.ensureOpenPeriodFor(date)` or initialize with `requireOpenPeriod: false`.
 
-**هل تدعم عملات متعددة / مراكز تكلفة؟**
-ليس بعد. المبالغ رقم واحد بعملة واحدة. (مخطط لها مستقبلاً.)
+**Are multi-currency transactions supported?**
+Currently, single-currency amounts are supported. Multi-currency and cost center features are planned for future releases.
 
-**كيف تُخزَّن المبالغ؟**
-كأرقام `double` مع هامش تسامح `0.001` في التوازن. قرّب المبالغ في تطبيقك لمنزلتين عشريتين قبل التسجيل.
+**How are decimal amounts stored?**
+Amounts are stored as `double` values with a `0.001` balance tolerance margin. Round values to 2 decimal places in your UI before recording.
 
 ---
 
-## الترخيص
+## License
 
 MIT License © 2026

@@ -52,15 +52,17 @@ class AccountHasTransactionsException extends AccountingException {
 class AccountIsParentException extends AccountingException {
   final String accountCode;
   const AccountIsParentException(this.accountCode)
-      : super('الحساب "$accountCode" حساب رئيسي (أب)، لا يمكن التسجيل عليه مباشرة. استخدم حساباً فرعياً.');
+      : super(
+            'الحساب "$accountCode" حساب رئيسي (أب)، لا يمكن التسجيل عليه مباشرة. استخدم حساباً فرعياً.');
 }
 
 /// لا يمكن إضافة حساب فرعي تحت حساب عليه قيود
 class ParentAccountHasTransactionsException extends AccountingException {
   final String parentCode;
   const ParentAccountHasTransactionsException(this.parentCode)
-      : super('لا يمكن إضافة حساب فرعي تحت الحساب "$parentCode" لأنه يحتوي على قيود. '
-              'انقل أرصدته أولاً أو اختر حساباً أباً آخر.');
+      : super(
+            'لا يمكن إضافة حساب فرعي تحت الحساب "$parentCode" لأنه يحتوي على قيود. '
+            'انقل أرصدته أولاً أو اختر حساباً أباً آخر.');
 }
 
 /// نوع الحساب الفرعي يجب أن يطابق نوع الحساب الأب
@@ -68,14 +70,16 @@ class AccountTypeMismatchException extends AccountingException {
   final String accountCode;
   final String parentCode;
   const AccountTypeMismatchException(this.accountCode, this.parentCode)
-      : super('نوع الحساب "$accountCode" يجب أن يطابق نوع الحساب الأب "$parentCode".');
+      : super(
+            'نوع الحساب "$accountCode" يجب أن يطابق نوع الحساب الأب "$parentCode".');
 }
 
 /// لا يمكن تغيير نوع حساب عليه قيود
 class CannotChangeAccountTypeException extends AccountingException {
   final String accountCode;
   const CannotChangeAccountTypeException(this.accountCode)
-      : super('لا يمكن تغيير نوع الحساب "$accountCode" لأنه يحتوي على قيود أو حسابات فرعية.');
+      : super(
+            'لا يمكن تغيير نوع الحساب "$accountCode" لأنه يحتوي على قيود أو حسابات فرعية.');
 }
 
 /// هيكل شجرة الحسابات غير صالح (مثل جعل الحساب أباً لنفسه أو لأحد أسلافه)
@@ -137,7 +141,7 @@ class PeriodHasDraftEntriesException extends AccountingException {
   final int draftCount;
   const PeriodHasDraftEntriesException(this.draftCount)
       : super('لا يمكن إغلاق الفترة: تحتوي على $draftCount قيد/قيود مسودة. '
-              'رحّلها أو احذفها أولاً.');
+            'رحّلها أو احذفها أولاً.');
 }
 
 /// لا يمكن حذف فترة تحتوي على قيود
@@ -169,13 +173,13 @@ class InsufficientLinesException extends AccountingException {
 /// مبلغ سالب في أحد البنود
 class NegativeAmountException extends AccountingException {
   const NegativeAmountException()
-      : super('لا يُسمح بالمبالغ السالبة. استخدم الجانب المقابل (مدين/دائن) بدلاً من ذلك.');
+      : super(
+            'لا يُسمح بالمبالغ السالبة. استخدم الجانب المقابل (مدين/دائن) بدلاً من ذلك.');
 }
 
 /// مبلغ البند يساوي صفر
 class ZeroAmountLineException extends AccountingException {
-  const ZeroAmountLineException()
-      : super('لا يُسمح بإدخال بنود بمبلغ صفر.');
+  const ZeroAmountLineException() : super('لا يُسمح بإدخال بنود بمبلغ صفر.');
 }
 
 /// محاولة تعديل قيد مرحّل

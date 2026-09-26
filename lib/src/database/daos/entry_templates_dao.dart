@@ -13,9 +13,9 @@ class EntryTemplatesDao extends DatabaseAccessor<AccountingDatabase>
     with _$EntryTemplatesDaoMixin {
   EntryTemplatesDao(super.db);
 
-  Future<List<EntryTemplate>> getAllTemplates() =>
-      (select(entryTemplates)..orderBy([(t) => OrderingTerm(expression: t.name)]))
-          .get();
+  Future<List<EntryTemplate>> getAllTemplates() => (select(entryTemplates)
+        ..orderBy([(t) => OrderingTerm(expression: t.name)]))
+      .get();
 
   Future<EntryTemplate?> getTemplateById(int id) =>
       (select(entryTemplates)..where((t) => t.id.equals(id))).getSingleOrNull();

@@ -34,8 +34,8 @@ class _EntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (entry.status) {
-      EntryStatus.draft    => Colors.orange,
-      EntryStatus.posted   => Colors.green,
+      EntryStatus.draft => Colors.orange,
+      EntryStatus.posted => Colors.green,
       EntryStatus.reversed => Colors.grey,
     };
 

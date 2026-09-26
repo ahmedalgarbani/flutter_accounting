@@ -40,13 +40,13 @@ class FlutterAccounting {
   // ─────────────────────────────────────────────────────────────
 
   /// دليل الحسابات
-  final IAccountRepository      accounts;
+  final IAccountRepository accounts;
 
   /// القيود اليومية (إنشاء / ترحيل / عكس)
   final IJournalEntryRepository journalEntries;
 
   /// التقارير المالية وكشوف الحسابات
-  final IReportsRepository      reports;
+  final IReportsRepository reports;
 
   /// قوالب العمليات (بيع، شراء، سندات...)
   final IEntryTemplateRepository templates;
@@ -75,15 +75,17 @@ class FlutterAccounting {
     AccountingDatabase db,
     AccountingConfig config,
   ) {
-    final accounts = AccountRepositoryImpl(db.accountsDao, db.journalEntriesDao);
+    final accounts =
+        AccountRepositoryImpl(db.accountsDao, db.journalEntriesDao);
     return FlutterAccounting._(
-      database:       db,
-      config:         config,
-      accounts:       accounts,
-      journalEntries: JournalEntryRepositoryImpl(db.journalEntriesDao, db.accountsDao, config),
-      reports:        ReportsRepositoryImpl(db.journalEntriesDao, db.accountsDao),
-      templates:      EntryTemplateRepositoryImpl(accounts, db.entryTemplatesDao),
-      periods:        AccountingPeriodRepositoryImpl(db.journalEntriesDao),
+      database: db,
+      config: config,
+      accounts: accounts,
+      journalEntries: JournalEntryRepositoryImpl(
+          db.journalEntriesDao, db.accountsDao, config),
+      reports: ReportsRepositoryImpl(db.journalEntriesDao, db.accountsDao),
+      templates: EntryTemplateRepositoryImpl(accounts, db.entryTemplatesDao),
+      periods: AccountingPeriodRepositoryImpl(db.journalEntriesDao),
     );
   }
 
@@ -149,7 +151,8 @@ class FlutterAccounting {
   static FlutterAccounting forTesting({
     AccountingConfig config = const AccountingConfig(),
   }) {
-    return FlutterAccounting._fromDatabase(AccountingDatabase.inMemory(), config);
+    return FlutterAccounting._fromDatabase(
+        AccountingDatabase.inMemory(), config);
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -200,8 +203,8 @@ class FlutterAccounting {
     String? postedBy,
   }) {
     return transaction(() async {
-      final entries =
-          await journalEntries.getEntriesBySource(sourceType, sourceId.toString());
+      final entries = await journalEntries.getEntriesBySource(
+          sourceType, sourceId.toString());
       final reversals = <JournalEntryModel>[];
       for (final e in entries.where((e) => e.isPosted && !e.isReversal)) {
         reversals.add(await journalEntries.reverseEntry(

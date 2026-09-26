@@ -9,11 +9,11 @@ library;
 // نوع الحساب (Account Type)
 // ─────────────────────────────────────────────────────────────
 enum AccountType {
-  asset,     // أصول
+  asset, // أصول
   liability, // خصوم
-  equity,    // حقوق الملكية
-  revenue,   // إيرادات
-  expense,   // مصروفات
+  equity, // حقوق الملكية
+  revenue, // إيرادات
+  expense, // مصروفات
 }
 
 extension AccountTypeX on AccountType {
@@ -42,21 +42,31 @@ extension AccountTypeX on AccountType {
 
   String get displayNameAr {
     switch (this) {
-      case AccountType.asset:     return 'أصول';
-      case AccountType.liability: return 'خصوم';
-      case AccountType.equity:    return 'حقوق الملكية';
-      case AccountType.revenue:   return 'إيرادات';
-      case AccountType.expense:   return 'مصروفات';
+      case AccountType.asset:
+        return 'أصول';
+      case AccountType.liability:
+        return 'خصوم';
+      case AccountType.equity:
+        return 'حقوق الملكية';
+      case AccountType.revenue:
+        return 'إيرادات';
+      case AccountType.expense:
+        return 'مصروفات';
     }
   }
 
   String get displayNameEn {
     switch (this) {
-      case AccountType.asset:     return 'Asset';
-      case AccountType.liability: return 'Liability';
-      case AccountType.equity:    return 'Equity';
-      case AccountType.revenue:   return 'Revenue';
-      case AccountType.expense:   return 'Expense';
+      case AccountType.asset:
+        return 'Asset';
+      case AccountType.liability:
+        return 'Liability';
+      case AccountType.equity:
+        return 'Equity';
+      case AccountType.revenue:
+        return 'Revenue';
+      case AccountType.expense:
+        return 'Expense';
     }
   }
 }
@@ -70,80 +80,107 @@ enum NormalBalance { debit, credit }
 // حالة القيد اليومي (Journal Entry Status)
 // ─────────────────────────────────────────────────────────────
 enum EntryStatus {
-  draft,    // مسودة - قابلة للتعديل والحذف
-  posted,   // مرحّل - محفوظة في دفتر الأستاذ
+  draft, // مسودة - قابلة للتعديل والحذف
+  posted, // مرحّل - محفوظة في دفتر الأستاذ
   reversed, // معكوس - تم إلغاؤها بقيد عكسي
 }
 
 extension EntryStatusX on EntryStatus {
   String get displayNameAr {
     switch (this) {
-      case EntryStatus.draft:    return 'مسودة';
-      case EntryStatus.posted:   return 'مرحّل';
-      case EntryStatus.reversed: return 'معكوس';
+      case EntryStatus.draft:
+        return 'مسودة';
+      case EntryStatus.posted:
+        return 'مرحّل';
+      case EntryStatus.reversed:
+        return 'معكوس';
     }
   }
 
   String get displayNameEn {
     switch (this) {
-      case EntryStatus.draft:    return 'Draft';
-      case EntryStatus.posted:   return 'Posted';
-      case EntryStatus.reversed: return 'Reversed';
+      case EntryStatus.draft:
+        return 'Draft';
+      case EntryStatus.posted:
+        return 'Posted';
+      case EntryStatus.reversed:
+        return 'Reversed';
     }
   }
 
   bool get isEditable => this == EntryStatus.draft;
-  bool get isPosted    => this == EntryStatus.posted;
+  bool get isPosted => this == EntryStatus.posted;
 
   /// هل يؤثر القيد على الأرصدة؟ (المرحّل والمعكوس كلاهما في دفتر الأستاذ،
   /// والقيد العكسي المقابل يلغي أثر القيد المعكوس)
   bool get affectsBalances =>
       this == EntryStatus.posted || this == EntryStatus.reversed;
 }
+
 // ─────────────────────────────────────────────────────────────
 // نوع القيد أو العملية (Entry Type / Operation Type)
 // ─────────────────────────────────────────────────────────────
 enum EntryType {
-  sale,             // مبيعات نقدية
-  purchase,         // مشتريات نقدية
-  saleAgil,         // مبيعات آجلة
-  purchaseAgil,     // مشتريات آجلة
-  paymentVoucher,   // سند صرف
-  receiptVoucher,   // سند قبض
-  journalEntry,     // قيد يومية عام
-  openingBalance,   // قيد افتتاحي
-  reversal,         // قيد عكسي
-  adjustment,       // قيد تسوية
+  sale, // مبيعات نقدية
+  purchase, // مشتريات نقدية
+  saleAgil, // مبيعات آجلة
+  purchaseAgil, // مشتريات آجلة
+  paymentVoucher, // سند صرف
+  receiptVoucher, // سند قبض
+  journalEntry, // قيد يومية عام
+  openingBalance, // قيد افتتاحي
+  reversal, // قيد عكسي
+  adjustment, // قيد تسوية
 }
 
 extension EntryTypeX on EntryType {
   String get displayNameAr {
     switch (this) {
-      case EntryType.sale:             return 'مبيعات نقدية';
-      case EntryType.purchase:         return 'مشتريات نقدية';
-      case EntryType.saleAgil:         return 'مبيعات آجلة';
-      case EntryType.purchaseAgil:     return 'مشتريات آجلة';
-      case EntryType.paymentVoucher:   return 'سند صرف';
-      case EntryType.receiptVoucher:   return 'سند قبض';
-      case EntryType.journalEntry:     return 'قيد يومية';
-      case EntryType.openingBalance:   return 'قيد افتتاحي';
-      case EntryType.reversal:         return 'قيد عكسي';
-      case EntryType.adjustment:       return 'قيد تسوية';
+      case EntryType.sale:
+        return 'مبيعات نقدية';
+      case EntryType.purchase:
+        return 'مشتريات نقدية';
+      case EntryType.saleAgil:
+        return 'مبيعات آجلة';
+      case EntryType.purchaseAgil:
+        return 'مشتريات آجلة';
+      case EntryType.paymentVoucher:
+        return 'سند صرف';
+      case EntryType.receiptVoucher:
+        return 'سند قبض';
+      case EntryType.journalEntry:
+        return 'قيد يومية';
+      case EntryType.openingBalance:
+        return 'قيد افتتاحي';
+      case EntryType.reversal:
+        return 'قيد عكسي';
+      case EntryType.adjustment:
+        return 'قيد تسوية';
     }
   }
 
   String get displayNameEn {
     switch (this) {
-      case EntryType.sale:             return 'Cash Sale';
-      case EntryType.purchase:         return 'Cash Purchase';
-      case EntryType.saleAgil:         return 'Credit Sale';
-      case EntryType.purchaseAgil:     return 'Credit Purchase';
-      case EntryType.paymentVoucher:   return 'Payment Voucher';
-      case EntryType.receiptVoucher:   return 'Receipt Voucher';
-      case EntryType.journalEntry:     return 'Journal Entry';
-      case EntryType.openingBalance:   return 'Opening Balance';
-      case EntryType.reversal:         return 'Reversal';
-      case EntryType.adjustment:       return 'Adjustment';
+      case EntryType.sale:
+        return 'Cash Sale';
+      case EntryType.purchase:
+        return 'Cash Purchase';
+      case EntryType.saleAgil:
+        return 'Credit Sale';
+      case EntryType.purchaseAgil:
+        return 'Credit Purchase';
+      case EntryType.paymentVoucher:
+        return 'Payment Voucher';
+      case EntryType.receiptVoucher:
+        return 'Receipt Voucher';
+      case EntryType.journalEntry:
+        return 'Journal Entry';
+      case EntryType.openingBalance:
+        return 'Opening Balance';
+      case EntryType.reversal:
+        return 'Reversal';
+      case EntryType.adjustment:
+        return 'Adjustment';
     }
   }
 }

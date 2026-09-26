@@ -9,8 +9,8 @@ class JournalEntryLineModel {
   final int? id;
   final int? entryId;
   final int accountId;
-  final String accountCode;   // للعرض - يُملأ عند الجلب من DB
-  final String accountName;   // للعرض - يُملأ عند الجلب من DB
+  final String accountCode; // للعرض - يُملأ عند الجلب من DB
+  final String accountName; // للعرض - يُملأ عند الجلب من DB
   final double debit;
   final double credit;
   final String? description;
@@ -47,15 +47,15 @@ class JournalEntryLineModel {
     int sortOrder = 0,
   }) {
     return JournalEntryLineModel(
-      id:          id,
-      entryId:     entryId,
-      accountId:   accountId,
+      id: id,
+      entryId: entryId,
+      accountId: accountId,
       accountCode: accountCode,
       accountName: accountName,
-      debit:       amount,
-      credit:      0,
+      debit: amount,
+      credit: 0,
       description: description,
-      sortOrder:   sortOrder,
+      sortOrder: sortOrder,
     );
   }
 
@@ -71,15 +71,15 @@ class JournalEntryLineModel {
     int sortOrder = 0,
   }) {
     return JournalEntryLineModel(
-      id:          id,
-      entryId:     entryId,
-      accountId:   accountId,
+      id: id,
+      entryId: entryId,
+      accountId: accountId,
       accountCode: accountCode,
       accountName: accountName,
-      debit:       0,
-      credit:      amount,
+      debit: 0,
+      credit: amount,
       description: description,
-      sortOrder:   sortOrder,
+      sortOrder: sortOrder,
     );
   }
 
@@ -87,7 +87,7 @@ class JournalEntryLineModel {
   // خصائص مشتقة
   // ─────────────────────────────────────────────────────────────
 
-  bool get isDebit  => debit > 0;
+  bool get isDebit => debit > 0;
   bool get isCredit => credit > 0;
   double get amount => isDebit ? debit : credit;
 
@@ -103,41 +103,41 @@ class JournalEntryLineModel {
     int? sortOrder,
   }) {
     return JournalEntryLineModel(
-      id:          id          ?? this.id,
-      entryId:     entryId     ?? this.entryId,
-      accountId:   accountId   ?? this.accountId,
+      id: id ?? this.id,
+      entryId: entryId ?? this.entryId,
+      accountId: accountId ?? this.accountId,
       accountCode: accountCode ?? this.accountCode,
       accountName: accountName ?? this.accountName,
-      debit:       debit       ?? this.debit,
-      credit:      credit      ?? this.credit,
+      debit: debit ?? this.debit,
+      credit: credit ?? this.credit,
       description: description ?? this.description,
-      sortOrder:   sortOrder   ?? this.sortOrder,
+      sortOrder: sortOrder ?? this.sortOrder,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'id':          id,
-        'entryId':     entryId,
-        'accountId':   accountId,
+        'id': id,
+        'entryId': entryId,
+        'accountId': accountId,
         'accountCode': accountCode,
         'accountName': accountName,
-        'debit':       debit,
-        'credit':      credit,
+        'debit': debit,
+        'credit': credit,
         'description': description,
-        'sortOrder':   sortOrder,
+        'sortOrder': sortOrder,
       };
 
   factory JournalEntryLineModel.fromMap(Map<String, dynamic> map) =>
       JournalEntryLineModel(
-        id:          map['id'] as int?,
-        entryId:     map['entryId'] as int?,
-        accountId:   map['accountId'] as int,
+        id: map['id'] as int?,
+        entryId: map['entryId'] as int?,
+        accountId: map['accountId'] as int,
         accountCode: (map['accountCode'] as String?) ?? '',
         accountName: (map['accountName'] as String?) ?? '',
-        debit:       ((map['debit'] as num?) ?? 0).toDouble(),
-        credit:      ((map['credit'] as num?) ?? 0).toDouble(),
+        debit: ((map['debit'] as num?) ?? 0).toDouble(),
+        credit: ((map['credit'] as num?) ?? 0).toDouble(),
         description: map['description'] as String?,
-        sortOrder:   (map['sortOrder'] as int?) ?? 0,
+        sortOrder: (map['sortOrder'] as int?) ?? 0,
       );
 
   @override

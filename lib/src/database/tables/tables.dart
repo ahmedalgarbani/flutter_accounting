@@ -10,13 +10,13 @@ import '../../core/enums.dart';
 // ─────────────────────────────────────────────────────────────
 
 class Accounts extends Table {
-  IntColumn  get id          => integer().autoIncrement()();
-  TextColumn get code        => text().withLength(min: 1, max: 30)();
-  TextColumn get name        => text().withLength(min: 1, max: 255)();
-  TextColumn get nameAr      => text().withLength(min: 1, max: 255).nullable()();
-  IntColumn  get type        => intEnum<AccountType>()();
-  IntColumn  get parentId    => integer().nullable().references(Accounts, #id)();
-  BoolColumn get isActive    => boolean().withDefault(const Constant(true))();
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get code => text().withLength(min: 1, max: 30)();
+  TextColumn get name => text().withLength(min: 1, max: 255)();
+  TextColumn get nameAr => text().withLength(min: 1, max: 255).nullable()();
+  IntColumn get type => intEnum<AccountType>()();
+  IntColumn get parentId => integer().nullable().references(Accounts, #id)();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   TextColumn get description => text().nullable()();
 
   /// مستوى الحساب في التسلسل الهرمي (1 = حساب رئيسي، 2 = فرعي، ...)
@@ -26,7 +26,9 @@ class Accounts extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
-  List<Set<Column>>? get uniqueKeys => [{code}];
+  List<Set<Column>>? get uniqueKeys => [
+        {code}
+      ];
 
   @override
   String get tableName => 'accounts';
@@ -36,11 +38,12 @@ class Accounts extends Table {
 // جدول الفترات المحاسبية - Accounting Periods
 // ─────────────────────────────────────────────────────────────
 class AccountingPeriods extends Table {
-  IntColumn  get id        => integer().autoIncrement()();
-  TextColumn get name      => text().withLength(min: 1, max: 100)(); // مثال: "يناير 2024"
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name =>
+      text().withLength(min: 1, max: 100)(); // مثال: "يناير 2024"
   DateTimeColumn get startDate => dateTime()();
-  DateTimeColumn get endDate   => dateTime()();
-  BoolColumn get isClosed  => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get endDate => dateTime()();
+  BoolColumn get isClosed => boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -50,25 +53,26 @@ class AccountingPeriods extends Table {
 // ─────────────────────────────────────────────────────────────
 
 @TableIndex(name: 'idx_journal_entries_date', columns: {#date})
-@TableIndex(name: 'idx_journal_entries_source', columns: {#sourceType, #sourceId})
+@TableIndex(
+    name: 'idx_journal_entries_source', columns: {#sourceType, #sourceId})
 class JournalEntries extends Table {
-  IntColumn  get id          => integer().autoIncrement()();
-  
+  IntColumn get id => integer().autoIncrement()();
+
   /// رقم القيد المتسلسل (Unique Serial Number)
   TextColumn get serialNumber => text().withLength(min: 1, max: 50)();
 
-  DateTimeColumn get date    => dateTime()();
+  DateTimeColumn get date => dateTime()();
   TextColumn get description => text().withLength(min: 1, max: 500)();
 
   /// رقم المرجع (فاتورة، سند، ...)
-  TextColumn get reference   => text().withLength(min: 1, max: 100).nullable()();
+  TextColumn get reference => text().withLength(min: 1, max: 100).nullable()();
 
-  IntColumn  get status      => intEnum<EntryStatus>()();
-  TextColumn get notes       => text().nullable()();
+  IntColumn get status => intEnum<EntryStatus>()();
+  TextColumn get notes => text().nullable()();
 
   // تتبع التدقيق (Audit Trail)
-  TextColumn get createdBy   => text().nullable()();
-  TextColumn get postedBy    => text().nullable()();
+  TextColumn get createdBy => text().nullable()();
+  TextColumn get postedBy => text().nullable()();
   DateTimeColumn get postedAt => dateTime().nullable()();
 
   // ── أُضيفت في الإصدار 2 من المخطط (Schema v2) ──
@@ -78,7 +82,7 @@ class JournalEntries extends Table {
 
   /// ربط القيد بمستند في النظام المضيف (مثال: 'invoice' / '15')
   TextColumn get sourceType => text().nullable()();
-  TextColumn get sourceId   => text().nullable()();
+  TextColumn get sourceId => text().nullable()();
 
   /// إن كان هذا القيد قيداً عكسياً: معرّف القيد الأصلي
   IntColumn get reversalOfId => integer().nullable()();
@@ -87,7 +91,9 @@ class JournalEntries extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
-  List<Set<Column>>? get uniqueKeys => [{serialNumber}];
+  List<Set<Column>>? get uniqueKeys => [
+        {serialNumber}
+      ];
 
   @override
   String get tableName => 'journal_entries';
@@ -100,12 +106,12 @@ class JournalEntries extends Table {
 @TableIndex(name: 'idx_journal_entry_lines_entry', columns: {#entryId})
 @TableIndex(name: 'idx_journal_entry_lines_account', columns: {#accountId})
 class JournalEntryLines extends Table {
-  IntColumn get id      => integer().autoIncrement()();
+  IntColumn get id => integer().autoIncrement()();
   IntColumn get entryId => integer().references(JournalEntries, #id)();
   IntColumn get accountId => integer().references(Accounts, #id)();
 
   /// المبلغ المدين (0 إذا كان البند دائناً)
-  RealColumn get debit  => real().withDefault(const Constant(0.0))();
+  RealColumn get debit => real().withDefault(const Constant(0.0))();
 
   /// المبلغ الدائن (0 إذا كان البند مديناً)
   RealColumn get credit => real().withDefault(const Constant(0.0))();
@@ -124,13 +130,13 @@ class JournalEntryLines extends Table {
 // ─────────────────────────────────────────────────────────────
 
 class EntryTemplates extends Table {
-  IntColumn  get id          => integer().autoIncrement()();
-  TextColumn get name        => text().withLength(min: 1, max: 255)();
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 255)();
   TextColumn get description => text().nullable()();
-  IntColumn  get type        => intEnum<EntryType>()();
+  IntColumn get type => intEnum<EntryType>()();
 
   /// بنود القالب مخزّنة كـ JSON
-  TextColumn get linesJson   => text()();
+  TextColumn get linesJson => text()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 

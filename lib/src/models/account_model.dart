@@ -51,15 +51,15 @@ class AccountModel {
   }) {
     final now = DateTime.now();
     return AccountModel(
-      code:        code,
-      name:        name,
-      nameAr:      nameAr,
-      type:        type,
-      parentId:    parentId,
-      isActive:    isActive,
+      code: code,
+      name: name,
+      nameAr: nameAr,
+      type: type,
+      parentId: parentId,
+      isActive: isActive,
       description: description,
-      createdAt:   now,
-      updatedAt:   now,
+      createdAt: now,
+      updatedAt: now,
     );
   }
 
@@ -79,7 +79,8 @@ class AccountModel {
   /// ⚠️ الاسم مضلِّل: هذه الخاصية تعني فقط أن الحساب ليس له أب (جذري)،
   /// ولا تعني أن له حسابات فرعية.
   /// لمعرفة ذلك استخدم `accounts.hasChildren(id)`.
-  @Deprecated('Use isRoot, or accounts.hasChildren(id) to check for sub-accounts.')
+  @Deprecated(
+      'Use isRoot, or accounts.hasChildren(id) to check for sub-accounts.')
   bool get isParent => isRoot;
 
   // ─────────────────────────────────────────────────────────────
@@ -99,48 +100,52 @@ class AccountModel {
     DateTime? updatedAt,
   }) {
     return AccountModel(
-      id:          id          ?? this.id,
-      code:        code        ?? this.code,
-      name:        name        ?? this.name,
-      nameAr:      nameAr      ?? this.nameAr,
-      type:        type        ?? this.type,
-      parentId:    parentId    ?? this.parentId,
-      isActive:    isActive    ?? this.isActive,
+      id: id ?? this.id,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      nameAr: nameAr ?? this.nameAr,
+      type: type ?? this.type,
+      parentId: parentId ?? this.parentId,
+      isActive: isActive ?? this.isActive,
       description: description ?? this.description,
-      level:       level       ?? this.level,
-      createdAt:   createdAt   ?? this.createdAt,
-      updatedAt:   updatedAt   ?? this.updatedAt,
+      level: level ?? this.level,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'id':          id,
-        'code':        code,
-        'name':        name,
-        'nameAr':      nameAr,
-        'type':        type.name,
-        'parentId':    parentId,
-        'isActive':    isActive,
+        'id': id,
+        'code': code,
+        'name': name,
+        'nameAr': nameAr,
+        'type': type.name,
+        'parentId': parentId,
+        'isActive': isActive,
         'description': description,
-        'level':       level,
-        'createdAt':   createdAt.toIso8601String(),
-        'updatedAt':   updatedAt.toIso8601String(),
+        'level': level,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
       };
 
   factory AccountModel.fromMap(Map<String, dynamic> map) {
     final now = DateTime.now();
     return AccountModel(
-      id:          map['id'] as int?,
-      code:        map['code'] as String,
-      name:        map['name'] as String,
-      nameAr:      map['nameAr'] as String?,
-      type:        AccountType.values.byName(map['type'] as String),
-      parentId:    map['parentId'] as int?,
-      isActive:    (map['isActive'] as bool?) ?? true,
+      id: map['id'] as int?,
+      code: map['code'] as String,
+      name: map['name'] as String,
+      nameAr: map['nameAr'] as String?,
+      type: AccountType.values.byName(map['type'] as String),
+      parentId: map['parentId'] as int?,
+      isActive: (map['isActive'] as bool?) ?? true,
       description: map['description'] as String?,
-      level:       (map['level'] as int?) ?? 1,
-      createdAt:   map['createdAt'] == null ? now : DateTime.parse(map['createdAt'] as String),
-      updatedAt:   map['updatedAt'] == null ? now : DateTime.parse(map['updatedAt'] as String),
+      level: (map['level'] as int?) ?? 1,
+      createdAt: map['createdAt'] == null
+          ? now
+          : DateTime.parse(map['createdAt'] as String),
+      updatedAt: map['updatedAt'] == null
+          ? now
+          : DateTime.parse(map['updatedAt'] as String),
     );
   }
 
@@ -156,5 +161,6 @@ class AccountModel {
   int get hashCode => id.hashCode ^ code.hashCode;
 
   @override
-  String toString() => 'AccountModel(id: $id, code: $code, name: $name, type: ${type.name})';
+  String toString() =>
+      'AccountModel(id: $id, code: $code, name: $name, type: ${type.name})';
 }

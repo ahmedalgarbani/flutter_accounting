@@ -11,7 +11,7 @@ import 'package:meta/meta.dart';
 @immutable
 class AccountingPeriodModel {
   final int? id;
-  final String name;      // مثال: "يناير 2024"
+  final String name; // مثال: "يناير 2024"
   final DateTime startDate;
   final DateTime endDate;
   final bool isClosed;
@@ -38,22 +38,24 @@ class AccountingPeriodModel {
   }
 
   Map<String, dynamic> toMap() => {
-        'id':        id,
-        'name':      name,
+        'id': id,
+        'name': name,
         'startDate': startDate.toIso8601String(),
-        'endDate':   endDate.toIso8601String(),
-        'isClosed':  isClosed,
+        'endDate': endDate.toIso8601String(),
+        'isClosed': isClosed,
         'createdAt': createdAt?.toIso8601String(),
       };
 
   factory AccountingPeriodModel.fromMap(Map<String, dynamic> map) =>
       AccountingPeriodModel(
-        id:        map['id'] as int?,
-        name:      map['name'] as String,
+        id: map['id'] as int?,
+        name: map['name'] as String,
         startDate: DateTime.parse(map['startDate'] as String),
-        endDate:   DateTime.parse(map['endDate'] as String),
-        isClosed:  (map['isClosed'] as bool?) ?? false,
-        createdAt: map['createdAt'] == null ? null : DateTime.parse(map['createdAt'] as String),
+        endDate: DateTime.parse(map['endDate'] as String),
+        isClosed: (map['isClosed'] as bool?) ?? false,
+        createdAt: map['createdAt'] == null
+            ? null
+            : DateTime.parse(map['createdAt'] as String),
       );
 
   AccountingPeriodModel copyWith({
@@ -65,11 +67,11 @@ class AccountingPeriodModel {
     DateTime? createdAt,
   }) {
     return AccountingPeriodModel(
-      id:        id        ?? this.id,
-      name:      name      ?? this.name,
+      id: id ?? this.id,
+      name: name ?? this.name,
       startDate: startDate ?? this.startDate,
-      endDate:   endDate   ?? this.endDate,
-      isClosed:  isClosed  ?? this.isClosed,
+      endDate: endDate ?? this.endDate,
+      isClosed: isClosed ?? this.isClosed,
       createdAt: createdAt ?? this.createdAt,
     );
   }

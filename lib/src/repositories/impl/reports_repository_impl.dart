@@ -31,39 +31,38 @@ class ReportsRepositoryImpl implements IReportsRepository {
     DateTime? from,
     DateTime? to,
   }) async {
-    final now      = DateTime.now();
+    final now = DateTime.now();
     final fromDate = startOfDay(from ?? DateTime(now.year, 1, 1));
-    final toDate   = to ?? now;
+    final toDate = to ?? now;
 
     final balances = await _entriesDao.getAccountBalances(
-      from:        fromDate,
+      from: fromDate,
       toExclusive: startOfNextDay(toDate),
     );
 
-    final rows = balances
-        .where((b) => b.totalDebit != 0 || b.totalCredit != 0)
-        .map((b) {
-      final type       = AccountType.values[b.accountType];
+    final rows =
+        balances.where((b) => b.totalDebit != 0 || b.totalCredit != 0).map((b) {
+      final type = AccountType.values[b.accountType];
       final netBalance = b.totalDebit - b.totalCredit;
 
       // الرصيد: موجب = مدين، سالب = دائن (بغض النظر عن نوع الحساب)
       return TrialBalanceRow(
-        accountId:     b.accountId,
-        accountCode:   b.accountCode,
-        accountName:   b.accountName,
+        accountId: b.accountId,
+        accountCode: b.accountCode,
+        accountName: b.accountName,
         accountNameAr: b.accountNameAr,
-        accountType:   type,
-        totalDebits:   b.totalDebit,
-        totalCredits:  b.totalCredit,
-        balance:       netBalance,
+        accountType: type,
+        totalDebits: b.totalDebit,
+        totalCredits: b.totalCredit,
+        balance: netBalance,
       );
     }).toList();
 
     return TrialBalanceReport(
-      from:        fromDate,
-      to:          toDate,
+      from: fromDate,
+      to: toDate,
       generatedAt: now,
-      rows:        rows,
+      rows: rows,
     );
   }
 
@@ -73,31 +72,31 @@ class ReportsRepositoryImpl implements IReportsRepository {
 
   @override
   Future<BalanceSheetReport> getBalanceSheet({required DateTime asOf}) async {
-    final now      = DateTime.now();
+    final now = DateTime.now();
     final balances = await _entriesDao.getAccountBalances(
       toExclusive: startOfNextDay(asOf),
     );
 
-    final assetRows     = <BalanceSheetRow>[];
+    final assetRows = <BalanceSheetRow>[];
     final liabilityRows = <BalanceSheetRow>[];
-    final equityRows    = <BalanceSheetRow>[];
+    final equityRows = <BalanceSheetRow>[];
 
     // متغيرات قائمة الدخل (لحساب الأرباح المدورة)
-    double totalRevenue  = 0;
+    double totalRevenue = 0;
     double totalExpenses = 0;
 
     for (final b in balances) {
-      final type          = AccountType.values[b.accountType];
+      final type = AccountType.values[b.accountType];
       final creditBalance = b.totalCredit - b.totalDebit;
-      final debitBalance  = b.totalDebit - b.totalCredit;
+      final debitBalance = b.totalDebit - b.totalCredit;
 
       BalanceSheetRow row(double balance) => BalanceSheetRow(
-            accountId:     b.accountId,
-            accountCode:   b.accountCode,
-            accountName:   b.accountName,
+            accountId: b.accountId,
+            accountCode: b.accountCode,
+            accountName: b.accountName,
             accountNameAr: b.accountNameAr,
-            type:          type,
-            balance:       balance,
+            type: type,
+            balance: balance,
           );
 
       switch (type) {
@@ -115,11 +114,11 @@ class ReportsRepositoryImpl implements IReportsRepository {
     }
 
     return BalanceSheetReport(
-      asOf:             asOf,
-      generatedAt:      now,
-      assetRows:        assetRows,
-      liabilityRows:    liabilityRows,
-      equityRows:       equityRows,
+      asOf: asOf,
+      generatedAt: now,
+      assetRows: assetRows,
+      liabilityRows: liabilityRows,
+      equityRows: equityRows,
       retainedEarnings: totalRevenue - totalExpenses,
     );
   }
@@ -133,9 +132,9 @@ class ReportsRepositoryImpl implements IReportsRepository {
     required DateTime from,
     required DateTime to,
   }) async {
-    final now      = DateTime.now();
+    final now = DateTime.now();
     final balances = await _entriesDao.getAccountBalances(
-      from:        startOfDay(from),
+      from: startOfDay(from),
       toExclusive: startOfNextDay(to),
     );
 
@@ -146,12 +145,12 @@ class ReportsRepositoryImpl implements IReportsRepository {
       final type = AccountType.values[b.accountType];
 
       IncomeStatementRow row(double balance) => IncomeStatementRow(
-            accountId:     b.accountId,
-            accountCode:   b.accountCode,
-            accountName:   b.accountName,
+            accountId: b.accountId,
+            accountCode: b.accountCode,
+            accountName: b.accountName,
             accountNameAr: b.accountNameAr,
-            type:          type,
-            balance:       balance,
+            type: type,
+            balance: balance,
           );
 
       if (type == AccountType.revenue) {
@@ -164,8 +163,8 @@ class ReportsRepositoryImpl implements IReportsRepository {
     }
 
     return IncomeStatementReport(
-      from:        from,
-      to:          to,
+      from: from,
+      to: to,
       generatedAt: now,
       revenueRows: revenueRows,
       expenseRows: expenseRows,
@@ -195,7 +194,7 @@ class ReportsRepositoryImpl implements IReportsRepository {
 
     double debit = 0, credit = 0;
     for (final b in balances.where((b) => ids.contains(b.accountId))) {
-      debit  += b.totalDebit;
+      debit += b.totalDebit;
       credit += b.totalCredit;
     }
     return _natural(account.type, debit, credit);
@@ -215,7 +214,7 @@ class ReportsRepositoryImpl implements IReportsRepository {
     final account = await _accounts.getAccountById(accountId);
     if (account == null) throw AccountNotFoundException(accountId);
 
-    final now    = DateTime.now();
+    final now = DateTime.now();
     final toDate = to ?? now;
     final ids = [
       accountId,
@@ -237,8 +236,8 @@ class ReportsRepositoryImpl implements IReportsRepository {
     }
 
     final rows = await _entriesDao.getLedgerLines(
-      accountIds:  ids,
-      from:        from != null ? startOfDay(from) : null,
+      accountIds: ids,
+      from: from != null ? startOfDay(from) : null,
       toExclusive: startOfNextDay(toDate),
     );
 
@@ -247,34 +246,36 @@ class ReportsRepositoryImpl implements IReportsRepository {
     for (final r in rows) {
       running += _natural(account.type, r.debit, r.credit);
       lines.add(LedgerEntryLine(
-        entryId:        r.entryId,
-        serialNumber:   r.serialNumber,
-        date:           r.date,
-        description:    r.lineDescription ?? r.entryDescription,
-        reference:      r.reference,
-        accountId:      r.accountId,
-        debit:          r.debit,
-        credit:         r.credit,
+        entryId: r.entryId,
+        serialNumber: r.serialNumber,
+        date: r.date,
+        description: r.lineDescription ?? r.entryDescription,
+        reference: r.reference,
+        accountId: r.accountId,
+        debit: r.debit,
+        credit: r.credit,
         runningBalance: running,
       ));
     }
 
     return AccountLedgerReport(
-      accountId:        account.id,
-      accountCode:      account.code,
-      accountName:      account.name,
-      accountNameAr:    account.nameAr,
-      accountType:      account.type,
+      accountId: account.id,
+      accountCode: account.code,
+      accountName: account.name,
+      accountNameAr: account.nameAr,
+      accountType: account.type,
       includesChildren: includeChildren,
-      from:             from,
-      to:               toDate,
-      generatedAt:      now,
-      openingBalance:   opening,
-      lines:            lines,
+      from: from,
+      to: toDate,
+      generatedAt: now,
+      openingBalance: opening,
+      lines: lines,
     );
   }
 
   /// الرصيد بالاتجاه الطبيعي لنوع الحساب
   static double _natural(AccountType type, double debit, double credit) =>
-      type.normalBalance == NormalBalance.debit ? debit - credit : credit - debit;
+      type.normalBalance == NormalBalance.debit
+          ? debit - credit
+          : credit - debit;
 }
