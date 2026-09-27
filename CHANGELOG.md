@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-09-27
+
+Adds **cost centers** (analytic dimensions). The feature is opt-in and off by default.
+
+### Added
+- **Dimensions and cost centers**: `fa.costCenters` manages dimensions (branch, project,
+  department or custom ones) and hierarchical cost centers per dimension. `ensureDimension`
+  / `ensureCostCenter` are idempotent. `seedDefaultCostDimensions: true` (or
+  `CostCenterSeedData.seed`) creates `BRANCH`, `PROJECT` and `DEPARTMENT`.
+- **Line allocations**: `JournalEntryLineModel.allocations` / builder `allocations:` link a
+  line to one center per dimension, or split it within a dimension by percentage, amount or
+  a saved allocation key (`allocationKey:`). Centers can be referenced by id or code.
+  Rounding goes to the last share. Reversals copy the original allocations.
+- **Policies**: `DimensionRuleModel` makes a dimension required or forbidden per account
+  (inherited by sub-accounts) or per account type, and can set a default center applied
+  automatically. `CostDimensionModel.defaultPolicy` and `allowSplit` set dimension-wide
+  behaviour.
+- **Allocation keys**: saved weights (area, headcount...) and `splitByKey`.
+- **Periodic allocation**: `fa.costAllocations.previewAllocation` / `runAllocation` move a
+  service center's balances to other centers with an `EntryType.costAllocation` entry.
+- **Reports** via `fa.costReports`: center summary with tree roll-up and unallocated totals,
+  accounts × centers comparison, income statement and trial balance filtered by centers
+  (with proportional multi-dimension intersection), center ledger, two-dimension matrix, and
+  unallocated lines.
+- `AccountingConfig.enableCostCenters` (default `false`) and `allocationDecimals` (default 2).
+- New exceptions: `CostCentersDisabledException`, `CostCenterRequiredException`,
+  `CostCenterNotAllowedException`, `InvalidCostAllocationException`,
+  `InactiveCostCenterException`, `CostCenterIsParentException` and related not-found /
+  duplicate / hierarchy exceptions.
+- Example app: branch selector, rent split by allocation key, required department on
+  expenses, and a new **Cost Centers** screen.
+
+### Changed
+- Database schema **v3** (automatic migration): tables `cost_dimensions`, `cost_centers`,
+  `journal_line_allocations`, `cost_dimension_rules`, `allocation_keys`,
+  `allocation_key_items`. Drift files regenerated.
+- `EntryType.costAllocation` appended to the enum.
+
 ## [0.4.1] - 2026-09-23
 
 A correctness and integration release. **Upgrading is strongly recommended**:

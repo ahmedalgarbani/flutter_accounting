@@ -39,6 +39,7 @@ await fa.record(
   - [التقارير](#6-التقارير)
   - [القوالب](#7-القوالب)
   - [الإعدادات](#8-الإعدادات)
+  - [مراكز التكلفة](#9-مراكز-التكلفة-اختيارية)
 - [دليل التكامل مع نظامك](#دليل-التكامل-مع-نظامك-)
 - [مرجع الـ API](#مرجع-الـ-api-)
 - [القواعد المحاسبية المدمجة](#القواعد-المحاسبية-المدمجة-️)
@@ -64,6 +65,7 @@ await fa.record(
 | 🔢 | **ترقيم تلقائي** — `JV-2026-0001` لكل سنة، وبادئة قابلة للتخصيص |
 | 📅 | **الفترات المالية** — سنوية أو شهرية، إقفال/إعادة فتح، منع التداخل |
 | 📈 | **التقارير** — ميزان المراجعة، قائمة الدخل، الميزانية العمومية، **كشف حساب** برصيد تراكمي، ورصيد أي حساب (مع أبنائه) |
+| 🏢 | **مراكز التكلفة (اختيارية)** — فروع، مشاريع، أقسام أو أبعاد خاصة؛ توزيع البند بالنسب أو المبالغ أو مفاتيح التوزيع، سياسات لكل حساب، توزيع دوري، وتقارير ربحية |
 | 🧩 | **القوالب** — 7 قوالب قياسية + قوالب مخصصة محفوظة في قاعدة البيانات |
 | 🔄 | **تحويل إلى Map** — `toMap()` / `fromMap()` للمزامنة والتصدير |
 | 🗄️ | **Drift (SQLite)** — أوفلاين بالكامل، type-safe، WAL، فهارس للأداء، ترقية تلقائية للمخطط |
@@ -76,7 +78,7 @@ await fa.record(
 ```yaml
 # pubspec.yaml
 dependencies:
-  flutter_accounting: ^0.4.0
+  flutter_accounting: ^0.5.0
 ```
 
 المنصات المدعومة: Android, iOS, Windows, macOS, Linux (عبر `sqlite3_flutter_libs`).
@@ -384,9 +386,92 @@ await FlutterAccounting.initialize(
     requireOpenPeriod: true,   // اشتراط فترة مفتوحة لكل قيد
     serialPrefix: 'JV',        // JV-2026-0001
     serialPadding: 4,
+    enableCostCenters: false,  // تفعيل مراكز التكلفة (القسم 9)
+    allocationDecimals: 2,     // منازل تقريب الحصص عند التوزيع
   ),
 );
 ```
+
+### 9. مراكز التكلفة (اختيارية)
+
+تتبّع الربحية حسب **الفرع والمشروع والقسم**، أو أي بُعد تعرّفه بنفسك. الميزة **موقوفة افتراضياً**، وكل ما فيها اختياري: فعّلها، ولن يصبح شيء إلزامياً إلا ما تجعله أنت إلزامياً.
+
+**التفعيل**
+
+```dart
+await FlutterAccounting.initialize(
+  config: const AccountingConfig(enableCostCenters: true),
+  seedDefaultCostDimensions: true, // اختياري: الفرع، المشروع، القسم
+);
+```
+
+**الأبعاد والمراكز** (المراكز شجرة هرمية مثل دليل الحسابات)
+
+```dart
+final region = await fa.costCenters.ensureDimension(code: 'REGION', name: 'Region', nameAr: 'المنطقة'); // بُعد خاص
+await fa.costCenters.ensureCostCenter(dimensionCode: 'BRANCH', code: 'BR-WEST', name: 'West', nameAr: 'المنطقة الغربية');
+await fa.costCenters.ensureCostCenter(
+    dimensionCode: 'BRANCH', code: 'BR-JED', name: 'Jeddah', nameAr: 'فرع جدة', parentCode: 'BR-WEST');
+```
+
+**توزيع البنود**: مركز من كل بُعد، أو تقسيم داخل البعد بالنسبة أو بالمبلغ أو بمفتاح توزيع محفوظ. فرق التقريب يُحمَّل على آخر حصة، فيبقى المجموع مساوياً لمبلغ البند دائماً.
+
+```dart
+await fa.record(
+  JournalEntryBuilder(description: 'إيجار مشترك')
+    .debitCode('53', 10000, allocations: [
+      CostAllocationModel.percent('BR-RYD', 60),
+      CostAllocationModel.percent('BR-JED', 40),
+      CostAllocationModel.code('DEP-ADMIN'),     // 100% للإدارة (بُعد آخر)
+    ])
+    .creditCode('111', 10000),
+);
+
+// أو بمفتاح توزيع محفوظ (مثلاً حسب المساحة: الرياض 300 / جدة 200)
+.debitCode('53', 10000, allocationKey: 'AREA')
+```
+
+**السياسات (اختيارية)**: اجعل البعد إلزامياً أو ممنوعاً لحساب (مع حساباته الفرعية) أو لنوع حساب، وحدّد مركزاً افتراضياً يُطبَّق تلقائياً:
+
+```dart
+await fa.costCenters.setRule(DimensionRuleModel.forType(
+  dimensionId: department.id!,
+  accountType: AccountType.expense,
+  policy: DimensionPolicy.required,     // كل مصروف يجب أن يحدد القسم
+));
+await fa.costCenters.setRule(DimensionRuleModel.forAccount(
+  dimensionId: branch.id!,
+  accountId: jeddahRentId,
+  defaultCostCenterId: jeddah.id,       // يُملأ تلقائياً إن لم يُحدَّد
+));
+```
+
+الأولوية: قاعدة الحساب، ثم أقرب حساب أب، ثم نوع الحساب، ثم `defaultPolicy` للبعد. البعد الموقوف لا تُطبَّق سياساته، والمركز الموقوف أو الأب لا يقبل توزيعاً جديداً. القيد العكسي ينسخ توزيع القيد الأصلي.
+
+**التوزيع الدوري** لتكاليف مركز خدمي على المراكز الأخرى:
+
+```dart
+final request = CostAllocationRequest(
+  sourceCostCenterId: hq.id!, allocationKeyId: headcountKey.id!,
+  from: DateTime(2026, 1, 1), to: DateTime(2026, 1, 31),
+);
+final preview = await fa.costAllocations.previewAllocation(request); // معاينة بدون حفظ
+final entry = await fa.costAllocations.runAllocation(request);       // قيد مرحّل قابل للعكس
+```
+
+**التقارير** عبر `fa.costReports`:
+
+| الدالة | يُعيد |
+|--------|-------|
+| `getSummary(dimensionId:)` | إيرادات ومصروفات وصافي ربح كل مركز (تجميع هرمي) + غير الموزّع |
+| `getComparison(dimensionId:, costCenterIds?)` | جدول الحسابات × المراكز |
+| `getIncomeStatement(filter:, from:, to:)` | قائمة الدخل لمركز أو أكثر |
+| `getTrialBalance(filter:)` | ميزان المراجعة لمركز أو أكثر |
+| `getLedger(costCenterId, {accountId})` | كشف حساب المركز برصيد افتتاحي وتراكمي |
+| `getMatrix(rowDimensionId:, columnDimensionId:)` | تحليل متقاطع، مثل الفروع × المشاريع |
+| `getUnallocatedLines(dimensionId:)` | البنود التي بلا مركز (لضبط جودة البيانات) |
+
+الفلتر `CostCenterFilter([ryd.id!, prjA.id!])` يقاطع الأبعاد بالتناسب (بند 60% للرياض و50% لمشروع A يساهم بـ 30%)، والمراكز من نفس البعد تُجمع معاً.
 
 ---
 
@@ -462,6 +547,25 @@ await FlutterAccounting.initialize(
 | `getBalanceSheet({asOf})` | `BalanceSheetReport` |
 | `getAccountBalance(id, {asOf, includeChildren})` | `double` بالاتجاه الطبيعي |
 | `getAccountLedger(id, {from, to, includeChildren})` | `AccountLedgerReport` |
+
+### `ICostCenterRepository` — `fa.costCenters`
+
+| الدالة | الوصف |
+|--------|-------|
+| `getDimensions()` / `createDimension(d)` / `updateDimension(d)` / `ensureDimension(...)` | الأبعاد (فرع، مشروع...) |
+| `setDimensionActive(id, isActive:)` / `deleteDimension(id)` | إيقاف بُعد أو حذف بُعد فارغ |
+| `getCostCenters({dimensionId})` / `getPostableCostCenters({dimensionId})` / `searchCostCenters(q)` | قراءة المراكز (القابلة للتوزيع = النهائية النشطة) |
+| `createCostCenter(c)` / `updateCostCenter(c)` / `ensureCostCenter(...)` | إدارة شجرة المراكز |
+| `setCostCenterActive(id, isActive:)` / `deleteCostCenter(id)` / `hasTransactions(id)` | دورة حياة المركز |
+| `getRules()` / `setRule(rule)` / `deleteRule(id)` / `getEffectivePolicy(...)` | السياسات والمراكز الافتراضية |
+| `getAllocationKeys()` / `saveAllocationKey(k)` / `deleteAllocationKey(id)` / `splitByKey(id, amount)` | مفاتيح التوزيع |
+
+### `ICostAllocationRepository` — `fa.costAllocations`
+
+| الدالة | الوصف |
+|--------|-------|
+| `previewAllocation(request)` | معاينة التوزيع الدوري بدون حفظ |
+| `runAllocation(request, {post, postedBy})` | إنشاء قيد `EntryType.costAllocation` |
 
 ### `IAccountingPeriodRepository` — `fa.periods`
 
@@ -556,6 +660,13 @@ tearDown(() => fa.dispose());
 
 ---
 
+## الترقية من 0.4.x ⬆️
+
+- **ترقية تلقائية للمخطط v3** تضيف جداول مراكز التكلفة، دون المساس بالبيانات الحالية.
+- مراكز التكلفة **موقوفة افتراضياً**، فلا يتغير شيء حتى تفعّل `AccountingConfig(enableCostCenters: true)`.
+- أُضيفت القيمة `EntryType.costAllocation` في نهاية التعداد؛ إن كنت تستخدم `switch` على `EntryType` فأضف حالتها.
+- أُضيف إلى `FlutterAccounting` كلٌّ من `costCenters` و`costAllocations` و`costReports`، وإلى `JournalEntryLineModel` الحقل `allocations` (فارغ افتراضياً).
+
 ## الترقية من 0.3.x ⬆️
 
 - **ترقية قاعدة البيانات تلقائية** (المخطط v1 → v2) عند أول فتح؛ البيانات الحالية محفوظة.
@@ -587,12 +698,12 @@ lib/
     │   ├── standard_templates.dart    ← القوالب القياسية
     │   └── date_utils.dart            ← (داخلي) حدود الأيام
     ├── models/                        ← نماذج Dart نقية
-    ├── reports/report_models.dart     ← نماذج التقارير
+    ├── reports/                       ← نماذج التقارير (المالية ومراكز التكلفة)
     ├── repositories/
     │   ├── interfaces/interfaces.dart ← العقود المجردة
     │   └── impl/                      ← التنفيذ
     ├── database/                      ← Drift (داخلي): tables, daos, mappers
-    └── seed/accounting_seed_data.dart ← دليل الحسابات الافتراضي
+    └── seed/                          ← دليل الحسابات والأبعاد الافتراضية
 doc/
 └── INTEGRATION.md                     ← دليل التكامل
 example/                               ← تطبيق مثال كامل + اختبار

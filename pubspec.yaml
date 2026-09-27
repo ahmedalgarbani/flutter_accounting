@@ -1,8 +1,9 @@
 name: flutter_accounting
 description: >
   Offline double-entry accounting engine for Flutter apps with chart of
-  accounts, journal entries, fiscal periods, ledgers, and financial reports.
-version: 0.4.1
+  accounts, journal entries, fiscal periods, ledgers, cost centers, and
+  financial reports.
+version: 0.5.0
 repository: https://github.com/ahmedalgarbani/flutter_accounting
 issue_tracker: https://github.com/ahmedalgarbani/flutter_accounting/issues
 topics:
