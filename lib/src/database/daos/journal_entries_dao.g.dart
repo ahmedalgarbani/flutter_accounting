@@ -11,6 +11,10 @@ mixin _$JournalEntriesDaoMixin on DatabaseAccessor<AccountingDatabase> {
   $AccountingPeriodsTable get accountingPeriods =>
       attachedDatabase.accountingPeriods;
   $EntryTemplatesTable get entryTemplates => attachedDatabase.entryTemplates;
+  $CostDimensionsTable get costDimensions => attachedDatabase.costDimensions;
+  $CostCentersTable get costCenters => attachedDatabase.costCenters;
+  $JournalLineAllocationsTable get journalLineAllocations =>
+      attachedDatabase.journalLineAllocations;
   JournalEntriesDaoManager get managers => JournalEntriesDaoManager(this);
 }
 
@@ -31,4 +35,12 @@ class JournalEntriesDaoManager {
   $$EntryTemplatesTableTableManager get entryTemplates =>
       $$EntryTemplatesTableTableManager(
           _db.attachedDatabase, _db.entryTemplates);
+  $$CostDimensionsTableTableManager get costDimensions =>
+      $$CostDimensionsTableTableManager(
+          _db.attachedDatabase, _db.costDimensions);
+  $$CostCentersTableTableManager get costCenters =>
+      $$CostCentersTableTableManager(_db.attachedDatabase, _db.costCenters);
+  $$JournalLineAllocationsTableTableManager get journalLineAllocations =>
+      $$JournalLineAllocationsTableTableManager(
+          _db.attachedDatabase, _db.journalLineAllocations);
 }

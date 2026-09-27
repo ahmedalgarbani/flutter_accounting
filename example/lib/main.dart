@@ -3,6 +3,7 @@ import 'package:flutter_accounting/flutter_accounting.dart';
 
 import 'accounting_setup.dart';
 import 'sales_accounting_service.dart';
+import 'screens/cost_centers_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/journal_screen.dart';
 import 'screens/ledger_screen.dart';
@@ -57,6 +58,7 @@ class _HomeShellState extends State<HomeShell> {
       JournalScreen(fa: fa),
       ReportsScreen(fa: fa),
       LedgerScreen(fa: fa),
+      CostCentersScreen(fa: fa),
     ];
 
     return Scaffold(
@@ -73,6 +75,8 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(
               icon: Icon(Icons.assessment), label: 'التقارير'),
           NavigationDestination(icon: Icon(Icons.menu_book), label: 'كشف حساب'),
+          NavigationDestination(
+              icon: Icon(Icons.account_tree), label: 'مراكز التكلفة'),
         ],
       ),
     );

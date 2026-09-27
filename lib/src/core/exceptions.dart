@@ -221,3 +221,132 @@ class InvalidLineAmountsException extends AccountingException {
 class InvalidTemplateException extends AccountingException {
   const InvalidTemplateException(super.message);
 }
+
+// ─────────────────────────────────────────────────────────────
+// استثناءات مراكز التكلفة
+// ─────────────────────────────────────────────────────────────
+
+/// ميزة مراكز التكلفة غير مفعّلة في [AccountingConfig.enableCostCenters]
+class CostCentersDisabledException extends AccountingException {
+  const CostCentersDisabledException()
+      : super('مراكز التكلفة غير مفعّلة. فعّلها عبر '
+            'AccountingConfig(enableCostCenters: true).');
+}
+
+/// البعد التحليلي غير موجود
+class CostDimensionNotFoundException extends AccountingException {
+  final dynamic identifier;
+  const CostDimensionNotFoundException(this.identifier)
+      : super('البعد التحليلي "$identifier" غير موجود.');
+}
+
+/// رمز البعد التحليلي مكرر
+class DuplicateCostDimensionCodeException extends AccountingException {
+  final String code;
+  const DuplicateCostDimensionCodeException(this.code)
+      : super('رمز البعد "$code" موجود مسبقاً.');
+}
+
+/// لا يمكن حذف بعد يحتوي على مراكز تكلفة
+class CostDimensionHasCentersException extends AccountingException {
+  const CostDimensionHasCentersException()
+      : super('لا يمكن حذف البعد لأنه يحتوي على مراكز تكلفة. '
+            'احذفها أو أوقف البعد بدلاً من ذلك.');
+}
+
+/// مركز التكلفة غير موجود
+class CostCenterNotFoundException extends AccountingException {
+  final dynamic identifier;
+  const CostCenterNotFoundException(this.identifier)
+      : super('مركز التكلفة "$identifier" غير موجود.');
+}
+
+/// رمز مركز التكلفة مكرر
+class DuplicateCostCenterCodeException extends AccountingException {
+  final String code;
+  const DuplicateCostCenterCodeException(this.code)
+      : super('رمز مركز التكلفة "$code" موجود مسبقاً.');
+}
+
+/// مركز التكلفة (أو بُعده) غير نشط
+class InactiveCostCenterException extends AccountingException {
+  final String code;
+  const InactiveCostCenterException(this.code)
+      : super('مركز التكلفة "$code" غير نشط (أو بُعده موقوف) '
+            'ولا يمكن التوزيع عليه.');
+}
+
+/// لا يمكن التوزيع على مركز أب
+class CostCenterIsParentException extends AccountingException {
+  final String code;
+  const CostCenterIsParentException(this.code)
+      : super('مركز التكلفة "$code" مركز رئيسي (أب)، لا يمكن التوزيع عليه '
+            'مباشرة. استخدم مركزاً فرعياً.');
+}
+
+/// لا يمكن حذف مركز له مراكز فرعية
+class CostCenterHasChildrenException extends AccountingException {
+  const CostCenterHasChildrenException()
+      : super('لا يمكن حذف مركز التكلفة لأنه يحتوي على مراكز فرعية.');
+}
+
+/// لا يمكن حذف مركز عليه حركات أو مستخدم في مفتاح توزيع أو قاعدة
+class CostCenterHasTransactionsException extends AccountingException {
+  const CostCenterHasTransactionsException()
+      : super('لا يمكن حذف مركز التكلفة لأنه مستخدم في قيود أو مفاتيح توزيع '
+            'أو قواعد. أوقفه بدلاً من ذلك.');
+}
+
+/// لا يمكن إضافة مركز فرعي تحت مركز عليه حركات
+class ParentCostCenterHasTransactionsException extends AccountingException {
+  final String parentCode;
+  const ParentCostCenterHasTransactionsException(this.parentCode)
+      : super('لا يمكن إضافة مركز فرعي تحت "$parentCode" لأن عليه حركات.');
+}
+
+/// هيكل شجرة مراكز التكلفة غير صالح
+class InvalidCostCenterHierarchyException extends AccountingException {
+  const InvalidCostCenterHierarchyException(super.message);
+}
+
+/// الحساب يتطلب مركز تكلفة من بعد معيّن ([DimensionPolicy.required])
+class CostCenterRequiredException extends AccountingException {
+  final String accountCode;
+  final String dimensionCode;
+  const CostCenterRequiredException(this.accountCode, this.dimensionCode)
+      : super('الحساب "$accountCode" يتطلب تحديد مركز تكلفة من البعد '
+            '"$dimensionCode".');
+}
+
+/// الحساب لا يقبل مراكز من بعد معيّن ([DimensionPolicy.forbidden])
+class CostCenterNotAllowedException extends AccountingException {
+  final String accountCode;
+  final String dimensionCode;
+  const CostCenterNotAllowedException(this.accountCode, this.dimensionCode)
+      : super('الحساب "$accountCode" لا يقبل مراكز تكلفة من البعد '
+            '"$dimensionCode".');
+}
+
+/// توزيع غير صالح (مجموع لا يساوي مبلغ البند، مبلغ سالب، مركز مكرر...)
+class InvalidCostAllocationException extends AccountingException {
+  const InvalidCostAllocationException(super.message);
+}
+
+/// مفتاح التوزيع غير موجود
+class AllocationKeyNotFoundException extends AccountingException {
+  final dynamic identifier;
+  const AllocationKeyNotFoundException(this.identifier)
+      : super('مفتاح التوزيع "$identifier" غير موجود.');
+}
+
+/// رمز مفتاح التوزيع مكرر
+class DuplicateAllocationKeyCodeException extends AccountingException {
+  final String code;
+  const DuplicateAllocationKeyCodeException(this.code)
+      : super('رمز مفتاح التوزيع "$code" موجود مسبقاً.');
+}
+
+/// مفتاح توزيع غير صالح (بلا مراكز، أوزان سالبة، مراكز من بعد آخر...)
+class InvalidAllocationKeyException extends AccountingException {
+  const InvalidAllocationKeyException(super.message);
+}

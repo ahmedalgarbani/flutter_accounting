@@ -16,6 +16,11 @@ export 'src/models/journal_entry_model.dart';
 export 'src/models/journal_entry_line_model.dart';
 export 'src/models/accounting_period_model.dart';
 export 'src/models/entry_template_model.dart';
+export 'src/models/cost_dimension_model.dart';
+export 'src/models/cost_center_model.dart';
+export 'src/models/cost_allocation_model.dart';
+export 'src/models/allocation_key_model.dart';
+export 'src/models/cost_allocation_run_model.dart';
 
 // ── التعدادات ──
 export 'src/core/enums.dart';
@@ -27,13 +32,16 @@ export 'src/core/exceptions.dart';
 export 'src/core/accounting_validator.dart';
 export 'src/core/accounting_config.dart';
 export 'src/core/journal_entry_builder.dart';
+export 'src/core/cost_allocation_calculator.dart';
 
 // ── الواجهات (للـ DI والاختبار) ──
 export 'src/repositories/interfaces/interfaces.dart';
 
 // ── نماذج التقارير ──
 export 'src/reports/report_models.dart';
+export 'src/reports/cost_center_report_models.dart';
 
 // ── القوالب القياسية ودليل الحسابات الافتراضي ──
 export 'src/core/standard_templates.dart';
 export 'src/seed/accounting_seed_data.dart';
+export 'src/seed/cost_center_seed_data.dart';

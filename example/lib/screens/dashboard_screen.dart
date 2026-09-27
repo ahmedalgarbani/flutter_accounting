@@ -17,6 +17,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   double _cash = 0;
   int? _lastInvoiceId;
+  String _branch = AppCostCenters.riyadh;
 
   SalesAccountingService get _service => widget.service;
 
@@ -70,6 +71,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         const SizedBox(height: 16),
+        // الفرع الذي تُنسب إليه الفواتير (مركز تكلفة)
+        SegmentedButton<String>(
+          segments: const [
+            ButtonSegment(
+                value: AppCostCenters.riyadh,
+                icon: Icon(Icons.store),
+                label: Text('فرع الرياض')),
+            ButtonSegment(
+                value: AppCostCenters.jeddah,
+                icon: Icon(Icons.store),
+                label: Text('فرع جدة')),
+          ],
+          selected: {_branch},
+          onSelectionChanged: (s) => setState(() => _branch = s.first),
+        ),
+        const SizedBox(height: 16),
         _action(
             Icons.shopping_cart, 'فاتورة نقدية 1000 + ضريبة 150 (تكلفة 600)',
             () {
@@ -80,6 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 netAmount: 1000,
                 vatAmount: 150,
                 costAmount: 600,
+                branchCode: _branch,
                 user: 'demo');
             _lastInvoiceId = id;
           });
@@ -88,7 +106,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final id = _newInvoiceId();
           return _run('تم ترحيل الفاتورة الآجلة $id', () async {
             await _service.onInvoiceCreated(
-                invoiceId: id, netAmount: 500, paidInCash: false);
+                invoiceId: id,
+                netAmount: 500,
+                paidInCash: false,
+                branchCode: _branch);
             _lastInvoiceId = id;
           });
         }),
@@ -100,12 +121,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 amount: 200);
           });
         }),
-        _action(Icons.home_work, 'دفع إيجار 300', () {
+        _action(
+            Icons.home_work, 'دفع إيجار 300 (يوزَّع على الفروع حسب المساحة)',
+            () {
           return _run('تم تسجيل سند الصرف', () async {
             await _service.onExpensePaid(
                 expenseCode: AppAccounts.rent,
                 amount: 300,
-                description: 'إيجار المحل');
+                description: 'إيجار المحلات',
+                allocationKey: AppCostCenters.byArea,
+                allocations: [
+                  CostAllocationModel.code(AppCostCenters.adminDept),
+                ]);
+          });
+        }),
+        _action(Icons.rule, 'مصروف بدون قسم (سيُرفض: القسم إلزامي)', () {
+          return _run('لن تظهر هذه الرسالة', () async {
+            await _service.onExpensePaid(
+                expenseCode: AppAccounts.rent,
+                amount: 50,
+                description: 'مصروف بلا قسم');
           });
         }),
         _action(Icons.cancel, 'إلغاء آخر فاتورة (قيد عكسي)', () {

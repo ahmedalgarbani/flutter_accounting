@@ -131,6 +131,7 @@ enum EntryType {
   openingBalance, // قيد افتتاحي
   reversal, // قيد عكسي
   adjustment, // قيد تسوية
+  costAllocation, // قيد توزيع تكاليف بين مراكز التكلفة
 }
 
 extension EntryTypeX on EntryType {
@@ -156,6 +157,8 @@ extension EntryTypeX on EntryType {
         return 'قيد عكسي';
       case EntryType.adjustment:
         return 'قيد تسوية';
+      case EntryType.costAllocation:
+        return 'توزيع تكاليف';
     }
   }
 
@@ -181,6 +184,43 @@ extension EntryTypeX on EntryType {
         return 'Reversal';
       case EntryType.adjustment:
         return 'Adjustment';
+      case EntryType.costAllocation:
+        return 'Cost Allocation';
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// سياسة البعد التحليلي على حساب (Dimension Policy)
+// ─────────────────────────────────────────────────────────────
+
+/// هل يجب ربط بنود حساب ما بمركز تكلفة من بُعد معيّن؟
+enum DimensionPolicy {
+  optional, // اختياري (الافتراضي): يمكن ربط البند بمركز أو تركه
+  required, // إلزامي: يُرفض البند بدون مركز من هذا البعد
+  forbidden, // ممنوع: لا يُسمح بربط البند بمركز من هذا البعد
+}
+
+extension DimensionPolicyX on DimensionPolicy {
+  String get displayNameAr {
+    switch (this) {
+      case DimensionPolicy.optional:
+        return 'اختياري';
+      case DimensionPolicy.required:
+        return 'إلزامي';
+      case DimensionPolicy.forbidden:
+        return 'ممنوع';
+    }
+  }
+
+  String get displayNameEn {
+    switch (this) {
+      case DimensionPolicy.optional:
+        return 'Optional';
+      case DimensionPolicy.required:
+        return 'Required';
+      case DimensionPolicy.forbidden:
+        return 'Forbidden';
     }
   }
 }

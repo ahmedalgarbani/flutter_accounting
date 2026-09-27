@@ -2,6 +2,7 @@
 /// باني القيود (Fluent API) - أسهل طريقة لإنشاء قيد يومية
 library;
 
+import '../models/cost_allocation_model.dart';
 import '../models/journal_entry_line_model.dart';
 import '../models/journal_entry_model.dart';
 import '../repositories/interfaces/interfaces.dart';
@@ -21,6 +22,18 @@ import 'exceptions.dart';
 ///
 /// // إنشاء وترحيل في خطوة واحدة (ذرّية):
 /// await fa.record(entry);
+/// ```
+///
+/// ### مراكز التكلفة (اختياري)
+/// كل دوال البنود تقبل `allocations` لتوزيع البند على مراكز التكلفة،
+/// أو `allocationKey` (رمز مفتاح توزيع) ليُقسَّم البند حسب أوزانه:
+///
+/// ```dart
+/// JournalEntryBuilder(description: 'إيجار المكاتب')
+///   .debitCode('53', 9000, allocationKey: 'AREA', allocations: [
+///     CostAllocationModel.code('DEP-ADMIN'), // بُعد آخر: 100% للإدارة
+///   ])
+///   .creditCode('111', 9000);
 /// ```
 class JournalEntryBuilder {
   JournalEntryBuilder({
@@ -93,27 +106,51 @@ class JournalEntryBuilder {
 
   /// بند مدين على حساب بالمعرّف
   JournalEntryBuilder debit(int accountId, double amount,
-          {String? description}) =>
+          {String? description,
+          List<CostAllocationModel> allocations = const [],
+          String? allocationKey}) =>
       _add(_PendingLine(
-          accountId: accountId, debit: amount, description: description));
+          accountId: accountId,
+          debit: amount,
+          description: description,
+          allocations: allocations,
+          allocationKey: allocationKey));
 
   /// بند دائن على حساب بالمعرّف
   JournalEntryBuilder credit(int accountId, double amount,
-          {String? description}) =>
+          {String? description,
+          List<CostAllocationModel> allocations = const [],
+          String? allocationKey}) =>
       _add(_PendingLine(
-          accountId: accountId, credit: amount, description: description));
+          accountId: accountId,
+          credit: amount,
+          description: description,
+          allocations: allocations,
+          allocationKey: allocationKey));
 
   /// بند مدين على حساب بالرمز (يُحلّ عند [resolve] أو `fa.record`)
   JournalEntryBuilder debitCode(String accountCode, double amount,
-          {String? description}) =>
+          {String? description,
+          List<CostAllocationModel> allocations = const [],
+          String? allocationKey}) =>
       _add(_PendingLine(
-          accountCode: accountCode, debit: amount, description: description));
+          accountCode: accountCode,
+          debit: amount,
+          description: description,
+          allocations: allocations,
+          allocationKey: allocationKey));
 
   /// بند دائن على حساب بالرمز (يُحلّ عند [resolve] أو `fa.record`)
   JournalEntryBuilder creditCode(String accountCode, double amount,
-          {String? description}) =>
+          {String? description,
+          List<CostAllocationModel> allocations = const [],
+          String? allocationKey}) =>
       _add(_PendingLine(
-          accountCode: accountCode, credit: amount, description: description));
+          accountCode: accountCode,
+          credit: amount,
+          description: description,
+          allocations: allocations,
+          allocationKey: allocationKey));
 
   /// إضافة بند جاهز
   JournalEntryBuilder line(JournalEntryLineModel line) => _add(_PendingLine(
@@ -121,6 +158,7 @@ class JournalEntryBuilder {
         debit: line.debit,
         credit: line.credit,
         description: line.description,
+        allocations: line.allocations,
       ));
 
   JournalEntryBuilder _add(_PendingLine line) {
@@ -140,27 +178,33 @@ class JournalEntryBuilder {
   /// الفرق بين المدين والدائن (موجب = المدين أكبر)
   double get difference => totalDebits - totalCredits;
 
-  /// هل توجد بنود تشير لحسابات بالرمز وتحتاج إلى [resolve]؟
-  bool get needsResolution => _lines.any((l) => l.accountId == null);
+  /// هل توجد بنود تشير لحسابات بالرمز أو لمفاتيح توزيع وتحتاج إلى [resolve]؟
+  bool get needsResolution =>
+      _lines.any((l) => l.accountId == null || l.allocationKey != null);
 
   // ─────────────────────────────────────────────────────────────
   // البناء
   // ─────────────────────────────────────────────────────────────
 
   /// يبني القيد مباشرة. جميع البنود يجب أن تستخدم معرّفات الحسابات
-  /// (استخدم [resolve] إذا استعملت [debitCode] / [creditCode]).
+  /// (استخدم [resolve] إذا استعملت [debitCode] / [creditCode] أو `allocationKey`).
   JournalEntryModel build() {
     if (needsResolution) {
       throw StateError(
-        'بعض البنود تستخدم رموز حسابات. استخدم resolve() أو fa.record() بدلاً من build().',
+        'بعض البنود تستخدم رموز حسابات أو مفاتيح توزيع. استخدم resolve() أو fa.record() بدلاً من build().',
       );
     }
-    return _toModel({});
+    return _toModel({}, {});
   }
 
-  /// يحلّ رموز الحسابات إلى معرّفات ثم يبني القيد.
-  /// يرمي [AccountNotFoundException] إذا لم يوجد رمز.
-  Future<JournalEntryModel> resolve(IAccountRepository accounts) async {
+  /// يحلّ رموز الحسابات إلى معرّفات ومفاتيح التوزيع إلى حصص، ثم يبني القيد.
+  /// يرمي [AccountNotFoundException] إذا لم يوجد رمز حساب، و
+  /// [AllocationKeyNotFoundException] إذا لم يوجد مفتاح توزيع.
+  /// [costCenters] مطلوب فقط إن استُخدم `allocationKey` (يمرره `fa.record` تلقائياً).
+  Future<JournalEntryModel> resolve(
+    IAccountRepository accounts, {
+    ICostCenterRepository? costCenters,
+  }) async {
     final ids = <String, int>{};
     for (final line in _lines) {
       final code = line.accountCode;
@@ -171,10 +215,29 @@ class JournalEntryBuilder {
       if (account == null) throw AccountNotFoundException(code);
       ids[code] = account.id!;
     }
-    return _toModel(ids);
+
+    // حصص مفاتيح التوزيع لكل بند
+    final keyShares = <int, List<CostAllocationModel>>{};
+    for (var i = 0; i < _lines.length; i++) {
+      final keyCode = _lines[i].allocationKey;
+      if (keyCode == null) continue;
+      if (costCenters == null) {
+        throw StateError(
+            'allocationKey يتطلب تمرير costCenters إلى resolve().');
+      }
+      final key = await costCenters.getAllocationKeyByCode(keyCode);
+      if (key == null) throw AllocationKeyNotFoundException(keyCode);
+      final line = _lines[i];
+      keyShares[i] = await costCenters.splitByKey(
+          key.id!, line.debit > 0 ? line.debit : line.credit);
+    }
+    return _toModel(ids, keyShares);
   }
 
-  JournalEntryModel _toModel(Map<String, int> codeIds) {
+  JournalEntryModel _toModel(
+    Map<String, int> codeIds,
+    Map<int, List<CostAllocationModel>> keyShares,
+  ) {
     final lines = <JournalEntryLineModel>[];
     for (var i = 0; i < _lines.length; i++) {
       final l = _lines[i];
@@ -185,6 +248,7 @@ class JournalEntryBuilder {
         credit: l.credit,
         description: l.description,
         sortOrder: i,
+        allocations: [...?keyShares[i], ...l.allocations],
       ));
     }
     return JournalEntryModel(
@@ -208,6 +272,8 @@ class _PendingLine {
   final double debit;
   final double credit;
   final String? description;
+  final List<CostAllocationModel> allocations;
+  final String? allocationKey;
 
   _PendingLine({
     this.accountId,
@@ -215,5 +281,7 @@ class _PendingLine {
     this.debit = 0,
     this.credit = 0,
     this.description,
+    this.allocations = const [],
+    this.allocationKey,
   });
 }

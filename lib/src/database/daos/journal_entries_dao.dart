@@ -9,12 +9,25 @@ import '../tables/tables.dart';
 
 part 'journal_entries_dao.g.dart';
 
-// نموذج مدمج: قيد + بنده + اسم الحساب
+// نموذج مدمج: قيد + بنده + اسم الحساب + توزيعه على مراكز التكلفة
 class EntryLineWithAccount {
   final JournalEntryLine line;
   final Account account;
+  final List<AllocationWithCenter> allocations;
 
-  EntryLineWithAccount({required this.line, required this.account});
+  EntryLineWithAccount({
+    required this.line,
+    required this.account,
+    this.allocations = const [],
+  });
+}
+
+// نموذج مدمج: حصة مركز تكلفة من بند + بيانات المركز
+class AllocationWithCenter {
+  final JournalLineAllocation allocation;
+  final CostCenter center;
+
+  AllocationWithCenter({required this.allocation, required this.center});
 }
 
 @DriftAccessor(tables: [
@@ -23,6 +36,8 @@ class EntryLineWithAccount {
   Accounts,
   AccountingPeriods,
   EntryTemplates,
+  JournalLineAllocations,
+  CostCenters,
 ])
 class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
     with _$JournalEntriesDaoMixin {
@@ -200,12 +215,18 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
       ]);
 
     final rows = await query.get();
-    return rows
-        .map((row) => EntryLineWithAccount(
-              line: row.readTable(journalEntryLines),
-              account: row.readTable(accounts),
-            ))
-        .toList();
+    final lines = [for (final row in rows) row.readTable(journalEntryLines)];
+    final allocations =
+        await getAllocationsForLines(lines.map((l) => l.id).toList());
+    return [
+      for (final row in rows)
+        EntryLineWithAccount(
+          line: row.readTable(journalEntryLines),
+          account: row.readTable(accounts),
+          allocations:
+              allocations[row.readTable(journalEntryLines).id] ?? const [],
+        ),
+    ];
   }
 
   /// جلب بنود عدة قيود دفعة واحدة (تفادياً لمشكلة N+1)
@@ -230,11 +251,51 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
           OrderingTerm(expression: journalEntryLines.sortOrder),
           OrderingTerm(expression: journalEntryLines.id),
         ]);
-      for (final row in await query.get()) {
+      final rows = await query.get();
+      final allocations = await getAllocationsForLines(
+          [for (final row in rows) row.readTable(journalEntryLines).id]);
+      for (final row in rows) {
         final line = row.readTable(journalEntryLines);
         result.putIfAbsent(line.entryId, () => []).add(
               EntryLineWithAccount(
-                  line: line, account: row.readTable(accounts)),
+                line: line,
+                account: row.readTable(accounts),
+                allocations: allocations[line.id] ?? const [],
+              ),
+            );
+      }
+    }
+    return result;
+  }
+
+  /// توزيعات عدة بنود على مراكز التكلفة (مجمّعة حسب معرّف البند)
+  Future<Map<int, List<AllocationWithCenter>>> getAllocationsForLines(
+    List<int> lineIds,
+  ) async {
+    final result = <int, List<AllocationWithCenter>>{};
+    const chunkSize = 500; // حد متغيرات SQLite
+    for (var i = 0; i < lineIds.length; i += chunkSize) {
+      final chunk = lineIds.sublist(
+        i,
+        i + chunkSize > lineIds.length ? lineIds.length : i + chunkSize,
+      );
+      final query = select(journalLineAllocations).join([
+        innerJoin(costCenters,
+            costCenters.id.equalsExp(journalLineAllocations.costCenterId)),
+      ])
+        ..where(journalLineAllocations.lineId.isIn(chunk))
+        ..orderBy([
+          OrderingTerm(expression: journalLineAllocations.lineId),
+          OrderingTerm(expression: journalLineAllocations.dimensionId),
+          OrderingTerm(expression: journalLineAllocations.id),
+        ]);
+      for (final row in await query.get()) {
+        final allocation = row.readTable(journalLineAllocations);
+        result.putIfAbsent(allocation.lineId, () => []).add(
+              AllocationWithCenter(
+                allocation: allocation,
+                center: row.readTable(costCenters),
+              ),
             );
       }
     }
@@ -279,44 +340,66 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
   Future<int> insertLine(JournalEntryLinesCompanion line) =>
       into(journalEntryLines).insert(line);
 
-  Future<void> deleteLinesForEntry(int entryId) =>
-      (delete(journalEntryLines)..where((t) => t.entryId.equals(entryId))).go();
+  /// حذف بنود القيد وتوزيعاتها على مراكز التكلفة
+  Future<void> deleteLinesForEntry(int entryId) async {
+    await (delete(journalLineAllocations)
+          ..where((a) => a.lineId.isInQuery(
+                selectOnly(journalEntryLines)
+                  ..addColumns([journalEntryLines.id])
+                  ..where(journalEntryLines.entryId.equals(entryId)),
+              )))
+        .go();
+    await (delete(journalEntryLines)..where((t) => t.entryId.equals(entryId)))
+        .go();
+  }
+
+  /// إدراج بنود القيد مع توزيعاتها ([allocations] موازية لـ [lines])
+  Future<void> _insertLines(
+    int entryId,
+    List<JournalEntryLinesCompanion> lines,
+    List<List<JournalLineAllocationsCompanion>> allocations,
+  ) async {
+    for (var i = 0; i < lines.length; i++) {
+      final lineId =
+          await insertLine(lines[i].copyWith(entryId: Value(entryId)));
+      if (i < allocations.length) {
+        for (final a in allocations[i]) {
+          await into(journalLineAllocations)
+              .insert(a.copyWith(lineId: Value(lineId)));
+        }
+      }
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────
   // عمليات مجمّعة (Transaction-safe)
   // ─────────────────────────────────────────────────────────────
 
   /// إدراج قيد + بنوده في عملية واحدة (Atomic)
+  ///
+  /// [allocations] توزيعات كل بند على مراكز التكلفة (بنفس ترتيب [lines]).
   Future<int> insertEntryWithLines({
     required JournalEntriesCompanion entry,
     required List<JournalEntryLinesCompanion> lines,
+    List<List<JournalLineAllocationsCompanion>> allocations = const [],
   }) async {
     return transaction(() async {
       final entryId = await insertEntry(entry);
-      final linesWithEntryId = lines.map(
-        (l) => l.copyWith(entryId: Value(entryId)),
-      );
-      for (final line in linesWithEntryId) {
-        await insertLine(line);
-      }
+      await _insertLines(entryId, lines, allocations);
       return entryId;
     });
   }
 
-  /// تحديث قيد + بنوده في عملية واحدة
+  /// تحديث قيد + بنوده (وتوزيعاتها) في عملية واحدة
   Future<void> updateEntryWithLines({
     required JournalEntriesCompanion entry,
     required List<JournalEntryLinesCompanion> lines,
+    List<List<JournalLineAllocationsCompanion>> allocations = const [],
   }) async {
     await transaction(() async {
       await updateEntry(entry);
       await deleteLinesForEntry(entry.id.value);
-      final linesWithEntryId = lines.map(
-        (l) => l.copyWith(entryId: Value(entry.id.value)),
-      );
-      for (final line in linesWithEntryId) {
-        await insertLine(line);
-      }
+      await _insertLines(entry.id.value, lines, allocations);
     });
   }
 

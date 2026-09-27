@@ -36,6 +36,7 @@ await fa.record(
   - [6. Financial Reports & Ledgers](#6-financial-reports--ledgers)
   - [7. Entry Templates](#7-entry-templates)
   - [8. Configuration](#8-configuration)
+  - [9. Cost Centers (Optional)](#9-cost-centers-optional)
 - [Integration Guide](#integration-guide-)
 - [API Reference](#api-reference-)
 - [Enforced Accounting Rules](#enforced-accounting-rules-️)
@@ -62,6 +63,7 @@ await fa.record(
 | 🔢 | **Auto-Sequenced Serials** — Yearly serial numbering (e.g. `JV-2026-0001`) with configurable prefixes and padding. |
 | 📅 | **Fiscal Period Control** — Annual or monthly periods, open/close safeguards, and overlap prevention. |
 | 📈 | **Financial Reports** — Trial Balance, Income Statement (P&L), Balance Sheet, Account Balance (recursive), and Account Ledger with opening/running balances. |
+| 🏢 | **Cost Centers (optional)** — Branches, projects, departments or custom dimensions; split lines by percentage/amount/allocation keys, per-account policies, periodic allocation, and profitability reports. |
 | 🧩 | **Entry Templates** — 7 built-in standard templates plus persistent database custom templates. |
 | 🔄 | **Serialization Support** — `toMap()` and `fromMap()` across all models for exports and sync. |
 | 🗄️ | **Drift (SQLite) Storage** — Fully offline, type-safe, WAL enabled, indexed for high performance, with automatic migrations. |
@@ -75,7 +77,7 @@ Add `flutter_accounting` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_accounting: ^0.4.0
+  flutter_accounting: ^0.5.0
 ```
 
 Supported platforms: **Android, iOS, Windows, macOS, Linux** (powered by `sqlite3_flutter_libs`).
@@ -397,9 +399,92 @@ await FlutterAccounting.initialize(
     requireOpenPeriod: true,   // Requires entries to fall into an open fiscal period
     serialPrefix: 'JV',        // e.g. JV-2026-0001
     serialPadding: 4,
+    enableCostCenters: false,  // Opt-in cost centers (see section 9)
+    allocationDecimals: 2,     // Rounding of percentage/key splits
   ),
 );
 ```
+
+### 9. Cost Centers (Optional)
+
+Track profitability by **branch, project, department** — or any dimension you define. The feature is **off by default** and everything in it is optional: turn it on, and nothing becomes mandatory unless you make it so.
+
+**Enable it**
+
+```dart
+await FlutterAccounting.initialize(
+  config: const AccountingConfig(enableCostCenters: true),
+  seedDefaultCostDimensions: true, // optional: BRANCH, PROJECT, DEPARTMENT
+);
+```
+
+**Define dimensions and centers** (centers form a tree, like the chart of accounts)
+
+```dart
+final region = await fa.costCenters.ensureDimension(code: 'REGION', name: 'Region'); // custom dimension
+await fa.costCenters.ensureCostCenter(dimensionCode: 'BRANCH', code: 'BR-WEST', name: 'Western Region');
+await fa.costCenters.ensureCostCenter(
+    dimensionCode: 'BRANCH', code: 'BR-JED', name: 'Jeddah', parentCode: 'BR-WEST');
+```
+
+**Allocate journal lines** — one center per dimension, or split within a dimension by percentage, amount, or a saved allocation key. Split rounding goes to the last share so the total always matches the line.
+
+```dart
+await fa.record(
+  JournalEntryBuilder(description: 'Shared rent')
+    .debitCode('53', 10000, allocations: [
+      CostAllocationModel.percent('BR-RYD', 60),
+      CostAllocationModel.percent('BR-JED', 40),
+      CostAllocationModel.code('DEP-ADMIN'),     // 100% to Admin (another dimension)
+    ])
+    .creditCode('111', 10000),
+);
+
+// Or use a saved allocation key (e.g. by floor area: Riyadh 300 / Jeddah 200)
+.debitCode('53', 10000, allocationKey: 'AREA')
+```
+
+**Policies (optional)** — make a dimension required or forbidden per account (including sub-accounts) or per account type, and set a default center applied automatically:
+
+```dart
+await fa.costCenters.setRule(DimensionRuleModel.forType(
+  dimensionId: department.id!,
+  accountType: AccountType.expense,
+  policy: DimensionPolicy.required,     // every expense line needs a department
+));
+await fa.costCenters.setRule(DimensionRuleModel.forAccount(
+  dimensionId: branch.id!,
+  accountId: jeddahRentId,
+  defaultCostCenterId: jeddah.id,       // auto-filled when not provided
+));
+```
+
+Precedence: rule on the account → nearest parent account → account type → the dimension's `defaultPolicy`. Inactive dimensions are ignored; inactive or parent centers cannot receive new allocations. Reversal entries copy the original allocations.
+
+**Periodic allocation** of a service center's costs to other centers:
+
+```dart
+final request = CostAllocationRequest(
+  sourceCostCenterId: hq.id!, allocationKeyId: headcountKey.id!,
+  from: DateTime(2026, 1, 1), to: DateTime(2026, 1, 31),
+);
+final preview = await fa.costAllocations.previewAllocation(request); // nothing saved
+final entry = await fa.costAllocations.runAllocation(request);       // posted, reversible
+```
+
+**Reports** — `fa.costReports`:
+
+| Method | Returns |
+|---|---|
+| `getSummary(dimensionId:)` | Revenue / expenses / net per center (tree roll-up) + unallocated |
+| `getComparison(dimensionId:, costCenterIds?)` | Accounts × centers table |
+| `getIncomeStatement(filter:, from:, to:)` | `IncomeStatementReport` for one or more centers |
+| `getTrialBalance(filter:)` | `TrialBalanceReport` for one or more centers |
+| `getLedger(costCenterId, {accountId})` | Center ledger with opening and running balances |
+| `getMatrix(rowDimensionId:, columnDimensionId:)` | Cross analysis, e.g. branches × projects |
+| `getUnallocatedLines(dimensionId:)` | Lines missing a center (data quality) |
+
+`CostCenterFilter([ryd.id!, prjA.id!])` intersects dimensions proportionally (a line 60% Riyadh and 50% Project A contributes 30%); centers from the same dimension are added together.
 
 ---
 
@@ -425,10 +510,11 @@ Check the [`example/`](example/) directory for a full working Flutter app includ
 
 | Member | Description |
 |---|---|
-| `initialize({databaseName, databaseDirectory, customExecutor, config, seedDefaultAccounts})` | Initializes the database and sets the singleton instance |
+| `initialize({databaseName, databaseDirectory, customExecutor, config, seedDefaultAccounts, seedDefaultCostDimensions})` | Initializes the database and sets the singleton instance |
 | `instance` / `isInitialized` | Accesses the initialized instance (`StateError` if uninitialized) |
 | `forTesting({config})` | Creates an in-memory test instance |
 | `accounts` / `journalEntries` / `reports` / `templates` / `periods` | Repository accessors |
+| `costCenters` / `costAllocations` / `costReports` | Cost center accessors (see section 9) |
 | `record(builder, {post, postedBy})` | Resolves, creates, and optionally posts an entry |
 | `reverseSource(type, id, {reversalDate, postedBy})` | Reverses all posted entries for a source document |
 | `transaction(action)` | Executes multiple database operations in an atomic transaction |
@@ -491,6 +577,25 @@ Check the [`example/`](example/) directory for a full working Flutter app includ
 | `getCustomTemplates()` / `saveTemplate(t)` / `deleteTemplate(id)` | Persistent custom templates |
 | `applyTemplate({template, accountIdMap, totalAmount, ...})` | Generates a balanced draft entry from a template |
 
+### `ICostCenterRepository` — `fa.costCenters`
+
+| Method | Description |
+|---|---|
+| `getDimensions()` / `createDimension(d)` / `updateDimension(d)` / `ensureDimension(...)` | Dimensions (branch, project, ...) |
+| `setDimensionActive(id, isActive:)` / `deleteDimension(id)` | Deactivate or delete an empty dimension |
+| `getCostCenters({dimensionId})` / `getPostableCostCenters({dimensionId})` / `searchCostCenters(q)` | Read centers (postable = active leaves) |
+| `createCostCenter(c)` / `updateCostCenter(c)` / `ensureCostCenter(...)` | Manage the center tree |
+| `setCostCenterActive(id, isActive:)` / `deleteCostCenter(id)` / `hasTransactions(id)` | Lifecycle |
+| `getRules()` / `setRule(rule)` / `deleteRule(id)` / `getEffectivePolicy(...)` | Dimension policies and default centers |
+| `getAllocationKeys()` / `saveAllocationKey(k)` / `deleteAllocationKey(id)` / `splitByKey(id, amount)` | Allocation keys |
+
+### `ICostAllocationRepository` — `fa.costAllocations`
+
+| Method | Description |
+|---|---|
+| `previewAllocation(request)` | Computes a periodic allocation without saving |
+| `runAllocation(request, {post, postedBy})` | Creates the `EntryType.costAllocation` entry |
+
 ---
 
 ## Enforced Accounting Rules ⚖️
@@ -518,6 +623,10 @@ Check the [`example/`](example/) directory for a full working Flutter app includ
 | Fiscal periods cannot overlap; start date must precede end date | `PeriodOverlapException` / `InvalidPeriodException` |
 | Fiscal period cannot be closed if draft entries exist | `PeriodHasDraftEntriesException` |
 | Template line ratios must be balanced | `InvalidTemplateException` |
+| Cost center allocations per dimension must sum to the line amount | `InvalidCostAllocationException` |
+| Allocations only to active leaf centers in active dimensions | `InactiveCostCenterException` / `CostCenterIsParentException` |
+| Required / forbidden dimension policies | `CostCenterRequiredException` / `CostCenterNotAllowedException` |
+| Cost center writes while the feature is off | `CostCentersDisabledException` |
 
 ---
 
@@ -558,6 +667,13 @@ tearDown(() => fa.dispose());
 
 ---
 
+## Upgrading from 0.4.x ⬆️
+
+- **Automatic migration to schema v3** adds the cost center tables; existing data is untouched.
+- Cost centers are **off by default**, so nothing changes until you set `AccountingConfig(enableCostCenters: true)`.
+- `EntryType.costAllocation` was added at the end of the enum. If you `switch` over `EntryType`, handle it.
+- `FlutterAccounting` has new `costCenters`, `costAllocations` and `costReports` accessors. `JournalEntryLineModel` has a new `allocations` field (default empty).
+
 ## Upgrading from 0.3.x ⬆️
 
 - **Automatic Schema Migration**: Database migrations (v1 → v2) execute automatically on startup preserving your data.
@@ -584,15 +700,16 @@ lib/
     │   ├── accounting_validator.dart  ← Double-entry validation rules
     │   ├── accounting_config.dart     ← AccountingConfig
     │   ├── journal_entry_builder.dart ← JournalEntryBuilder
+    │   ├── cost_allocation_calculator.dart ← Allocation splitting & rounding
     │   ├── standard_templates.dart    ← Standard templates collection
     │   └── date_utils.dart            ← Day boundary utilities
     ├── models/                        ← Pure domain models
-    ├── reports/report_models.dart     ← Report DTOs
+    ├── reports/                       ← Report DTOs (financial + cost centers)
     ├── repositories/
     │   ├── interfaces/                ← Repository contracts
     │   └── impl/                      ← Repository implementations
     ├── database/                      ← Drift (SQLite): tables, DAOs, mappers
-    └── seed/accounting_seed_data.dart ← Standard chart of accounts seed
+    └── seed/                          ← Chart of accounts & cost dimension seeds
 doc/
 └── INTEGRATION.md                     ← Integration guide & recipes
 example/                               ← Full example app & integration tests

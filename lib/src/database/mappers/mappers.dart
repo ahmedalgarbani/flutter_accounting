@@ -13,6 +13,10 @@ import '../../models/accounting_period_model.dart';
 import '../../models/journal_entry_model.dart';
 import '../../models/journal_entry_line_model.dart';
 import '../../models/entry_template_model.dart';
+import '../../models/cost_dimension_model.dart';
+import '../../models/cost_center_model.dart';
+import '../../models/cost_allocation_model.dart';
+import '../../models/allocation_key_model.dart';
 
 /// يحوّل النص الفارغ إلى null (الأعمدة الاختيارية لا تقبل نصاً فارغاً)
 String? _nullIfBlank(String? v) => (v == null || v.trim().isEmpty) ? null : v;
@@ -75,6 +79,8 @@ class JournalEntryLineMapper {
         credit: data.line.credit,
         description: data.line.description,
         sortOrder: data.line.sortOrder,
+        allocations:
+            data.allocations.map(CostAllocationMapper.fromData).toList(),
       );
 
   static JournalEntryLinesCompanion toCompanion(JournalEntryLineModel model) =>
@@ -204,5 +210,173 @@ class EntryTemplateMapper {
         type: Value(model.type),
         linesJson:
             Value(jsonEncode(model.lines.map((l) => l.toMap()).toList())),
+      );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Cost Centers Mappers
+// ─────────────────────────────────────────────────────────────
+
+class CostDimensionMapper {
+  CostDimensionMapper._();
+
+  static CostDimensionModel fromData(CostDimension data) => CostDimensionModel(
+        id: data.id,
+        code: data.code,
+        name: data.name,
+        nameAr: data.nameAr,
+        description: data.description,
+        defaultPolicy: data.defaultPolicy,
+        allowSplit: data.allowSplit,
+        isActive: data.isActive,
+        sortOrder: data.sortOrder,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      );
+
+  static CostDimensionsCompanion toCompanion(CostDimensionModel model) =>
+      CostDimensionsCompanion(
+        id: model.id != null ? Value(model.id!) : const Value.absent(),
+        code: Value(model.code),
+        name: Value(model.name),
+        nameAr: Value(_nullIfBlank(model.nameAr)),
+        description: Value(_nullIfBlank(model.description)),
+        defaultPolicy: Value(model.defaultPolicy),
+        allowSplit: Value(model.allowSplit),
+        isActive: Value(model.isActive),
+        sortOrder: Value(model.sortOrder),
+        updatedAt: Value(DateTime.now()),
+      );
+}
+
+class CostCenterMapper {
+  CostCenterMapper._();
+
+  static CostCenterModel fromData(CostCenter data) => CostCenterModel(
+        id: data.id,
+        dimensionId: data.dimensionId,
+        code: data.code,
+        name: data.name,
+        nameAr: data.nameAr,
+        parentId: data.parentId,
+        level: data.level,
+        isActive: data.isActive,
+        description: data.description,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      );
+
+  static CostCentersCompanion toCompanion(CostCenterModel model) =>
+      CostCentersCompanion(
+        id: model.id != null ? Value(model.id!) : const Value.absent(),
+        dimensionId: Value(model.dimensionId),
+        code: Value(model.code),
+        name: Value(model.name),
+        nameAr: Value(_nullIfBlank(model.nameAr)),
+        parentId: Value(model.parentId),
+        level: Value(model.level),
+        isActive: Value(model.isActive),
+        description: Value(_nullIfBlank(model.description)),
+        updatedAt: Value(DateTime.now()),
+      );
+
+  static List<CostCenterModel> fromDataList(List<CostCenter> list) =>
+      list.map(fromData).toList();
+}
+
+class CostAllocationMapper {
+  CostAllocationMapper._();
+
+  static CostAllocationModel fromData(AllocationWithCenter data) =>
+      CostAllocationModel(
+        id: data.allocation.id,
+        lineId: data.allocation.lineId,
+        costCenterId: data.allocation.costCenterId,
+        costCenterCode: data.center.code,
+        costCenterName: data.center.nameAr ?? data.center.name,
+        dimensionId: data.allocation.dimensionId,
+        amount: data.allocation.amount,
+        percentage: data.allocation.percentage,
+      );
+
+  /// الحصة يجب أن تكون محلولة (معرّف المركز والبعد والمبلغ والنسبة)
+  static JournalLineAllocationsCompanion toCompanion(
+          CostAllocationModel model) =>
+      JournalLineAllocationsCompanion(
+        costCenterId: Value(model.costCenterId!),
+        dimensionId: Value(model.dimensionId!),
+        amount: Value(model.amount!),
+        percentage: Value(model.percentage!),
+      );
+}
+
+class DimensionRuleMapper {
+  DimensionRuleMapper._();
+
+  static DimensionRuleModel fromData(CostDimensionRule data) =>
+      DimensionRuleModel(
+        id: data.id,
+        dimensionId: data.dimensionId,
+        accountId: data.accountId,
+        accountType: data.accountType,
+        policy: data.policy,
+        defaultCostCenterId: data.defaultCostCenterId,
+      );
+
+  static CostDimensionRulesCompanion toCompanion(DimensionRuleModel model) =>
+      CostDimensionRulesCompanion(
+        id: model.id != null ? Value(model.id!) : const Value.absent(),
+        dimensionId: Value(model.dimensionId),
+        accountId: Value(model.accountId),
+        accountType: Value(model.accountId == null ? model.accountType : null),
+        policy: Value(model.policy),
+        defaultCostCenterId: Value(model.defaultCostCenterId),
+      );
+}
+
+class AllocationKeyMapper {
+  AllocationKeyMapper._();
+
+  static AllocationKeyModel fromData(
+    AllocationKey data,
+    List<(AllocationKeyItem, CostCenter)> items,
+  ) =>
+      AllocationKeyModel(
+        id: data.id,
+        code: data.code,
+        name: data.name,
+        nameAr: data.nameAr,
+        dimensionId: data.dimensionId,
+        description: data.description,
+        isActive: data.isActive,
+        items: [
+          for (final (item, center) in items)
+            AllocationKeyItemModel(
+              id: item.id,
+              costCenterId: item.costCenterId,
+              weight: item.weight,
+              costCenterCode: center.code,
+              costCenterName: center.nameAr ?? center.name,
+            ),
+        ],
+      );
+
+  static AllocationKeysCompanion toCompanion(AllocationKeyModel model) =>
+      AllocationKeysCompanion(
+        id: model.id != null ? Value(model.id!) : const Value.absent(),
+        code: Value(model.code),
+        name: Value(model.name),
+        nameAr: Value(_nullIfBlank(model.nameAr)),
+        dimensionId: Value(model.dimensionId),
+        description: Value(_nullIfBlank(model.description)),
+        isActive: Value(model.isActive),
+        updatedAt: Value(DateTime.now()),
+      );
+
+  static AllocationKeyItemsCompanion itemToCompanion(
+          AllocationKeyItemModel item) =>
+      AllocationKeyItemsCompanion(
+        costCenterId: Value(item.costCenterId),
+        weight: Value(item.weight),
       );
 }

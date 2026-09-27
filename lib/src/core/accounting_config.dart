@@ -20,20 +20,40 @@ class AccountingConfig {
   /// عدد خانات الجزء الرقمي من الرقم التسلسلي (الافتراضي 4 → `0001`)
   final int serialPadding;
 
+  /// تفعيل مراكز التكلفة (الأبعاد التحليلية: فرع، مشروع، قسم...).
+  ///
+  /// - `false` (الافتراضي): الميزة موقوفة؛ لا يمكن إنشاء أبعاد أو مراكز
+  ///   أو توزيع البنود عليها ([CostCentersDisabledException])، ولا تُطبَّق
+  ///   سياساتها. القراءة والتقارير تبقى متاحة للبيانات السابقة.
+  /// - `true`: يمكن ربط بنود القيود بمراكز التكلفة وتوزيعها. كل شيء اختياري
+  ///   إلا ما تجعله إلزامياً بنفسك عبر سياسات الأبعاد.
+  final bool enableCostCenters;
+
+  /// عدد المنازل العشرية لتقريب الحصص عند التوزيع بالنسب أو بمفاتيح التوزيع
+  /// (الافتراضي 2؛ استخدم 3 لعملات مثل الدينار الكويتي). فرق التقريب يُحمَّل
+  /// دائماً على آخر حصة كي يطابق المجموع مبلغ البند.
+  final int allocationDecimals;
+
   const AccountingConfig({
     this.requireOpenPeriod = true,
     this.serialPrefix = 'JV',
     this.serialPadding = 4,
+    this.enableCostCenters = false,
+    this.allocationDecimals = 2,
   });
 
   AccountingConfig copyWith({
     bool? requireOpenPeriod,
     String? serialPrefix,
     int? serialPadding,
+    bool? enableCostCenters,
+    int? allocationDecimals,
   }) =>
       AccountingConfig(
         requireOpenPeriod: requireOpenPeriod ?? this.requireOpenPeriod,
         serialPrefix: serialPrefix ?? this.serialPrefix,
         serialPadding: serialPadding ?? this.serialPadding,
+        enableCostCenters: enableCostCenters ?? this.enableCostCenters,
+        allocationDecimals: allocationDecimals ?? this.allocationDecimals,
       );
 }
