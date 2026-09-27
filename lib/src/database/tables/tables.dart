@@ -143,3 +143,129 @@ class EntryTemplates extends Table {
   @override
   String get tableName => 'entry_templates';
 }
+
+// ─────────────────────────────────────────────────────────────
+// مراكز التكلفة - Cost Centers (Schema v3)
+// ─────────────────────────────────────────────────────────────
+
+/// الأبعاد التحليلية (فرع، مشروع، قسم...)
+class CostDimensions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get code => text().withLength(min: 1, max: 30)();
+  TextColumn get name => text().withLength(min: 1, max: 255)();
+  TextColumn get nameAr => text().withLength(min: 1, max: 255).nullable()();
+  TextColumn get description => text().nullable()();
+
+  /// السياسة الافتراضية لكل الحسابات
+  IntColumn get defaultPolicy => intEnum<DimensionPolicy>()
+      .withDefault(Constant(DimensionPolicy.optional.index))();
+
+  /// هل يُسمح بتوزيع البند على أكثر من مركز من هذا البعد؟
+  BoolColumn get allowSplit => boolean().withDefault(const Constant(true))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {code}
+      ];
+
+  @override
+  String get tableName => 'cost_dimensions';
+}
+
+/// مراكز التكلفة (شجرة هرمية لكل بُعد)
+@TableIndex(name: 'idx_cost_centers_dimension', columns: {#dimensionId})
+class CostCenters extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get dimensionId => integer().references(CostDimensions, #id)();
+  TextColumn get code => text().withLength(min: 1, max: 30)();
+  TextColumn get name => text().withLength(min: 1, max: 255)();
+  TextColumn get nameAr => text().withLength(min: 1, max: 255).nullable()();
+  IntColumn get parentId => integer().nullable().references(CostCenters, #id)();
+  IntColumn get level => integer().withDefault(const Constant(1))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  TextColumn get description => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {code}
+      ];
+
+  @override
+  String get tableName => 'cost_centers';
+}
+
+/// توزيع بنود القيود على مراكز التكلفة
+@TableIndex(name: 'idx_line_allocations_line', columns: {#lineId})
+@TableIndex(name: 'idx_line_allocations_center', columns: {#costCenterId})
+class JournalLineAllocations extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get lineId => integer().references(JournalEntryLines, #id)();
+  IntColumn get costCenterId => integer().references(CostCenters, #id)();
+
+  /// بُعد المركز (نسخة لتسريع التقارير)
+  IntColumn get dimensionId => integer().references(CostDimensions, #id)();
+
+  /// المبلغ المخصص (موجب دائماً، والجهة تتبع البند)
+  RealColumn get amount => real()();
+
+  /// النسبة من مبلغ البند (0-100)
+  RealColumn get percentage => real()();
+
+  @override
+  String get tableName => 'journal_line_allocations';
+}
+
+/// قواعد سياسة الأبعاد لكل حساب أو نوع حساب
+class CostDimensionRules extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get dimensionId => integer().references(CostDimensions, #id)();
+  IntColumn get accountId => integer().nullable().references(Accounts, #id)();
+  IntColumn get accountType => intEnum<AccountType>().nullable()();
+  IntColumn get policy => intEnum<DimensionPolicy>()();
+  IntColumn get defaultCostCenterId =>
+      integer().nullable().references(CostCenters, #id)();
+
+  @override
+  String get tableName => 'cost_dimension_rules';
+}
+
+/// مفاتيح التوزيع
+class AllocationKeys extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get code => text().withLength(min: 1, max: 30)();
+  TextColumn get name => text().withLength(min: 1, max: 255)();
+  TextColumn get nameAr => text().withLength(min: 1, max: 255).nullable()();
+  IntColumn get dimensionId => integer().references(CostDimensions, #id)();
+  TextColumn get description => text().nullable()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {code}
+      ];
+
+  @override
+  String get tableName => 'allocation_keys';
+}
+
+/// أوزان المراكز داخل مفتاح التوزيع
+class AllocationKeyItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get keyId => integer().references(AllocationKeys, #id)();
+  IntColumn get costCenterId => integer().references(CostCenters, #id)();
+  RealColumn get weight => real()();
+
+  @override
+  String get tableName => 'allocation_key_items';
+}

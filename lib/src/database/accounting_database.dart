@@ -13,6 +13,7 @@ import 'tables/tables.dart';
 import 'daos/accounts_dao.dart';
 import 'daos/journal_entries_dao.dart';
 import 'daos/entry_templates_dao.dart';
+import 'daos/cost_centers_dao.dart';
 
 part 'accounting_database.g.dart';
 
@@ -23,8 +24,14 @@ part 'accounting_database.g.dart';
     JournalEntryLines,
     AccountingPeriods,
     EntryTemplates,
+    CostDimensions,
+    CostCenters,
+    JournalLineAllocations,
+    CostDimensionRules,
+    AllocationKeys,
+    AllocationKeyItems,
   ],
-  daos: [AccountsDao, JournalEntriesDao, EntryTemplatesDao],
+  daos: [AccountsDao, JournalEntriesDao, EntryTemplatesDao, CostCentersDao],
 )
 class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase(super.e);
@@ -35,7 +42,8 @@ class AccountingDatabase extends _$AccountingDatabase {
   /// - 1: الإصدار الأولي
   /// - 2: نوع القيد، ربط المصدر (sourceType/sourceId)، ربط القيد العكسي،
   ///      جدول القوالب المخصصة، وفهارس للأداء
-  int get schemaVersion => 2;
+  /// - 3: مراكز التكلفة: الأبعاد، المراكز، توزيع البنود، القواعد، مفاتيح التوزيع
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -54,6 +62,17 @@ class AccountingDatabase extends _$AccountingDatabase {
             await m.createIndex(idxJournalEntriesSource);
             await m.createIndex(idxJournalEntryLinesEntry);
             await m.createIndex(idxJournalEntryLinesAccount);
+          }
+          if (from < 3) {
+            await m.createTable(costDimensions);
+            await m.createTable(costCenters);
+            await m.createTable(journalLineAllocations);
+            await m.createTable(costDimensionRules);
+            await m.createTable(allocationKeys);
+            await m.createTable(allocationKeyItems);
+            await m.createIndex(idxCostCentersDimension);
+            await m.createIndex(idxLineAllocationsLine);
+            await m.createIndex(idxLineAllocationsCenter);
           }
         },
         beforeOpen: (details) async {

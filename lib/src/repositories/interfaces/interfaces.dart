@@ -8,7 +8,13 @@ import '../../models/account_model.dart';
 import '../../models/accounting_period_model.dart';
 import '../../models/journal_entry_model.dart';
 import '../../models/entry_template_model.dart';
+import '../../models/cost_dimension_model.dart';
+import '../../models/cost_center_model.dart';
+import '../../models/cost_allocation_model.dart';
+import '../../models/allocation_key_model.dart';
+import '../../models/cost_allocation_run_model.dart';
 import '../../reports/report_models.dart';
+import '../../reports/cost_center_report_models.dart';
 
 // ─────────────────────────────────────────────────────────────
 // IAccountRepository - دليل الحسابات
@@ -196,5 +202,187 @@ abstract class IEntryTemplateRepository {
     DateTime? date,
     String? description,
     String? reference,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ICostCenterRepository - مراكز التكلفة
+// ─────────────────────────────────────────────────────────────
+
+/// إدارة الأبعاد التحليلية ومراكز التكلفة وقواعدها ومفاتيح التوزيع.
+///
+/// عمليات الكتابة ترمي [CostCentersDisabledException] إن كانت الميزة غير
+/// مفعّلة في `AccountingConfig.enableCostCenters`، والقراءة متاحة دائماً.
+abstract class ICostCenterRepository {
+  // ── الأبعاد ──
+  Future<List<CostDimensionModel>> getDimensions({bool activeOnly = false});
+  Future<CostDimensionModel?> getDimensionById(int id);
+  Future<CostDimensionModel?> getDimensionByCode(String code);
+  Future<CostDimensionModel> createDimension(CostDimensionModel dimension);
+  Future<CostDimensionModel> updateDimension(CostDimensionModel dimension);
+
+  /// يُعيد البعد إن كان رمزه موجوداً، وإلا ينشئه
+  Future<CostDimensionModel> ensureDimension({
+    required String code,
+    required String name,
+    String? nameAr,
+    DimensionPolicy defaultPolicy = DimensionPolicy.optional,
+    bool allowSplit = true,
+  });
+
+  /// إيقاف/تفعيل بُعد: البعد الموقوف لا يقبل توزيعات جديدة ولا تُطبَّق سياساته
+  Future<void> setDimensionActive(int id, {required bool isActive});
+
+  /// حذف بُعد لا يحتوي على مراكز (مع قواعده ومفاتيح توزيعه)
+  Future<void> deleteDimension(int id);
+
+  // ── المراكز ──
+  Future<List<CostCenterModel>> getCostCenters(
+      {int? dimensionId, bool activeOnly = false});
+  Future<CostCenterModel?> getCostCenterById(int id);
+  Future<CostCenterModel?> getCostCenterByCode(String code);
+  Future<List<CostCenterModel>> getChildCostCenters(int parentId);
+  Stream<List<CostCenterModel>> watchCostCenters({int? dimensionId});
+
+  /// المراكز النهائية (Leaf) النشطة في أبعاد نشطة - لقوائم الاختيار
+  Future<List<CostCenterModel>> getPostableCostCenters({int? dimensionId});
+
+  /// البحث بالرمز أو الاسم العربي/الإنجليزي
+  Future<List<CostCenterModel>> searchCostCenters(String query,
+      {int? dimensionId});
+
+  Future<CostCenterModel> createCostCenter(CostCenterModel costCenter);
+  Future<CostCenterModel> updateCostCenter(CostCenterModel costCenter);
+
+  /// يُعيد المركز إن كان رمزه موجوداً، وإلا ينشئه في البعد [dimensionCode]
+  Future<CostCenterModel> ensureCostCenter({
+    required String dimensionCode,
+    required String code,
+    required String name,
+    String? nameAr,
+    String? parentCode,
+  });
+
+  Future<void> setCostCenterActive(int id, {required bool isActive});
+
+  /// حذف مركز بلا حركات أو أبناء أو ارتباطات
+  Future<void> deleteCostCenter(int id);
+
+  /// هل توجد حركات (بأي حالة) على المركز؟
+  Future<bool> hasTransactions(int costCenterId);
+
+  // ── قواعد الأبعاد ──
+  Future<List<DimensionRuleModel>> getRules({int? dimensionId});
+
+  /// إنشاء قاعدة أو تحديث القاعدة الموجودة لنفس الحساب/النوع في نفس البعد
+  Future<DimensionRuleModel> setRule(DimensionRuleModel rule);
+  Future<void> deleteRule(int id);
+
+  /// السياسة الفعلية لبُعد على حساب بعد تطبيق القواعد والأولويات
+  Future<DimensionPolicy> getEffectivePolicy({
+    required int accountId,
+    required int dimensionId,
+  });
+
+  // ── مفاتيح التوزيع ──
+  Future<List<AllocationKeyModel>> getAllocationKeys({int? dimensionId});
+  Future<AllocationKeyModel?> getAllocationKeyById(int id);
+  Future<AllocationKeyModel?> getAllocationKeyByCode(String code);
+
+  /// إنشاء مفتاح (بلا id) أو تحديثه مع بنوده
+  Future<AllocationKeyModel> saveAllocationKey(AllocationKeyModel key);
+  Future<void> deleteAllocationKey(int id);
+
+  /// يقسم [amount] حسب أوزان المفتاح ويُعيد حصصاً جاهزة لبند قيد
+  Future<List<CostAllocationModel>> splitByKey(
+      int allocationKeyId, double amount);
+}
+
+// ─────────────────────────────────────────────────────────────
+// ICostAllocationRepository - التوزيع الدوري للتكاليف
+// ─────────────────────────────────────────────────────────────
+
+abstract class ICostAllocationRepository {
+  /// يحسب التوزيع دون حفظ شيء (لعرضه على المستخدم قبل التنفيذ)
+  Future<CostAllocationPreview> previewAllocation(
+      CostAllocationRequest request);
+
+  /// ينشئ قيد توزيع التكاليف (مرحّلاً افتراضياً).
+  /// القيد مرتبط بالمصدر `cost_allocation` ويمكن إلغاؤه بـ `reverseEntry`.
+  /// يرمي [InvalidCostAllocationException] إن لم توجد أرصدة للتوزيع.
+  Future<JournalEntryModel> runAllocation(
+    CostAllocationRequest request, {
+    bool post = true,
+    String? postedBy,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ICostReportsRepository - تقارير مراكز التكلفة
+// ─────────────────────────────────────────────────────────────
+
+/// تقارير مراكز التكلفة. التواريخ الافتراضية: من بداية السنة الحالية حتى
+/// اليوم، وحدود التواريخ على مستوى اليوم مثل التقارير المالية.
+abstract class ICostReportsRepository {
+  /// ملخص الإيرادات والمصروفات وصافي الربح لكل مراكز بُعد (شجرة مجمّعة)
+  Future<CostCenterSummaryReport> getSummary({
+    required int dimensionId,
+    DateTime? from,
+    DateTime? to,
+  });
+
+  /// مقارنة أرصدة الحسابات بين المراكز.
+  /// [costCenterIds] المراكز المعروضة كأعمدة (كل منها يشمل أبناءه)،
+  /// والافتراضي: المراكز الجذرية للبعد.
+  /// [incomeStatementOnly] حسابات الإيرادات والمصروفات فقط (الافتراضي).
+  Future<CostCenterComparisonReport> getComparison({
+    required int dimensionId,
+    DateTime? from,
+    DateTime? to,
+    List<int>? costCenterIds,
+    bool includeUnallocated = true,
+    bool incomeStatementOnly = true,
+  });
+
+  /// قائمة الدخل لمركز أو مجموعة مراكز
+  Future<IncomeStatementReport> getIncomeStatement({
+    required CostCenterFilter filter,
+    required DateTime from,
+    required DateTime to,
+  });
+
+  /// ميزان المراجعة لمركز أو مجموعة مراكز
+  Future<TrialBalanceReport> getTrialBalance({
+    required CostCenterFilter filter,
+    DateTime? from,
+    DateTime? to,
+  });
+
+  /// كشف حساب مركز تكلفة (اختيارياً لحساب واحد وحساباته الفرعية)
+  Future<CostCenterLedgerReport> getLedger(
+    int costCenterId, {
+    DateTime? from,
+    DateTime? to,
+    int? accountId,
+    bool includeChildren = true,
+  });
+
+  /// تحليل متقاطع لبُعدين (مثل الفروع × المشاريع) للإيرادات والمصروفات.
+  /// الصفوف/الأعمدة الافتراضية: المراكز الجذرية لكل بعد.
+  Future<CostCenterMatrixReport> getMatrix({
+    required int rowDimensionId,
+    required int columnDimensionId,
+    DateTime? from,
+    DateTime? to,
+    List<int>? rowCostCenterIds,
+    List<int>? columnCostCenterIds,
+  });
+
+  /// البنود غير الموزعة على مراكز بُعد (لضبط جودة البيانات)
+  Future<UnallocatedLinesReport> getUnallocatedLines({
+    required int dimensionId,
+    DateTime? from,
+    DateTime? to,
+    bool incomeStatementOnly = true,
   });
 }

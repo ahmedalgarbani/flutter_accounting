@@ -32,7 +32,11 @@ import 'repositories/impl/journal_entry_repository_impl.dart';
 import 'repositories/impl/reports_repository_impl.dart';
 import 'repositories/impl/entry_template_repository_impl.dart';
 import 'repositories/impl/accounting_period_repository_impl.dart';
+import 'repositories/impl/cost_allocation_repository_impl.dart';
+import 'repositories/impl/cost_center_repository_impl.dart';
+import 'repositories/impl/cost_reports_repository_impl.dart';
 import 'seed/accounting_seed_data.dart';
+import 'seed/cost_center_seed_data.dart';
 
 class FlutterAccounting {
   // ─────────────────────────────────────────────────────────────
@@ -54,6 +58,16 @@ class FlutterAccounting {
   /// الفترات المحاسبية
   final IAccountingPeriodRepository periods;
 
+  /// مراكز التكلفة: الأبعاد (فرع/مشروع/قسم...)، المراكز، القواعد،
+  /// ومفاتيح التوزيع. تتطلب `AccountingConfig(enableCostCenters: true)`.
+  final ICostCenterRepository costCenters;
+
+  /// التوزيع الدوري لتكاليف مركز على مراكز أخرى
+  final ICostAllocationRepository costAllocations;
+
+  /// تقارير مراكز التكلفة
+  final ICostReportsRepository costReports;
+
   /// الإعدادات المستخدمة
   final AccountingConfig config;
 
@@ -66,6 +80,9 @@ class FlutterAccounting {
     required this.reports,
     required this.templates,
     required this.periods,
+    required this.costCenters,
+    required this.costAllocations,
+    required this.costReports,
     required this.config,
     required this.database,
   });
@@ -77,15 +94,23 @@ class FlutterAccounting {
   ) {
     final accounts =
         AccountRepositoryImpl(db.accountsDao, db.journalEntriesDao);
+    final journalEntries = JournalEntryRepositoryImpl(
+        db.journalEntriesDao, db.accountsDao, config, db.costCentersDao);
+    final costCenters =
+        CostCenterRepositoryImpl(db.costCentersDao, db.accountsDao, config);
     return FlutterAccounting._(
       database: db,
       config: config,
       accounts: accounts,
-      journalEntries: JournalEntryRepositoryImpl(
-          db.journalEntriesDao, db.accountsDao, config),
+      journalEntries: journalEntries,
       reports: ReportsRepositoryImpl(db.journalEntriesDao, db.accountsDao),
       templates: EntryTemplateRepositoryImpl(accounts, db.entryTemplatesDao),
       periods: AccountingPeriodRepositoryImpl(db.journalEntriesDao),
+      costCenters: costCenters,
+      costAllocations: CostAllocationRepositoryImpl(db.costCentersDao,
+          db.accountsDao, costCenters, journalEntries, config),
+      costReports: CostReportsRepositoryImpl(
+          db.costCentersDao, db.accountsDao, db.journalEntriesDao),
     );
   }
 
@@ -120,6 +145,9 @@ class FlutterAccounting {
   /// - [customExecutor] تمرير executor مخصص (مفيد للاختبار أو التشفير)
   /// - [config] إعدادات السلوك، انظر [AccountingConfig]
   /// - [seedDefaultAccounts] زرع دليل الحسابات الافتراضي إن كانت القاعدة فارغة
+  /// - [seedDefaultCostDimensions] إنشاء الأبعاد الجاهزة (الفرع، المشروع،
+  ///   القسم) إن لم تكن موجودة. يتطلب `config.enableCostCenters = true`.
+  ///   بدونها يمكنك تعريف أبعادك الخاصة عبر `fa.costCenters`.
   ///
   /// استدعاء [initialize] مرة ثانية يغلق النسخة السابقة أولاً.
   static Future<FlutterAccounting> initialize({
@@ -128,7 +156,12 @@ class FlutterAccounting {
     QueryExecutor? customExecutor,
     AccountingConfig config = const AccountingConfig(),
     bool seedDefaultAccounts = false,
+    bool seedDefaultCostDimensions = false,
   }) async {
+    if (seedDefaultCostDimensions && !config.enableCostCenters) {
+      throw ArgumentError(
+          'seedDefaultCostDimensions يتطلب AccountingConfig(enableCostCenters: true).');
+    }
     final previous = _instance;
     _instance = null;
     await previous?.database.close();
@@ -142,6 +175,9 @@ class FlutterAccounting {
 
     final fa = FlutterAccounting._fromDatabase(db, config);
     if (seedDefaultAccounts) await AccountingSeedData.seed(fa.accounts);
+    if (seedDefaultCostDimensions) {
+      await CostCenterSeedData.seed(fa.costCenters);
+    }
 
     return _instance = fa;
   }
@@ -176,7 +212,7 @@ class FlutterAccounting {
     bool post = true,
     String? postedBy,
   }) async {
-    final entry = await builder.resolve(accounts);
+    final entry = await builder.resolve(accounts, costCenters: costCenters);
     return post
         ? journalEntries.createAndPost(entry, postedBy: postedBy)
         : journalEntries.createEntry(entry);

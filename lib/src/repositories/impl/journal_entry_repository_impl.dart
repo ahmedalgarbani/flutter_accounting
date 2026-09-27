@@ -12,23 +12,32 @@ import '../../core/date_utils.dart';
 import '../../core/enums.dart';
 import '../../core/exceptions.dart';
 import '../../core/accounting_validator.dart';
+import '../../core/cost_allocation_calculator.dart';
+import '../../models/cost_allocation_model.dart';
 import '../../models/journal_entry_model.dart';
 import '../../models/journal_entry_line_model.dart';
 import '../../database/daos/accounts_dao.dart';
+import '../../database/daos/cost_centers_dao.dart';
 import '../../database/daos/journal_entries_dao.dart';
 import '../../database/mappers/mappers.dart';
 import '../interfaces/interfaces.dart';
+import 'dimension_policy_resolver.dart';
 
 class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   final JournalEntriesDao _entriesDao;
   final AccountsDao _accountsDao;
   final AccountingConfig _config;
+  final CostCentersDao? _costCentersDao;
 
   JournalEntryRepositoryImpl(
     this._entriesDao,
     this._accountsDao, [
     this._config = const AccountingConfig(),
+    this._costCentersDao,
   ]);
+
+  CostCentersDao get _costDao =>
+      _costCentersDao ?? _entriesDao.attachedDatabase.costCentersDao;
 
   // ─────────────────────────────────────────────────────────────
   // القراءة
@@ -109,8 +118,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
 
   /// الإدراج الفعلي (يُستدعى داخل transaction)
   Future<JournalEntryModel> _insert(JournalEntryModel entry) async {
-    // 1. التحقق من القواعد المحاسبية والفترة
-    await _validateEntry(entry);
+    // 1. التحقق من القواعد المحاسبية والفترة ومراكز التكلفة
+    final resolvedLines = await _validateEntry(entry);
 
     // 2. توليد رقم تسلسلي إذا لم يوجد أو التحقق من عدم تكراره
     final serial = entry.serialNumber ??
@@ -133,10 +142,11 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       updatedAt: now,
     );
 
-    final lines = _withSortOrder(entry.lines);
+    final lines = _withSortOrder(resolvedLines);
     final id = await _entriesDao.insertEntryWithLines(
       entry: JournalEntryMapper.toCompanion(toSave),
       lines: lines.map(JournalEntryLineMapper.toCompanion).toList(),
+      allocations: _allocationCompanions(lines),
     );
 
     return (await getEntryById(id))!;
@@ -173,12 +183,13 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
         updatedAt: DateTime.now(),
       );
 
-      // التحقق من القواعد المحاسبية والفترة
-      await _validateEntry(updated);
+      // التحقق من القواعد المحاسبية والفترة ومراكز التكلفة
+      final lines = await _validateEntry(updated);
 
       await _entriesDao.updateEntryWithLines(
         entry: JournalEntryMapper.toCompanion(updated),
-        lines: updated.lines.map(JournalEntryLineMapper.toCompanion).toList(),
+        lines: lines.map(JournalEntryLineMapper.toCompanion).toList(),
+        allocations: _allocationCompanions(lines),
       );
       return (await getEntryById(existing.id!))!;
     });
@@ -258,6 +269,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
             credit: line.debit, // مبادلة
             description: line.description,
             sortOrder: line.sortOrder,
+            // نفس توزيع البند الأصلي كي يلغي أثره على كل مركز
+            allocations: line.allocations,
           ),
       ];
 
@@ -325,7 +338,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     ];
   }
 
-  Future<void> _validateEntry(JournalEntryModel entry) async {
+  /// يتحقق من القيد ويُعيد بنوده بعد حل توزيعها على مراكز التكلفة
+  Future<List<JournalEntryLineModel>> _validateEntry(
+      JournalEntryModel entry) async {
     // 1. التحقق من القواعد المحاسبية للبنود
     await _validateLines(entry.lines);
 
@@ -335,12 +350,137 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       if (_config.requireOpenPeriod) {
         throw DateOutsidePeriodException(entry.date);
       }
-      return;
-    }
-    if (period.isClosed) {
+    } else if (period.isClosed) {
       throw PeriodClosedException(entry.date);
     }
+
+    // 3. مراكز التكلفة (القيد العكسي ينسخ توزيع الأصل كما هو دون إعادة تحقق،
+    //    كي يُلغى أثره حتى لو أُوقف مركز أو تغيرت السياسات بعد ذلك)
+    if (entry.reversalOfId != null) return entry.lines;
+    return _resolveAllocations(entry);
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // مراكز التكلفة
+  // ─────────────────────────────────────────────────────────────
+
+  List<List<JournalLineAllocationsCompanion>> _allocationCompanions(
+          List<JournalEntryLineModel> lines) =>
+      [
+        for (final line in lines)
+          line.allocations.map(CostAllocationMapper.toCompanion).toList(),
+      ];
+
+  /// يحلّ مراكز كل بند (بالمعرّف أو الرمز)، ويطبق المراكز الافتراضية
+  /// والسياسات، ويحسب مبالغ الحصص ويتحقق من صحتها.
+  Future<List<JournalEntryLineModel>> _resolveAllocations(
+      JournalEntryModel entry) async {
+    final hasAny = entry.lines.any((l) => l.allocations.isNotEmpty);
+    if (!_config.enableCostCenters) {
+      if (hasAny) throw const CostCentersDisabledException();
+      return entry.lines;
+    }
+
+    final resolver = await DimensionPolicyResolver.load(_costDao, _accountsDao);
+    if (!hasAny && resolver.activeDimensions.isEmpty) return entry.lines;
+
+    final centers = <Object, CostCenter>{};
+    final isParent = <int, bool>{};
+
+    Future<CostCenter> postableCenter(int? id, String? code) async {
+      final key = id ?? code!;
+      var center = centers[key];
+      if (center == null) {
+        center = id != null
+            ? await _costDao.getCenterById(id)
+            : await _costDao.getCenterByCode(code!);
+        if (center == null) throw CostCenterNotFoundException(key);
+        centers[key] = center;
+      }
+      final dimension = resolver.dimensions[center.dimensionId];
+      if (!center.isActive || dimension == null || !dimension.isActive) {
+        throw InactiveCostCenterException(center.code);
+      }
+      final parent =
+          isParent[center.id] ??= await _costDao.centerHasChildren(center.id);
+      if (parent) throw CostCenterIsParentException(center.code);
+      return center;
+    }
+
+    CostAllocationModel attach(CostAllocationModel a, CostCenter c) =>
+        a.copyWith(
+          costCenterId: c.id,
+          costCenterCode: c.code,
+          costCenterName: c.nameAr ?? c.name,
+          dimensionId: c.dimensionId,
+        );
+
+    final result = <JournalEntryLineModel>[];
+    for (final line in entry.lines) {
+      final allocations = <CostAllocationModel>[
+        for (final a in line.allocations)
+          attach(a, await postableCenter(a.costCenterId, a.costCenterCode)),
+      ];
+
+      // المراكز الافتراضية والسياسات لكل بُعد نشط
+      for (final dimension in resolver.activeDimensions) {
+        final effective = await resolver.resolve(line.accountId, dimension.id);
+        var has = allocations.any((a) => a.dimensionId == dimension.id);
+        final defaultId = effective.defaultCostCenterId;
+        if (!has &&
+            defaultId != null &&
+            effective.policy != DimensionPolicy.forbidden) {
+          allocations.add(attach(CostAllocationModel(costCenterId: defaultId),
+              await postableCenter(defaultId, null)));
+          has = true;
+        }
+        if (effective.policy == DimensionPolicy.required &&
+            !has &&
+            entry.entryType != EntryType.costAllocation) {
+          throw CostCenterRequiredException(
+              await _accountCode(line.accountId), dimension.code);
+        }
+        if (effective.policy == DimensionPolicy.forbidden && has) {
+          throw CostCenterNotAllowedException(
+              await _accountCode(line.accountId), dimension.code);
+        }
+      }
+
+      // حساب المبالغ والتحقق لكل بُعد
+      final byDimension = <int, List<CostAllocationModel>>{};
+      for (final a in allocations) {
+        byDimension.putIfAbsent(a.dimensionId!, () => []).add(a);
+      }
+      final resolved = <CostAllocationModel>[];
+      for (final MapEntry(key: dimensionId, value: group)
+          in byDimension.entries) {
+        final dimension = resolver.dimensions[dimensionId]!;
+        if (!dimension.allowSplit && group.length > 1) {
+          throw InvalidCostAllocationException(
+              'البعد "${dimension.code}" لا يسمح بتوزيع البند على أكثر من مركز.');
+        }
+        final seen = <int>{};
+        for (final a in group) {
+          if (!seen.add(a.costCenterId!)) {
+            throw InvalidCostAllocationException(
+                'المركز "${a.costCenterCode}" مكرر في نفس البند.');
+          }
+        }
+        resolved.addAll(CostAllocationCalculator.resolveDimension(
+          line.amount,
+          group,
+          fractionDigits: _config.allocationDecimals,
+          dimensionLabel: dimension.code,
+        ));
+      }
+      result.add(line.copyWith(allocations: resolved));
+    }
+    return result;
+  }
+
+  Future<String> _accountCode(int accountId) async =>
+      (await _accountsDao.getAccountById(accountId))?.code ??
+      accountId.toString();
 
   Future<void> _validateLines(List<JournalEntryLineModel> lines) async {
     if (lines.isEmpty) throw const InsufficientLinesException();

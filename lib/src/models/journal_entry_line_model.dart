@@ -4,6 +4,8 @@ library;
 
 import 'package:meta/meta.dart';
 
+import 'cost_allocation_model.dart';
+
 @immutable
 class JournalEntryLineModel {
   final int? id;
@@ -16,6 +18,10 @@ class JournalEntryLineModel {
   final String? description;
   final int sortOrder;
 
+  /// توزيع البند على مراكز التكلفة (اختياري). يمكن ربط البند بمركز من كل
+  /// بُعد، أو توزيعه على عدة مراكز من نفس البعد. انظر [CostAllocationModel].
+  final List<CostAllocationModel> allocations;
+
   const JournalEntryLineModel({
     this.id,
     this.entryId,
@@ -26,6 +32,7 @@ class JournalEntryLineModel {
     required this.credit,
     this.description,
     this.sortOrder = 0,
+    this.allocations = const [],
   }) : assert(
           !(debit > 0 && credit > 0),
           'البند لا يمكن أن يكون مديناً ودائناً في نفس الوقت',
@@ -45,6 +52,7 @@ class JournalEntryLineModel {
     required double amount,
     String? description,
     int sortOrder = 0,
+    List<CostAllocationModel> allocations = const [],
   }) {
     return JournalEntryLineModel(
       id: id,
@@ -56,6 +64,7 @@ class JournalEntryLineModel {
       credit: 0,
       description: description,
       sortOrder: sortOrder,
+      allocations: allocations,
     );
   }
 
@@ -69,6 +78,7 @@ class JournalEntryLineModel {
     required double amount,
     String? description,
     int sortOrder = 0,
+    List<CostAllocationModel> allocations = const [],
   }) {
     return JournalEntryLineModel(
       id: id,
@@ -80,6 +90,7 @@ class JournalEntryLineModel {
       credit: amount,
       description: description,
       sortOrder: sortOrder,
+      allocations: allocations,
     );
   }
 
@@ -101,6 +112,7 @@ class JournalEntryLineModel {
     double? credit,
     String? description,
     int? sortOrder,
+    List<CostAllocationModel>? allocations,
   }) {
     return JournalEntryLineModel(
       id: id ?? this.id,
@@ -112,6 +124,7 @@ class JournalEntryLineModel {
       credit: credit ?? this.credit,
       description: description ?? this.description,
       sortOrder: sortOrder ?? this.sortOrder,
+      allocations: allocations ?? this.allocations,
     );
   }
 
@@ -125,6 +138,7 @@ class JournalEntryLineModel {
         'credit': credit,
         'description': description,
         'sortOrder': sortOrder,
+        'allocations': allocations.map((a) => a.toMap()).toList(),
       };
 
   factory JournalEntryLineModel.fromMap(Map<String, dynamic> map) =>
@@ -138,6 +152,10 @@ class JournalEntryLineModel {
         credit: ((map['credit'] as num?) ?? 0).toDouble(),
         description: map['description'] as String?,
         sortOrder: (map['sortOrder'] as int?) ?? 0,
+        allocations: ((map['allocations'] as List?) ?? const [])
+            .map((a) => CostAllocationModel.fromMap(
+                Map<String, dynamic>.from(a as Map)))
+            .toList(),
       );
 
   @override

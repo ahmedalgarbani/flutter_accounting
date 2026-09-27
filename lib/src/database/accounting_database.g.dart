@@ -2413,6 +2413,2600 @@ class EntryTemplatesCompanion extends UpdateCompanion<EntryTemplate> {
   }
 }
 
+class $CostDimensionsTable extends CostDimensions
+    with TableInfo<$CostDimensionsTable, CostDimension> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CostDimensionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+      'code', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 30),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
+  @override
+  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
+      'name_ar', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  late final GeneratedColumnWithTypeConverter<DimensionPolicy, int>
+      defaultPolicy = GeneratedColumn<int>('default_policy', aliasedName, false,
+              type: DriftSqlType.int,
+              requiredDuringInsert: false,
+              defaultValue: Constant(DimensionPolicy.optional.index))
+          .withConverter<DimensionPolicy>(
+              $CostDimensionsTable.$converterdefaultPolicy);
+  static const VerificationMeta _allowSplitMeta =
+      const VerificationMeta('allowSplit');
+  @override
+  late final GeneratedColumn<bool> allowSplit = GeneratedColumn<bool>(
+      'allow_split', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("allow_split" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _sortOrderMeta =
+      const VerificationMeta('sortOrder');
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+      'sort_order', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        code,
+        name,
+        nameAr,
+        description,
+        defaultPolicy,
+        allowSplit,
+        isActive,
+        sortOrder,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cost_dimensions';
+  @override
+  VerificationContext validateIntegrity(Insertable<CostDimension> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+          _codeMeta, code.isAcceptableOrUnknown(data['code']!, _codeMeta));
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_ar')) {
+      context.handle(_nameArMeta,
+          nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta));
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('allow_split')) {
+      context.handle(
+          _allowSplitMeta,
+          allowSplit.isAcceptableOrUnknown(
+              data['allow_split']!, _allowSplitMeta));
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(_sortOrderMeta,
+          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {code},
+      ];
+  @override
+  CostDimension map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CostDimension(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      code: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}code'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      nameAr: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name_ar']),
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      defaultPolicy: $CostDimensionsTable.$converterdefaultPolicy.fromSql(
+          attachedDatabase.typeMapping.read(
+              DriftSqlType.int, data['${effectivePrefix}default_policy'])!),
+      allowSplit: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}allow_split'])!,
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+      sortOrder: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $CostDimensionsTable createAlias(String alias) {
+    return $CostDimensionsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<DimensionPolicy, int, int> $converterdefaultPolicy =
+      const EnumIndexConverter<DimensionPolicy>(DimensionPolicy.values);
+}
+
+class CostDimension extends DataClass implements Insertable<CostDimension> {
+  final int id;
+  final String code;
+  final String name;
+  final String? nameAr;
+  final String? description;
+
+  /// السياسة الافتراضية لكل الحسابات
+  final DimensionPolicy defaultPolicy;
+
+  /// هل يُسمح بتوزيع البند على أكثر من مركز من هذا البعد؟
+  final bool allowSplit;
+  final bool isActive;
+  final int sortOrder;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const CostDimension(
+      {required this.id,
+      required this.code,
+      required this.name,
+      this.nameAr,
+      this.description,
+      required this.defaultPolicy,
+      required this.allowSplit,
+      required this.isActive,
+      required this.sortOrder,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['code'] = Variable<String>(code);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || nameAr != null) {
+      map['name_ar'] = Variable<String>(nameAr);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    {
+      map['default_policy'] = Variable<int>(
+          $CostDimensionsTable.$converterdefaultPolicy.toSql(defaultPolicy));
+    }
+    map['allow_split'] = Variable<bool>(allowSplit);
+    map['is_active'] = Variable<bool>(isActive);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  CostDimensionsCompanion toCompanion(bool nullToAbsent) {
+    return CostDimensionsCompanion(
+      id: Value(id),
+      code: Value(code),
+      name: Value(name),
+      nameAr:
+          nameAr == null && nullToAbsent ? const Value.absent() : Value(nameAr),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      defaultPolicy: Value(defaultPolicy),
+      allowSplit: Value(allowSplit),
+      isActive: Value(isActive),
+      sortOrder: Value(sortOrder),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory CostDimension.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CostDimension(
+      id: serializer.fromJson<int>(json['id']),
+      code: serializer.fromJson<String>(json['code']),
+      name: serializer.fromJson<String>(json['name']),
+      nameAr: serializer.fromJson<String?>(json['nameAr']),
+      description: serializer.fromJson<String?>(json['description']),
+      defaultPolicy: $CostDimensionsTable.$converterdefaultPolicy
+          .fromJson(serializer.fromJson<int>(json['defaultPolicy'])),
+      allowSplit: serializer.fromJson<bool>(json['allowSplit']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'code': serializer.toJson<String>(code),
+      'name': serializer.toJson<String>(name),
+      'nameAr': serializer.toJson<String?>(nameAr),
+      'description': serializer.toJson<String?>(description),
+      'defaultPolicy': serializer.toJson<int>(
+          $CostDimensionsTable.$converterdefaultPolicy.toJson(defaultPolicy)),
+      'allowSplit': serializer.toJson<bool>(allowSplit),
+      'isActive': serializer.toJson<bool>(isActive),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  CostDimension copyWith(
+          {int? id,
+          String? code,
+          String? name,
+          Value<String?> nameAr = const Value.absent(),
+          Value<String?> description = const Value.absent(),
+          DimensionPolicy? defaultPolicy,
+          bool? allowSplit,
+          bool? isActive,
+          int? sortOrder,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      CostDimension(
+        id: id ?? this.id,
+        code: code ?? this.code,
+        name: name ?? this.name,
+        nameAr: nameAr.present ? nameAr.value : this.nameAr,
+        description: description.present ? description.value : this.description,
+        defaultPolicy: defaultPolicy ?? this.defaultPolicy,
+        allowSplit: allowSplit ?? this.allowSplit,
+        isActive: isActive ?? this.isActive,
+        sortOrder: sortOrder ?? this.sortOrder,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  CostDimension copyWithCompanion(CostDimensionsCompanion data) {
+    return CostDimension(
+      id: data.id.present ? data.id.value : this.id,
+      code: data.code.present ? data.code.value : this.code,
+      name: data.name.present ? data.name.value : this.name,
+      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
+      description:
+          data.description.present ? data.description.value : this.description,
+      defaultPolicy: data.defaultPolicy.present
+          ? data.defaultPolicy.value
+          : this.defaultPolicy,
+      allowSplit:
+          data.allowSplit.present ? data.allowSplit.value : this.allowSplit,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CostDimension(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('description: $description, ')
+          ..write('defaultPolicy: $defaultPolicy, ')
+          ..write('allowSplit: $allowSplit, ')
+          ..write('isActive: $isActive, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, code, name, nameAr, description,
+      defaultPolicy, allowSplit, isActive, sortOrder, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CostDimension &&
+          other.id == this.id &&
+          other.code == this.code &&
+          other.name == this.name &&
+          other.nameAr == this.nameAr &&
+          other.description == this.description &&
+          other.defaultPolicy == this.defaultPolicy &&
+          other.allowSplit == this.allowSplit &&
+          other.isActive == this.isActive &&
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class CostDimensionsCompanion extends UpdateCompanion<CostDimension> {
+  final Value<int> id;
+  final Value<String> code;
+  final Value<String> name;
+  final Value<String?> nameAr;
+  final Value<String?> description;
+  final Value<DimensionPolicy> defaultPolicy;
+  final Value<bool> allowSplit;
+  final Value<bool> isActive;
+  final Value<int> sortOrder;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const CostDimensionsCompanion({
+    this.id = const Value.absent(),
+    this.code = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameAr = const Value.absent(),
+    this.description = const Value.absent(),
+    this.defaultPolicy = const Value.absent(),
+    this.allowSplit = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  CostDimensionsCompanion.insert({
+    this.id = const Value.absent(),
+    required String code,
+    required String name,
+    this.nameAr = const Value.absent(),
+    this.description = const Value.absent(),
+    this.defaultPolicy = const Value.absent(),
+    this.allowSplit = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  })  : code = Value(code),
+        name = Value(name);
+  static Insertable<CostDimension> custom({
+    Expression<int>? id,
+    Expression<String>? code,
+    Expression<String>? name,
+    Expression<String>? nameAr,
+    Expression<String>? description,
+    Expression<int>? defaultPolicy,
+    Expression<bool>? allowSplit,
+    Expression<bool>? isActive,
+    Expression<int>? sortOrder,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (code != null) 'code': code,
+      if (name != null) 'name': name,
+      if (nameAr != null) 'name_ar': nameAr,
+      if (description != null) 'description': description,
+      if (defaultPolicy != null) 'default_policy': defaultPolicy,
+      if (allowSplit != null) 'allow_split': allowSplit,
+      if (isActive != null) 'is_active': isActive,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  CostDimensionsCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? code,
+      Value<String>? name,
+      Value<String?>? nameAr,
+      Value<String?>? description,
+      Value<DimensionPolicy>? defaultPolicy,
+      Value<bool>? allowSplit,
+      Value<bool>? isActive,
+      Value<int>? sortOrder,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt}) {
+    return CostDimensionsCompanion(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      nameAr: nameAr ?? this.nameAr,
+      description: description ?? this.description,
+      defaultPolicy: defaultPolicy ?? this.defaultPolicy,
+      allowSplit: allowSplit ?? this.allowSplit,
+      isActive: isActive ?? this.isActive,
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameAr.present) {
+      map['name_ar'] = Variable<String>(nameAr.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (defaultPolicy.present) {
+      map['default_policy'] = Variable<int>($CostDimensionsTable
+          .$converterdefaultPolicy
+          .toSql(defaultPolicy.value));
+    }
+    if (allowSplit.present) {
+      map['allow_split'] = Variable<bool>(allowSplit.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CostDimensionsCompanion(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('description: $description, ')
+          ..write('defaultPolicy: $defaultPolicy, ')
+          ..write('allowSplit: $allowSplit, ')
+          ..write('isActive: $isActive, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CostCentersTable extends CostCenters
+    with TableInfo<$CostCentersTable, CostCenter> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CostCentersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _dimensionIdMeta =
+      const VerificationMeta('dimensionId');
+  @override
+  late final GeneratedColumn<int> dimensionId = GeneratedColumn<int>(
+      'dimension_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES cost_dimensions (id)'));
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+      'code', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 30),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
+  @override
+  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
+      'name_ar', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _parentIdMeta =
+      const VerificationMeta('parentId');
+  @override
+  late final GeneratedColumn<int> parentId = GeneratedColumn<int>(
+      'parent_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES cost_centers (id)'));
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<int> level = GeneratedColumn<int>(
+      'level', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        dimensionId,
+        code,
+        name,
+        nameAr,
+        parentId,
+        level,
+        isActive,
+        description,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cost_centers';
+  @override
+  VerificationContext validateIntegrity(Insertable<CostCenter> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('dimension_id')) {
+      context.handle(
+          _dimensionIdMeta,
+          dimensionId.isAcceptableOrUnknown(
+              data['dimension_id']!, _dimensionIdMeta));
+    } else if (isInserting) {
+      context.missing(_dimensionIdMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+          _codeMeta, code.isAcceptableOrUnknown(data['code']!, _codeMeta));
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_ar')) {
+      context.handle(_nameArMeta,
+          nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta));
+    }
+    if (data.containsKey('parent_id')) {
+      context.handle(_parentIdMeta,
+          parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta));
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+          _levelMeta, level.isAcceptableOrUnknown(data['level']!, _levelMeta));
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {code},
+      ];
+  @override
+  CostCenter map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CostCenter(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      dimensionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}dimension_id'])!,
+      code: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}code'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      nameAr: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name_ar']),
+      parentId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}parent_id']),
+      level: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}level'])!,
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $CostCentersTable createAlias(String alias) {
+    return $CostCentersTable(attachedDatabase, alias);
+  }
+}
+
+class CostCenter extends DataClass implements Insertable<CostCenter> {
+  final int id;
+  final int dimensionId;
+  final String code;
+  final String name;
+  final String? nameAr;
+  final int? parentId;
+  final int level;
+  final bool isActive;
+  final String? description;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const CostCenter(
+      {required this.id,
+      required this.dimensionId,
+      required this.code,
+      required this.name,
+      this.nameAr,
+      this.parentId,
+      required this.level,
+      required this.isActive,
+      this.description,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['dimension_id'] = Variable<int>(dimensionId);
+    map['code'] = Variable<String>(code);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || nameAr != null) {
+      map['name_ar'] = Variable<String>(nameAr);
+    }
+    if (!nullToAbsent || parentId != null) {
+      map['parent_id'] = Variable<int>(parentId);
+    }
+    map['level'] = Variable<int>(level);
+    map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  CostCentersCompanion toCompanion(bool nullToAbsent) {
+    return CostCentersCompanion(
+      id: Value(id),
+      dimensionId: Value(dimensionId),
+      code: Value(code),
+      name: Value(name),
+      nameAr:
+          nameAr == null && nullToAbsent ? const Value.absent() : Value(nameAr),
+      parentId: parentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentId),
+      level: Value(level),
+      isActive: Value(isActive),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory CostCenter.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CostCenter(
+      id: serializer.fromJson<int>(json['id']),
+      dimensionId: serializer.fromJson<int>(json['dimensionId']),
+      code: serializer.fromJson<String>(json['code']),
+      name: serializer.fromJson<String>(json['name']),
+      nameAr: serializer.fromJson<String?>(json['nameAr']),
+      parentId: serializer.fromJson<int?>(json['parentId']),
+      level: serializer.fromJson<int>(json['level']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      description: serializer.fromJson<String?>(json['description']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'dimensionId': serializer.toJson<int>(dimensionId),
+      'code': serializer.toJson<String>(code),
+      'name': serializer.toJson<String>(name),
+      'nameAr': serializer.toJson<String?>(nameAr),
+      'parentId': serializer.toJson<int?>(parentId),
+      'level': serializer.toJson<int>(level),
+      'isActive': serializer.toJson<bool>(isActive),
+      'description': serializer.toJson<String?>(description),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  CostCenter copyWith(
+          {int? id,
+          int? dimensionId,
+          String? code,
+          String? name,
+          Value<String?> nameAr = const Value.absent(),
+          Value<int?> parentId = const Value.absent(),
+          int? level,
+          bool? isActive,
+          Value<String?> description = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      CostCenter(
+        id: id ?? this.id,
+        dimensionId: dimensionId ?? this.dimensionId,
+        code: code ?? this.code,
+        name: name ?? this.name,
+        nameAr: nameAr.present ? nameAr.value : this.nameAr,
+        parentId: parentId.present ? parentId.value : this.parentId,
+        level: level ?? this.level,
+        isActive: isActive ?? this.isActive,
+        description: description.present ? description.value : this.description,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  CostCenter copyWithCompanion(CostCentersCompanion data) {
+    return CostCenter(
+      id: data.id.present ? data.id.value : this.id,
+      dimensionId:
+          data.dimensionId.present ? data.dimensionId.value : this.dimensionId,
+      code: data.code.present ? data.code.value : this.code,
+      name: data.name.present ? data.name.value : this.name,
+      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
+      parentId: data.parentId.present ? data.parentId.value : this.parentId,
+      level: data.level.present ? data.level.value : this.level,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      description:
+          data.description.present ? data.description.value : this.description,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CostCenter(')
+          ..write('id: $id, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('parentId: $parentId, ')
+          ..write('level: $level, ')
+          ..write('isActive: $isActive, ')
+          ..write('description: $description, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, dimensionId, code, name, nameAr, parentId,
+      level, isActive, description, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CostCenter &&
+          other.id == this.id &&
+          other.dimensionId == this.dimensionId &&
+          other.code == this.code &&
+          other.name == this.name &&
+          other.nameAr == this.nameAr &&
+          other.parentId == this.parentId &&
+          other.level == this.level &&
+          other.isActive == this.isActive &&
+          other.description == this.description &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class CostCentersCompanion extends UpdateCompanion<CostCenter> {
+  final Value<int> id;
+  final Value<int> dimensionId;
+  final Value<String> code;
+  final Value<String> name;
+  final Value<String?> nameAr;
+  final Value<int?> parentId;
+  final Value<int> level;
+  final Value<bool> isActive;
+  final Value<String?> description;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const CostCentersCompanion({
+    this.id = const Value.absent(),
+    this.dimensionId = const Value.absent(),
+    this.code = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameAr = const Value.absent(),
+    this.parentId = const Value.absent(),
+    this.level = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.description = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  CostCentersCompanion.insert({
+    this.id = const Value.absent(),
+    required int dimensionId,
+    required String code,
+    required String name,
+    this.nameAr = const Value.absent(),
+    this.parentId = const Value.absent(),
+    this.level = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.description = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  })  : dimensionId = Value(dimensionId),
+        code = Value(code),
+        name = Value(name);
+  static Insertable<CostCenter> custom({
+    Expression<int>? id,
+    Expression<int>? dimensionId,
+    Expression<String>? code,
+    Expression<String>? name,
+    Expression<String>? nameAr,
+    Expression<int>? parentId,
+    Expression<int>? level,
+    Expression<bool>? isActive,
+    Expression<String>? description,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dimensionId != null) 'dimension_id': dimensionId,
+      if (code != null) 'code': code,
+      if (name != null) 'name': name,
+      if (nameAr != null) 'name_ar': nameAr,
+      if (parentId != null) 'parent_id': parentId,
+      if (level != null) 'level': level,
+      if (isActive != null) 'is_active': isActive,
+      if (description != null) 'description': description,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  CostCentersCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? dimensionId,
+      Value<String>? code,
+      Value<String>? name,
+      Value<String?>? nameAr,
+      Value<int?>? parentId,
+      Value<int>? level,
+      Value<bool>? isActive,
+      Value<String?>? description,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt}) {
+    return CostCentersCompanion(
+      id: id ?? this.id,
+      dimensionId: dimensionId ?? this.dimensionId,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      nameAr: nameAr ?? this.nameAr,
+      parentId: parentId ?? this.parentId,
+      level: level ?? this.level,
+      isActive: isActive ?? this.isActive,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (dimensionId.present) {
+      map['dimension_id'] = Variable<int>(dimensionId.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameAr.present) {
+      map['name_ar'] = Variable<String>(nameAr.value);
+    }
+    if (parentId.present) {
+      map['parent_id'] = Variable<int>(parentId.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<int>(level.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CostCentersCompanion(')
+          ..write('id: $id, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('parentId: $parentId, ')
+          ..write('level: $level, ')
+          ..write('isActive: $isActive, ')
+          ..write('description: $description, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $JournalLineAllocationsTable extends JournalLineAllocations
+    with TableInfo<$JournalLineAllocationsTable, JournalLineAllocation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $JournalLineAllocationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _lineIdMeta = const VerificationMeta('lineId');
+  @override
+  late final GeneratedColumn<int> lineId = GeneratedColumn<int>(
+      'line_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES journal_entry_lines (id)'));
+  static const VerificationMeta _costCenterIdMeta =
+      const VerificationMeta('costCenterId');
+  @override
+  late final GeneratedColumn<int> costCenterId = GeneratedColumn<int>(
+      'cost_center_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES cost_centers (id)'));
+  static const VerificationMeta _dimensionIdMeta =
+      const VerificationMeta('dimensionId');
+  @override
+  late final GeneratedColumn<int> dimensionId = GeneratedColumn<int>(
+      'dimension_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES cost_dimensions (id)'));
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+      'amount', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _percentageMeta =
+      const VerificationMeta('percentage');
+  @override
+  late final GeneratedColumn<double> percentage = GeneratedColumn<double>(
+      'percentage', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, lineId, costCenterId, dimensionId, amount, percentage];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'journal_line_allocations';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<JournalLineAllocation> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('line_id')) {
+      context.handle(_lineIdMeta,
+          lineId.isAcceptableOrUnknown(data['line_id']!, _lineIdMeta));
+    } else if (isInserting) {
+      context.missing(_lineIdMeta);
+    }
+    if (data.containsKey('cost_center_id')) {
+      context.handle(
+          _costCenterIdMeta,
+          costCenterId.isAcceptableOrUnknown(
+              data['cost_center_id']!, _costCenterIdMeta));
+    } else if (isInserting) {
+      context.missing(_costCenterIdMeta);
+    }
+    if (data.containsKey('dimension_id')) {
+      context.handle(
+          _dimensionIdMeta,
+          dimensionId.isAcceptableOrUnknown(
+              data['dimension_id']!, _dimensionIdMeta));
+    } else if (isInserting) {
+      context.missing(_dimensionIdMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(_amountMeta,
+          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('percentage')) {
+      context.handle(
+          _percentageMeta,
+          percentage.isAcceptableOrUnknown(
+              data['percentage']!, _percentageMeta));
+    } else if (isInserting) {
+      context.missing(_percentageMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  JournalLineAllocation map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return JournalLineAllocation(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      lineId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}line_id'])!,
+      costCenterId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cost_center_id'])!,
+      dimensionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}dimension_id'])!,
+      amount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
+      percentage: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}percentage'])!,
+    );
+  }
+
+  @override
+  $JournalLineAllocationsTable createAlias(String alias) {
+    return $JournalLineAllocationsTable(attachedDatabase, alias);
+  }
+}
+
+class JournalLineAllocation extends DataClass
+    implements Insertable<JournalLineAllocation> {
+  final int id;
+  final int lineId;
+  final int costCenterId;
+
+  /// بُعد المركز (نسخة لتسريع التقارير)
+  final int dimensionId;
+
+  /// المبلغ المخصص (موجب دائماً، والجهة تتبع البند)
+  final double amount;
+
+  /// النسبة من مبلغ البند (0-100)
+  final double percentage;
+  const JournalLineAllocation(
+      {required this.id,
+      required this.lineId,
+      required this.costCenterId,
+      required this.dimensionId,
+      required this.amount,
+      required this.percentage});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['line_id'] = Variable<int>(lineId);
+    map['cost_center_id'] = Variable<int>(costCenterId);
+    map['dimension_id'] = Variable<int>(dimensionId);
+    map['amount'] = Variable<double>(amount);
+    map['percentage'] = Variable<double>(percentage);
+    return map;
+  }
+
+  JournalLineAllocationsCompanion toCompanion(bool nullToAbsent) {
+    return JournalLineAllocationsCompanion(
+      id: Value(id),
+      lineId: Value(lineId),
+      costCenterId: Value(costCenterId),
+      dimensionId: Value(dimensionId),
+      amount: Value(amount),
+      percentage: Value(percentage),
+    );
+  }
+
+  factory JournalLineAllocation.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return JournalLineAllocation(
+      id: serializer.fromJson<int>(json['id']),
+      lineId: serializer.fromJson<int>(json['lineId']),
+      costCenterId: serializer.fromJson<int>(json['costCenterId']),
+      dimensionId: serializer.fromJson<int>(json['dimensionId']),
+      amount: serializer.fromJson<double>(json['amount']),
+      percentage: serializer.fromJson<double>(json['percentage']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'lineId': serializer.toJson<int>(lineId),
+      'costCenterId': serializer.toJson<int>(costCenterId),
+      'dimensionId': serializer.toJson<int>(dimensionId),
+      'amount': serializer.toJson<double>(amount),
+      'percentage': serializer.toJson<double>(percentage),
+    };
+  }
+
+  JournalLineAllocation copyWith(
+          {int? id,
+          int? lineId,
+          int? costCenterId,
+          int? dimensionId,
+          double? amount,
+          double? percentage}) =>
+      JournalLineAllocation(
+        id: id ?? this.id,
+        lineId: lineId ?? this.lineId,
+        costCenterId: costCenterId ?? this.costCenterId,
+        dimensionId: dimensionId ?? this.dimensionId,
+        amount: amount ?? this.amount,
+        percentage: percentage ?? this.percentage,
+      );
+  JournalLineAllocation copyWithCompanion(
+      JournalLineAllocationsCompanion data) {
+    return JournalLineAllocation(
+      id: data.id.present ? data.id.value : this.id,
+      lineId: data.lineId.present ? data.lineId.value : this.lineId,
+      costCenterId: data.costCenterId.present
+          ? data.costCenterId.value
+          : this.costCenterId,
+      dimensionId:
+          data.dimensionId.present ? data.dimensionId.value : this.dimensionId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      percentage:
+          data.percentage.present ? data.percentage.value : this.percentage,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalLineAllocation(')
+          ..write('id: $id, ')
+          ..write('lineId: $lineId, ')
+          ..write('costCenterId: $costCenterId, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('amount: $amount, ')
+          ..write('percentage: $percentage')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, lineId, costCenterId, dimensionId, amount, percentage);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is JournalLineAllocation &&
+          other.id == this.id &&
+          other.lineId == this.lineId &&
+          other.costCenterId == this.costCenterId &&
+          other.dimensionId == this.dimensionId &&
+          other.amount == this.amount &&
+          other.percentage == this.percentage);
+}
+
+class JournalLineAllocationsCompanion
+    extends UpdateCompanion<JournalLineAllocation> {
+  final Value<int> id;
+  final Value<int> lineId;
+  final Value<int> costCenterId;
+  final Value<int> dimensionId;
+  final Value<double> amount;
+  final Value<double> percentage;
+  const JournalLineAllocationsCompanion({
+    this.id = const Value.absent(),
+    this.lineId = const Value.absent(),
+    this.costCenterId = const Value.absent(),
+    this.dimensionId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.percentage = const Value.absent(),
+  });
+  JournalLineAllocationsCompanion.insert({
+    this.id = const Value.absent(),
+    required int lineId,
+    required int costCenterId,
+    required int dimensionId,
+    required double amount,
+    required double percentage,
+  })  : lineId = Value(lineId),
+        costCenterId = Value(costCenterId),
+        dimensionId = Value(dimensionId),
+        amount = Value(amount),
+        percentage = Value(percentage);
+  static Insertable<JournalLineAllocation> custom({
+    Expression<int>? id,
+    Expression<int>? lineId,
+    Expression<int>? costCenterId,
+    Expression<int>? dimensionId,
+    Expression<double>? amount,
+    Expression<double>? percentage,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (lineId != null) 'line_id': lineId,
+      if (costCenterId != null) 'cost_center_id': costCenterId,
+      if (dimensionId != null) 'dimension_id': dimensionId,
+      if (amount != null) 'amount': amount,
+      if (percentage != null) 'percentage': percentage,
+    });
+  }
+
+  JournalLineAllocationsCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? lineId,
+      Value<int>? costCenterId,
+      Value<int>? dimensionId,
+      Value<double>? amount,
+      Value<double>? percentage}) {
+    return JournalLineAllocationsCompanion(
+      id: id ?? this.id,
+      lineId: lineId ?? this.lineId,
+      costCenterId: costCenterId ?? this.costCenterId,
+      dimensionId: dimensionId ?? this.dimensionId,
+      amount: amount ?? this.amount,
+      percentage: percentage ?? this.percentage,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (lineId.present) {
+      map['line_id'] = Variable<int>(lineId.value);
+    }
+    if (costCenterId.present) {
+      map['cost_center_id'] = Variable<int>(costCenterId.value);
+    }
+    if (dimensionId.present) {
+      map['dimension_id'] = Variable<int>(dimensionId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (percentage.present) {
+      map['percentage'] = Variable<double>(percentage.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalLineAllocationsCompanion(')
+          ..write('id: $id, ')
+          ..write('lineId: $lineId, ')
+          ..write('costCenterId: $costCenterId, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('amount: $amount, ')
+          ..write('percentage: $percentage')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CostDimensionRulesTable extends CostDimensionRules
+    with TableInfo<$CostDimensionRulesTable, CostDimensionRule> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CostDimensionRulesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _dimensionIdMeta =
+      const VerificationMeta('dimensionId');
+  @override
+  late final GeneratedColumn<int> dimensionId = GeneratedColumn<int>(
+      'dimension_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES cost_dimensions (id)'));
+  static const VerificationMeta _accountIdMeta =
+      const VerificationMeta('accountId');
+  @override
+  late final GeneratedColumn<int> accountId = GeneratedColumn<int>(
+      'account_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES accounts (id)'));
+  @override
+  late final GeneratedColumnWithTypeConverter<AccountType?, int> accountType =
+      GeneratedColumn<int>('account_type', aliasedName, true,
+              type: DriftSqlType.int, requiredDuringInsert: false)
+          .withConverter<AccountType?>(
+              $CostDimensionRulesTable.$converteraccountTypen);
+  @override
+  late final GeneratedColumnWithTypeConverter<DimensionPolicy, int> policy =
+      GeneratedColumn<int>('policy', aliasedName, false,
+              type: DriftSqlType.int, requiredDuringInsert: true)
+          .withConverter<DimensionPolicy>(
+              $CostDimensionRulesTable.$converterpolicy);
+  static const VerificationMeta _defaultCostCenterIdMeta =
+      const VerificationMeta('defaultCostCenterId');
+  @override
+  late final GeneratedColumn<int> defaultCostCenterId = GeneratedColumn<int>(
+      'default_cost_center_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES cost_centers (id)'));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, dimensionId, accountId, accountType, policy, defaultCostCenterId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cost_dimension_rules';
+  @override
+  VerificationContext validateIntegrity(Insertable<CostDimensionRule> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('dimension_id')) {
+      context.handle(
+          _dimensionIdMeta,
+          dimensionId.isAcceptableOrUnknown(
+              data['dimension_id']!, _dimensionIdMeta));
+    } else if (isInserting) {
+      context.missing(_dimensionIdMeta);
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(_accountIdMeta,
+          accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta));
+    }
+    if (data.containsKey('default_cost_center_id')) {
+      context.handle(
+          _defaultCostCenterIdMeta,
+          defaultCostCenterId.isAcceptableOrUnknown(
+              data['default_cost_center_id']!, _defaultCostCenterIdMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CostDimensionRule map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CostDimensionRule(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      dimensionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}dimension_id'])!,
+      accountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}account_id']),
+      accountType: $CostDimensionRulesTable.$converteraccountTypen.fromSql(
+          attachedDatabase.typeMapping
+              .read(DriftSqlType.int, data['${effectivePrefix}account_type'])),
+      policy: $CostDimensionRulesTable.$converterpolicy.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}policy'])!),
+      defaultCostCenterId: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}default_cost_center_id']),
+    );
+  }
+
+  @override
+  $CostDimensionRulesTable createAlias(String alias) {
+    return $CostDimensionRulesTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<AccountType, int, int> $converteraccountType =
+      const EnumIndexConverter<AccountType>(AccountType.values);
+  static JsonTypeConverter2<AccountType?, int?, int?> $converteraccountTypen =
+      JsonTypeConverter2.asNullable($converteraccountType);
+  static JsonTypeConverter2<DimensionPolicy, int, int> $converterpolicy =
+      const EnumIndexConverter<DimensionPolicy>(DimensionPolicy.values);
+}
+
+class CostDimensionRule extends DataClass
+    implements Insertable<CostDimensionRule> {
+  final int id;
+  final int dimensionId;
+  final int? accountId;
+  final AccountType? accountType;
+  final DimensionPolicy policy;
+  final int? defaultCostCenterId;
+  const CostDimensionRule(
+      {required this.id,
+      required this.dimensionId,
+      this.accountId,
+      this.accountType,
+      required this.policy,
+      this.defaultCostCenterId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['dimension_id'] = Variable<int>(dimensionId);
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<int>(accountId);
+    }
+    if (!nullToAbsent || accountType != null) {
+      map['account_type'] = Variable<int>(
+          $CostDimensionRulesTable.$converteraccountTypen.toSql(accountType));
+    }
+    {
+      map['policy'] = Variable<int>(
+          $CostDimensionRulesTable.$converterpolicy.toSql(policy));
+    }
+    if (!nullToAbsent || defaultCostCenterId != null) {
+      map['default_cost_center_id'] = Variable<int>(defaultCostCenterId);
+    }
+    return map;
+  }
+
+  CostDimensionRulesCompanion toCompanion(bool nullToAbsent) {
+    return CostDimensionRulesCompanion(
+      id: Value(id),
+      dimensionId: Value(dimensionId),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
+      accountType: accountType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountType),
+      policy: Value(policy),
+      defaultCostCenterId: defaultCostCenterId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultCostCenterId),
+    );
+  }
+
+  factory CostDimensionRule.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CostDimensionRule(
+      id: serializer.fromJson<int>(json['id']),
+      dimensionId: serializer.fromJson<int>(json['dimensionId']),
+      accountId: serializer.fromJson<int?>(json['accountId']),
+      accountType: $CostDimensionRulesTable.$converteraccountTypen
+          .fromJson(serializer.fromJson<int?>(json['accountType'])),
+      policy: $CostDimensionRulesTable.$converterpolicy
+          .fromJson(serializer.fromJson<int>(json['policy'])),
+      defaultCostCenterId:
+          serializer.fromJson<int?>(json['defaultCostCenterId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'dimensionId': serializer.toJson<int>(dimensionId),
+      'accountId': serializer.toJson<int?>(accountId),
+      'accountType': serializer.toJson<int?>(
+          $CostDimensionRulesTable.$converteraccountTypen.toJson(accountType)),
+      'policy': serializer.toJson<int>(
+          $CostDimensionRulesTable.$converterpolicy.toJson(policy)),
+      'defaultCostCenterId': serializer.toJson<int?>(defaultCostCenterId),
+    };
+  }
+
+  CostDimensionRule copyWith(
+          {int? id,
+          int? dimensionId,
+          Value<int?> accountId = const Value.absent(),
+          Value<AccountType?> accountType = const Value.absent(),
+          DimensionPolicy? policy,
+          Value<int?> defaultCostCenterId = const Value.absent()}) =>
+      CostDimensionRule(
+        id: id ?? this.id,
+        dimensionId: dimensionId ?? this.dimensionId,
+        accountId: accountId.present ? accountId.value : this.accountId,
+        accountType: accountType.present ? accountType.value : this.accountType,
+        policy: policy ?? this.policy,
+        defaultCostCenterId: defaultCostCenterId.present
+            ? defaultCostCenterId.value
+            : this.defaultCostCenterId,
+      );
+  CostDimensionRule copyWithCompanion(CostDimensionRulesCompanion data) {
+    return CostDimensionRule(
+      id: data.id.present ? data.id.value : this.id,
+      dimensionId:
+          data.dimensionId.present ? data.dimensionId.value : this.dimensionId,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      accountType:
+          data.accountType.present ? data.accountType.value : this.accountType,
+      policy: data.policy.present ? data.policy.value : this.policy,
+      defaultCostCenterId: data.defaultCostCenterId.present
+          ? data.defaultCostCenterId.value
+          : this.defaultCostCenterId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CostDimensionRule(')
+          ..write('id: $id, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('accountId: $accountId, ')
+          ..write('accountType: $accountType, ')
+          ..write('policy: $policy, ')
+          ..write('defaultCostCenterId: $defaultCostCenterId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, dimensionId, accountId, accountType, policy, defaultCostCenterId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CostDimensionRule &&
+          other.id == this.id &&
+          other.dimensionId == this.dimensionId &&
+          other.accountId == this.accountId &&
+          other.accountType == this.accountType &&
+          other.policy == this.policy &&
+          other.defaultCostCenterId == this.defaultCostCenterId);
+}
+
+class CostDimensionRulesCompanion extends UpdateCompanion<CostDimensionRule> {
+  final Value<int> id;
+  final Value<int> dimensionId;
+  final Value<int?> accountId;
+  final Value<AccountType?> accountType;
+  final Value<DimensionPolicy> policy;
+  final Value<int?> defaultCostCenterId;
+  const CostDimensionRulesCompanion({
+    this.id = const Value.absent(),
+    this.dimensionId = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.accountType = const Value.absent(),
+    this.policy = const Value.absent(),
+    this.defaultCostCenterId = const Value.absent(),
+  });
+  CostDimensionRulesCompanion.insert({
+    this.id = const Value.absent(),
+    required int dimensionId,
+    this.accountId = const Value.absent(),
+    this.accountType = const Value.absent(),
+    required DimensionPolicy policy,
+    this.defaultCostCenterId = const Value.absent(),
+  })  : dimensionId = Value(dimensionId),
+        policy = Value(policy);
+  static Insertable<CostDimensionRule> custom({
+    Expression<int>? id,
+    Expression<int>? dimensionId,
+    Expression<int>? accountId,
+    Expression<int>? accountType,
+    Expression<int>? policy,
+    Expression<int>? defaultCostCenterId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dimensionId != null) 'dimension_id': dimensionId,
+      if (accountId != null) 'account_id': accountId,
+      if (accountType != null) 'account_type': accountType,
+      if (policy != null) 'policy': policy,
+      if (defaultCostCenterId != null)
+        'default_cost_center_id': defaultCostCenterId,
+    });
+  }
+
+  CostDimensionRulesCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? dimensionId,
+      Value<int?>? accountId,
+      Value<AccountType?>? accountType,
+      Value<DimensionPolicy>? policy,
+      Value<int?>? defaultCostCenterId}) {
+    return CostDimensionRulesCompanion(
+      id: id ?? this.id,
+      dimensionId: dimensionId ?? this.dimensionId,
+      accountId: accountId ?? this.accountId,
+      accountType: accountType ?? this.accountType,
+      policy: policy ?? this.policy,
+      defaultCostCenterId: defaultCostCenterId ?? this.defaultCostCenterId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (dimensionId.present) {
+      map['dimension_id'] = Variable<int>(dimensionId.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<int>(accountId.value);
+    }
+    if (accountType.present) {
+      map['account_type'] = Variable<int>($CostDimensionRulesTable
+          .$converteraccountTypen
+          .toSql(accountType.value));
+    }
+    if (policy.present) {
+      map['policy'] = Variable<int>(
+          $CostDimensionRulesTable.$converterpolicy.toSql(policy.value));
+    }
+    if (defaultCostCenterId.present) {
+      map['default_cost_center_id'] = Variable<int>(defaultCostCenterId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CostDimensionRulesCompanion(')
+          ..write('id: $id, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('accountId: $accountId, ')
+          ..write('accountType: $accountType, ')
+          ..write('policy: $policy, ')
+          ..write('defaultCostCenterId: $defaultCostCenterId')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AllocationKeysTable extends AllocationKeys
+    with TableInfo<$AllocationKeysTable, AllocationKey> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AllocationKeysTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+      'code', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 30),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
+  @override
+  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
+      'name_ar', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _dimensionIdMeta =
+      const VerificationMeta('dimensionId');
+  @override
+  late final GeneratedColumn<int> dimensionId = GeneratedColumn<int>(
+      'dimension_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES cost_dimensions (id)'));
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        code,
+        name,
+        nameAr,
+        dimensionId,
+        description,
+        isActive,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'allocation_keys';
+  @override
+  VerificationContext validateIntegrity(Insertable<AllocationKey> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+          _codeMeta, code.isAcceptableOrUnknown(data['code']!, _codeMeta));
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_ar')) {
+      context.handle(_nameArMeta,
+          nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta));
+    }
+    if (data.containsKey('dimension_id')) {
+      context.handle(
+          _dimensionIdMeta,
+          dimensionId.isAcceptableOrUnknown(
+              data['dimension_id']!, _dimensionIdMeta));
+    } else if (isInserting) {
+      context.missing(_dimensionIdMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {code},
+      ];
+  @override
+  AllocationKey map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AllocationKey(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      code: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}code'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      nameAr: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name_ar']),
+      dimensionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}dimension_id'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $AllocationKeysTable createAlias(String alias) {
+    return $AllocationKeysTable(attachedDatabase, alias);
+  }
+}
+
+class AllocationKey extends DataClass implements Insertable<AllocationKey> {
+  final int id;
+  final String code;
+  final String name;
+  final String? nameAr;
+  final int dimensionId;
+  final String? description;
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const AllocationKey(
+      {required this.id,
+      required this.code,
+      required this.name,
+      this.nameAr,
+      required this.dimensionId,
+      this.description,
+      required this.isActive,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['code'] = Variable<String>(code);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || nameAr != null) {
+      map['name_ar'] = Variable<String>(nameAr);
+    }
+    map['dimension_id'] = Variable<int>(dimensionId);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  AllocationKeysCompanion toCompanion(bool nullToAbsent) {
+    return AllocationKeysCompanion(
+      id: Value(id),
+      code: Value(code),
+      name: Value(name),
+      nameAr:
+          nameAr == null && nullToAbsent ? const Value.absent() : Value(nameAr),
+      dimensionId: Value(dimensionId),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AllocationKey.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AllocationKey(
+      id: serializer.fromJson<int>(json['id']),
+      code: serializer.fromJson<String>(json['code']),
+      name: serializer.fromJson<String>(json['name']),
+      nameAr: serializer.fromJson<String?>(json['nameAr']),
+      dimensionId: serializer.fromJson<int>(json['dimensionId']),
+      description: serializer.fromJson<String?>(json['description']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'code': serializer.toJson<String>(code),
+      'name': serializer.toJson<String>(name),
+      'nameAr': serializer.toJson<String?>(nameAr),
+      'dimensionId': serializer.toJson<int>(dimensionId),
+      'description': serializer.toJson<String?>(description),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  AllocationKey copyWith(
+          {int? id,
+          String? code,
+          String? name,
+          Value<String?> nameAr = const Value.absent(),
+          int? dimensionId,
+          Value<String?> description = const Value.absent(),
+          bool? isActive,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      AllocationKey(
+        id: id ?? this.id,
+        code: code ?? this.code,
+        name: name ?? this.name,
+        nameAr: nameAr.present ? nameAr.value : this.nameAr,
+        dimensionId: dimensionId ?? this.dimensionId,
+        description: description.present ? description.value : this.description,
+        isActive: isActive ?? this.isActive,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  AllocationKey copyWithCompanion(AllocationKeysCompanion data) {
+    return AllocationKey(
+      id: data.id.present ? data.id.value : this.id,
+      code: data.code.present ? data.code.value : this.code,
+      name: data.name.present ? data.name.value : this.name,
+      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
+      dimensionId:
+          data.dimensionId.present ? data.dimensionId.value : this.dimensionId,
+      description:
+          data.description.present ? data.description.value : this.description,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AllocationKey(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('description: $description, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, code, name, nameAr, dimensionId,
+      description, isActive, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AllocationKey &&
+          other.id == this.id &&
+          other.code == this.code &&
+          other.name == this.name &&
+          other.nameAr == this.nameAr &&
+          other.dimensionId == this.dimensionId &&
+          other.description == this.description &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AllocationKeysCompanion extends UpdateCompanion<AllocationKey> {
+  final Value<int> id;
+  final Value<String> code;
+  final Value<String> name;
+  final Value<String?> nameAr;
+  final Value<int> dimensionId;
+  final Value<String?> description;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const AllocationKeysCompanion({
+    this.id = const Value.absent(),
+    this.code = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameAr = const Value.absent(),
+    this.dimensionId = const Value.absent(),
+    this.description = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  AllocationKeysCompanion.insert({
+    this.id = const Value.absent(),
+    required String code,
+    required String name,
+    this.nameAr = const Value.absent(),
+    required int dimensionId,
+    this.description = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  })  : code = Value(code),
+        name = Value(name),
+        dimensionId = Value(dimensionId);
+  static Insertable<AllocationKey> custom({
+    Expression<int>? id,
+    Expression<String>? code,
+    Expression<String>? name,
+    Expression<String>? nameAr,
+    Expression<int>? dimensionId,
+    Expression<String>? description,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (code != null) 'code': code,
+      if (name != null) 'name': name,
+      if (nameAr != null) 'name_ar': nameAr,
+      if (dimensionId != null) 'dimension_id': dimensionId,
+      if (description != null) 'description': description,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  AllocationKeysCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? code,
+      Value<String>? name,
+      Value<String?>? nameAr,
+      Value<int>? dimensionId,
+      Value<String?>? description,
+      Value<bool>? isActive,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt}) {
+    return AllocationKeysCompanion(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      nameAr: nameAr ?? this.nameAr,
+      dimensionId: dimensionId ?? this.dimensionId,
+      description: description ?? this.description,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameAr.present) {
+      map['name_ar'] = Variable<String>(nameAr.value);
+    }
+    if (dimensionId.present) {
+      map['dimension_id'] = Variable<int>(dimensionId.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AllocationKeysCompanion(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('description: $description, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AllocationKeyItemsTable extends AllocationKeyItems
+    with TableInfo<$AllocationKeyItemsTable, AllocationKeyItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AllocationKeyItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _keyIdMeta = const VerificationMeta('keyId');
+  @override
+  late final GeneratedColumn<int> keyId = GeneratedColumn<int>(
+      'key_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES allocation_keys (id)'));
+  static const VerificationMeta _costCenterIdMeta =
+      const VerificationMeta('costCenterId');
+  @override
+  late final GeneratedColumn<int> costCenterId = GeneratedColumn<int>(
+      'cost_center_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES cost_centers (id)'));
+  static const VerificationMeta _weightMeta = const VerificationMeta('weight');
+  @override
+  late final GeneratedColumn<double> weight = GeneratedColumn<double>(
+      'weight', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [id, keyId, costCenterId, weight];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'allocation_key_items';
+  @override
+  VerificationContext validateIntegrity(Insertable<AllocationKeyItem> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('key_id')) {
+      context.handle(
+          _keyIdMeta, keyId.isAcceptableOrUnknown(data['key_id']!, _keyIdMeta));
+    } else if (isInserting) {
+      context.missing(_keyIdMeta);
+    }
+    if (data.containsKey('cost_center_id')) {
+      context.handle(
+          _costCenterIdMeta,
+          costCenterId.isAcceptableOrUnknown(
+              data['cost_center_id']!, _costCenterIdMeta));
+    } else if (isInserting) {
+      context.missing(_costCenterIdMeta);
+    }
+    if (data.containsKey('weight')) {
+      context.handle(_weightMeta,
+          weight.isAcceptableOrUnknown(data['weight']!, _weightMeta));
+    } else if (isInserting) {
+      context.missing(_weightMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AllocationKeyItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AllocationKeyItem(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      keyId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}key_id'])!,
+      costCenterId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cost_center_id'])!,
+      weight: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}weight'])!,
+    );
+  }
+
+  @override
+  $AllocationKeyItemsTable createAlias(String alias) {
+    return $AllocationKeyItemsTable(attachedDatabase, alias);
+  }
+}
+
+class AllocationKeyItem extends DataClass
+    implements Insertable<AllocationKeyItem> {
+  final int id;
+  final int keyId;
+  final int costCenterId;
+  final double weight;
+  const AllocationKeyItem(
+      {required this.id,
+      required this.keyId,
+      required this.costCenterId,
+      required this.weight});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['key_id'] = Variable<int>(keyId);
+    map['cost_center_id'] = Variable<int>(costCenterId);
+    map['weight'] = Variable<double>(weight);
+    return map;
+  }
+
+  AllocationKeyItemsCompanion toCompanion(bool nullToAbsent) {
+    return AllocationKeyItemsCompanion(
+      id: Value(id),
+      keyId: Value(keyId),
+      costCenterId: Value(costCenterId),
+      weight: Value(weight),
+    );
+  }
+
+  factory AllocationKeyItem.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AllocationKeyItem(
+      id: serializer.fromJson<int>(json['id']),
+      keyId: serializer.fromJson<int>(json['keyId']),
+      costCenterId: serializer.fromJson<int>(json['costCenterId']),
+      weight: serializer.fromJson<double>(json['weight']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'keyId': serializer.toJson<int>(keyId),
+      'costCenterId': serializer.toJson<int>(costCenterId),
+      'weight': serializer.toJson<double>(weight),
+    };
+  }
+
+  AllocationKeyItem copyWith(
+          {int? id, int? keyId, int? costCenterId, double? weight}) =>
+      AllocationKeyItem(
+        id: id ?? this.id,
+        keyId: keyId ?? this.keyId,
+        costCenterId: costCenterId ?? this.costCenterId,
+        weight: weight ?? this.weight,
+      );
+  AllocationKeyItem copyWithCompanion(AllocationKeyItemsCompanion data) {
+    return AllocationKeyItem(
+      id: data.id.present ? data.id.value : this.id,
+      keyId: data.keyId.present ? data.keyId.value : this.keyId,
+      costCenterId: data.costCenterId.present
+          ? data.costCenterId.value
+          : this.costCenterId,
+      weight: data.weight.present ? data.weight.value : this.weight,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AllocationKeyItem(')
+          ..write('id: $id, ')
+          ..write('keyId: $keyId, ')
+          ..write('costCenterId: $costCenterId, ')
+          ..write('weight: $weight')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, keyId, costCenterId, weight);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AllocationKeyItem &&
+          other.id == this.id &&
+          other.keyId == this.keyId &&
+          other.costCenterId == this.costCenterId &&
+          other.weight == this.weight);
+}
+
+class AllocationKeyItemsCompanion extends UpdateCompanion<AllocationKeyItem> {
+  final Value<int> id;
+  final Value<int> keyId;
+  final Value<int> costCenterId;
+  final Value<double> weight;
+  const AllocationKeyItemsCompanion({
+    this.id = const Value.absent(),
+    this.keyId = const Value.absent(),
+    this.costCenterId = const Value.absent(),
+    this.weight = const Value.absent(),
+  });
+  AllocationKeyItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required int keyId,
+    required int costCenterId,
+    required double weight,
+  })  : keyId = Value(keyId),
+        costCenterId = Value(costCenterId),
+        weight = Value(weight);
+  static Insertable<AllocationKeyItem> custom({
+    Expression<int>? id,
+    Expression<int>? keyId,
+    Expression<int>? costCenterId,
+    Expression<double>? weight,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (keyId != null) 'key_id': keyId,
+      if (costCenterId != null) 'cost_center_id': costCenterId,
+      if (weight != null) 'weight': weight,
+    });
+  }
+
+  AllocationKeyItemsCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? keyId,
+      Value<int>? costCenterId,
+      Value<double>? weight}) {
+    return AllocationKeyItemsCompanion(
+      id: id ?? this.id,
+      keyId: keyId ?? this.keyId,
+      costCenterId: costCenterId ?? this.costCenterId,
+      weight: weight ?? this.weight,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (keyId.present) {
+      map['key_id'] = Variable<int>(keyId.value);
+    }
+    if (costCenterId.present) {
+      map['cost_center_id'] = Variable<int>(costCenterId.value);
+    }
+    if (weight.present) {
+      map['weight'] = Variable<double>(weight.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AllocationKeyItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('keyId: $keyId, ')
+          ..write('costCenterId: $costCenterId, ')
+          ..write('weight: $weight')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AccountingDatabase extends GeneratedDatabase {
   _$AccountingDatabase(QueryExecutor e) : super(e);
   $AccountingDatabaseManager get managers => $AccountingDatabaseManager(this);
@@ -2423,6 +5017,15 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
   late final $AccountingPeriodsTable accountingPeriods =
       $AccountingPeriodsTable(this);
   late final $EntryTemplatesTable entryTemplates = $EntryTemplatesTable(this);
+  late final $CostDimensionsTable costDimensions = $CostDimensionsTable(this);
+  late final $CostCentersTable costCenters = $CostCentersTable(this);
+  late final $JournalLineAllocationsTable journalLineAllocations =
+      $JournalLineAllocationsTable(this);
+  late final $CostDimensionRulesTable costDimensionRules =
+      $CostDimensionRulesTable(this);
+  late final $AllocationKeysTable allocationKeys = $AllocationKeysTable(this);
+  late final $AllocationKeyItemsTable allocationKeyItems =
+      $AllocationKeyItemsTable(this);
   late final Index idxJournalEntriesDate = Index('idx_journal_entries_date',
       'CREATE INDEX idx_journal_entries_date ON journal_entries (date)');
   late final Index idxJournalEntriesSource = Index('idx_journal_entries_source',
@@ -2433,11 +5036,20 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
   late final Index idxJournalEntryLinesAccount = Index(
       'idx_journal_entry_lines_account',
       'CREATE INDEX idx_journal_entry_lines_account ON journal_entry_lines (account_id)');
+  late final Index idxCostCentersDimension = Index('idx_cost_centers_dimension',
+      'CREATE INDEX idx_cost_centers_dimension ON cost_centers (dimension_id)');
+  late final Index idxLineAllocationsLine = Index('idx_line_allocations_line',
+      'CREATE INDEX idx_line_allocations_line ON journal_line_allocations (line_id)');
+  late final Index idxLineAllocationsCenter = Index(
+      'idx_line_allocations_center',
+      'CREATE INDEX idx_line_allocations_center ON journal_line_allocations (cost_center_id)');
   late final AccountsDao accountsDao = AccountsDao(this as AccountingDatabase);
   late final JournalEntriesDao journalEntriesDao =
       JournalEntriesDao(this as AccountingDatabase);
   late final EntryTemplatesDao entryTemplatesDao =
       EntryTemplatesDao(this as AccountingDatabase);
+  late final CostCentersDao costCentersDao =
+      CostCentersDao(this as AccountingDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2448,10 +5060,19 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
         journalEntryLines,
         accountingPeriods,
         entryTemplates,
+        costDimensions,
+        costCenters,
+        journalLineAllocations,
+        costDimensionRules,
+        allocationKeys,
+        allocationKeyItems,
         idxJournalEntriesDate,
         idxJournalEntriesSource,
         idxJournalEntryLinesEntry,
-        idxJournalEntryLinesAccount
+        idxJournalEntryLinesAccount,
+        idxCostCentersDimension,
+        idxLineAllocationsLine,
+        idxLineAllocationsCenter
       ];
 }
 
@@ -2486,8 +5107,8 @@ final class $$AccountsTableReferences
     extends BaseReferences<_$AccountingDatabase, $AccountsTable, Account> {
   $$AccountsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $AccountsTable _parentIdTable(_$AccountingDatabase db) => db.accounts
-      .createAlias($_aliasNameGenerator(db.accounts.parentId, db.accounts.id));
+  static $AccountsTable _parentIdTable(_$AccountingDatabase db) =>
+      db.accounts.createAlias('accounts__parent_id__accounts__id');
 
   $$AccountsTableProcessedTableManager? get parentId {
     final $_column = $_itemColumn<int>('parent_id');
@@ -2503,8 +5124,7 @@ final class $$AccountsTableReferences
   static MultiTypedResultKey<$JournalEntryLinesTable, List<JournalEntryLine>>
       _journalEntryLinesRefsTable(_$AccountingDatabase db) =>
           MultiTypedResultKey.fromTable(db.journalEntryLines,
-              aliasName: $_aliasNameGenerator(
-                  db.accounts.id, db.journalEntryLines.accountId));
+              aliasName: 'accounts__id__journal_entry_lines__account_id');
 
   $$JournalEntryLinesTableProcessedTableManager get journalEntryLinesRefs {
     final manager =
@@ -2513,6 +5133,22 @@ final class $$AccountsTableReferences
 
     final cache =
         $_typedResult.readTableOrNull(_journalEntryLinesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CostDimensionRulesTable, List<CostDimensionRule>>
+      _costDimensionRulesRefsTable(_$AccountingDatabase db) =>
+          MultiTypedResultKey.fromTable(db.costDimensionRules,
+              aliasName: 'accounts__id__cost_dimension_rules__account_id');
+
+  $$CostDimensionRulesTableProcessedTableManager get costDimensionRulesRefs {
+    final manager =
+        $$CostDimensionRulesTableTableManager($_db, $_db.costDimensionRules)
+            .filter((f) => f.accountId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_costDimensionRulesRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -2592,6 +5228,27 @@ class $$AccountsTableFilterComposer
             $$JournalEntryLinesTableFilterComposer(
               $db: $db,
               $table: $db.journalEntryLines,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> costDimensionRulesRefs(
+      Expression<bool> Function($$CostDimensionRulesTableFilterComposer f) f) {
+    final $$CostDimensionRulesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.costDimensionRules,
+        getReferencedColumn: (t) => t.accountId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionRulesTableFilterComposer(
+              $db: $db,
+              $table: $db.costDimensionRules,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -2741,6 +5398,28 @@ class $$AccountsTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> costDimensionRulesRefs<T extends Object>(
+      Expression<T> Function($$CostDimensionRulesTableAnnotationComposer a) f) {
+    final $$CostDimensionRulesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.costDimensionRules,
+            getReferencedColumn: (t) => t.accountId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CostDimensionRulesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.costDimensionRules,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$AccountsTableTableManager extends RootTableManager<
@@ -2754,7 +5433,10 @@ class $$AccountsTableTableManager extends RootTableManager<
     $$AccountsTableUpdateCompanionBuilder,
     (Account, $$AccountsTableReferences),
     Account,
-    PrefetchHooks Function({bool parentId, bool journalEntryLinesRefs})> {
+    PrefetchHooks Function(
+        {bool parentId,
+        bool journalEntryLinesRefs,
+        bool costDimensionRulesRefs})> {
   $$AccountsTableTableManager(_$AccountingDatabase db, $AccountsTable table)
       : super(TableManagerState(
           db: db,
@@ -2818,15 +5500,20 @@ class $$AccountsTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$AccountsTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$AccountsTable, Account>(table),
+                    $$AccountsTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: (
-              {parentId = false, journalEntryLinesRefs = false}) {
+              {parentId = false,
+              journalEntryLinesRefs = false,
+              costDimensionRulesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (journalEntryLinesRefs) db.journalEntryLines
+                if (journalEntryLinesRefs) db.journalEntryLines,
+                if (costDimensionRulesRefs) db.costDimensionRules
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -2868,6 +5555,19 @@ class $$AccountsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.accountId == item.id),
+                        typedResults: items),
+                  if (costDimensionRulesRefs)
+                    await $_getPrefetchedData<Account, $AccountsTable,
+                            CostDimensionRule>(
+                        currentTable: table,
+                        referencedTable: $$AccountsTableReferences
+                            ._costDimensionRulesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AccountsTableReferences(db, table, p0)
+                                .costDimensionRulesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.accountId == item.id),
                         typedResults: items)
                 ];
               },
@@ -2887,7 +5587,10 @@ typedef $$AccountsTableProcessedTableManager = ProcessedTableManager<
     $$AccountsTableUpdateCompanionBuilder,
     (Account, $$AccountsTableReferences),
     Account,
-    PrefetchHooks Function({bool parentId, bool journalEntryLinesRefs})>;
+    PrefetchHooks Function(
+        {bool parentId,
+        bool journalEntryLinesRefs,
+        bool costDimensionRulesRefs})>;
 typedef $$JournalEntriesTableCreateCompanionBuilder = JournalEntriesCompanion
     Function({
   Value<int> id,
@@ -2935,8 +5638,7 @@ final class $$JournalEntriesTableReferences extends BaseReferences<
   static MultiTypedResultKey<$JournalEntryLinesTable, List<JournalEntryLine>>
       _journalEntryLinesRefsTable(_$AccountingDatabase db) =>
           MultiTypedResultKey.fromTable(db.journalEntryLines,
-              aliasName: $_aliasNameGenerator(
-                  db.journalEntries.id, db.journalEntryLines.entryId));
+              aliasName: 'journal_entries__id__journal_entry_lines__entry_id');
 
   $$JournalEntryLinesTableProcessedTableManager get journalEntryLinesRefs {
     final manager =
@@ -3270,7 +5972,7 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$JournalEntriesTable, JournalEntry>(table),
                     $$JournalEntriesTableReferences(db, table, e)
                   ))
               .toList(),
@@ -3342,8 +6044,8 @@ final class $$JournalEntryLinesTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $JournalEntriesTable _entryIdTable(_$AccountingDatabase db) =>
-      db.journalEntries.createAlias($_aliasNameGenerator(
-          db.journalEntryLines.entryId, db.journalEntries.id));
+      db.journalEntries
+          .createAlias('journal_entry_lines__entry_id__journal_entries__id');
 
   $$JournalEntriesTableProcessedTableManager get entryId {
     final $_column = $_itemColumn<int>('entry_id')!;
@@ -3357,8 +6059,7 @@ final class $$JournalEntryLinesTableReferences extends BaseReferences<
   }
 
   static $AccountsTable _accountIdTable(_$AccountingDatabase db) =>
-      db.accounts.createAlias(
-          $_aliasNameGenerator(db.journalEntryLines.accountId, db.accounts.id));
+      db.accounts.createAlias('journal_entry_lines__account_id__accounts__id');
 
   $$AccountsTableProcessedTableManager get accountId {
     final $_column = $_itemColumn<int>('account_id')!;
@@ -3369,6 +6070,25 @@ final class $$JournalEntryLinesTableReferences extends BaseReferences<
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$JournalLineAllocationsTable,
+      List<JournalLineAllocation>> _journalLineAllocationsRefsTable(
+          _$AccountingDatabase db) =>
+      MultiTypedResultKey.fromTable(db.journalLineAllocations,
+          aliasName:
+              'journal_entry_lines__id__journal_line_allocations__line_id');
+
+  $$JournalLineAllocationsTableProcessedTableManager
+      get journalLineAllocationsRefs {
+    final manager = $$JournalLineAllocationsTableTableManager(
+            $_db, $_db.journalLineAllocations)
+        .filter((f) => f.lineId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_journalLineAllocationsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
@@ -3434,6 +6154,29 @@ class $$JournalEntryLinesTableFilterComposer
                   $removeJoinBuilderFromRootComposer,
             ));
     return composer;
+  }
+
+  Expression<bool> journalLineAllocationsRefs(
+      Expression<bool> Function($$JournalLineAllocationsTableFilterComposer f)
+          f) {
+    final $$JournalLineAllocationsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.journalLineAllocations,
+            getReferencedColumn: (t) => t.lineId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$JournalLineAllocationsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.journalLineAllocations,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
   }
 }
 
@@ -3565,6 +6308,29 @@ class $$JournalEntryLinesTableAnnotationComposer
             ));
     return composer;
   }
+
+  Expression<T> journalLineAllocationsRefs<T extends Object>(
+      Expression<T> Function($$JournalLineAllocationsTableAnnotationComposer a)
+          f) {
+    final $$JournalLineAllocationsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.journalLineAllocations,
+            getReferencedColumn: (t) => t.lineId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$JournalLineAllocationsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.journalLineAllocations,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$JournalEntryLinesTableTableManager extends RootTableManager<
@@ -3578,7 +6344,8 @@ class $$JournalEntryLinesTableTableManager extends RootTableManager<
     $$JournalEntryLinesTableUpdateCompanionBuilder,
     (JournalEntryLine, $$JournalEntryLinesTableReferences),
     JournalEntryLine,
-    PrefetchHooks Function({bool entryId, bool accountId})> {
+    PrefetchHooks Function(
+        {bool entryId, bool accountId, bool journalLineAllocationsRefs})> {
   $$JournalEntryLinesTableTableManager(
       _$AccountingDatabase db, $JournalEntryLinesTable table)
       : super(TableManagerState(
@@ -3629,14 +6396,20 @@ class $$JournalEntryLinesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$JournalEntryLinesTable, JournalEntryLine>(
+                        table),
                     $$JournalEntryLinesTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({entryId = false, accountId = false}) {
+          prefetchHooksCallback: (
+              {entryId = false,
+              accountId = false,
+              journalLineAllocationsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [],
+              explicitlyWatchedTables: [
+                if (journalLineAllocationsRefs) db.journalLineAllocations
+              ],
               addJoins: <
                   T extends TableManagerState<
                       dynamic,
@@ -3675,7 +6448,21 @@ class $$JournalEntryLinesTableTableManager extends RootTableManager<
                 return state;
               },
               getPrefetchedDataCallback: (items) async {
-                return [];
+                return [
+                  if (journalLineAllocationsRefs)
+                    await $_getPrefetchedData<JournalEntryLine,
+                            $JournalEntryLinesTable, JournalLineAllocation>(
+                        currentTable: table,
+                        referencedTable: $$JournalEntryLinesTableReferences
+                            ._journalLineAllocationsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$JournalEntryLinesTableReferences(db, table, p0)
+                                .journalLineAllocationsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.lineId == item.id),
+                        typedResults: items)
+                ];
               },
             );
           },
@@ -3693,7 +6480,8 @@ typedef $$JournalEntryLinesTableProcessedTableManager = ProcessedTableManager<
     $$JournalEntryLinesTableUpdateCompanionBuilder,
     (JournalEntryLine, $$JournalEntryLinesTableReferences),
     JournalEntryLine,
-    PrefetchHooks Function({bool entryId, bool accountId})>;
+    PrefetchHooks Function(
+        {bool entryId, bool accountId, bool journalLineAllocationsRefs})>;
 typedef $$AccountingPeriodsTableCreateCompanionBuilder
     = AccountingPeriodsCompanion Function({
   Value<int> id,
@@ -3858,7 +6646,12 @@ class $$AccountingPeriodsTableTableManager extends RootTableManager<
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$AccountingPeriodsTable, AccountingPeriod>(
+                        table),
+                    BaseReferences<_$AccountingDatabase,
+                        $AccountingPeriodsTable, AccountingPeriod>(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -4044,7 +6837,11 @@ class $$EntryTemplatesTableTableManager extends RootTableManager<
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$EntryTemplatesTable, EntryTemplate>(table),
+                    BaseReferences<_$AccountingDatabase, $EntryTemplatesTable,
+                        EntryTemplate>(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -4065,6 +6862,2914 @@ typedef $$EntryTemplatesTableProcessedTableManager = ProcessedTableManager<
     ),
     EntryTemplate,
     PrefetchHooks Function()>;
+typedef $$CostDimensionsTableCreateCompanionBuilder = CostDimensionsCompanion
+    Function({
+  Value<int> id,
+  required String code,
+  required String name,
+  Value<String?> nameAr,
+  Value<String?> description,
+  Value<DimensionPolicy> defaultPolicy,
+  Value<bool> allowSplit,
+  Value<bool> isActive,
+  Value<int> sortOrder,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+typedef $$CostDimensionsTableUpdateCompanionBuilder = CostDimensionsCompanion
+    Function({
+  Value<int> id,
+  Value<String> code,
+  Value<String> name,
+  Value<String?> nameAr,
+  Value<String?> description,
+  Value<DimensionPolicy> defaultPolicy,
+  Value<bool> allowSplit,
+  Value<bool> isActive,
+  Value<int> sortOrder,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+
+final class $$CostDimensionsTableReferences extends BaseReferences<
+    _$AccountingDatabase, $CostDimensionsTable, CostDimension> {
+  $$CostDimensionsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$CostCentersTable, List<CostCenter>>
+      _costCentersRefsTable(_$AccountingDatabase db) =>
+          MultiTypedResultKey.fromTable(db.costCenters,
+              aliasName: 'cost_dimensions__id__cost_centers__dimension_id');
+
+  $$CostCentersTableProcessedTableManager get costCentersRefs {
+    final manager = $$CostCentersTableTableManager($_db, $_db.costCenters)
+        .filter((f) => f.dimensionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_costCentersRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$JournalLineAllocationsTable,
+      List<JournalLineAllocation>> _journalLineAllocationsRefsTable(
+          _$AccountingDatabase db) =>
+      MultiTypedResultKey.fromTable(db.journalLineAllocations,
+          aliasName:
+              'cost_dimensions__id__journal_line_allocations__dimension_id');
+
+  $$JournalLineAllocationsTableProcessedTableManager
+      get journalLineAllocationsRefs {
+    final manager = $$JournalLineAllocationsTableTableManager(
+            $_db, $_db.journalLineAllocations)
+        .filter((f) => f.dimensionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_journalLineAllocationsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CostDimensionRulesTable, List<CostDimensionRule>>
+      _costDimensionRulesRefsTable(_$AccountingDatabase db) =>
+          MultiTypedResultKey.fromTable(db.costDimensionRules,
+              aliasName:
+                  'cost_dimensions__id__cost_dimension_rules__dimension_id');
+
+  $$CostDimensionRulesTableProcessedTableManager get costDimensionRulesRefs {
+    final manager = $$CostDimensionRulesTableTableManager(
+            $_db, $_db.costDimensionRules)
+        .filter((f) => f.dimensionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_costDimensionRulesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$AllocationKeysTable, List<AllocationKey>>
+      _allocationKeysRefsTable(_$AccountingDatabase db) =>
+          MultiTypedResultKey.fromTable(db.allocationKeys,
+              aliasName: 'cost_dimensions__id__allocation_keys__dimension_id');
+
+  $$AllocationKeysTableProcessedTableManager get allocationKeysRefs {
+    final manager = $$AllocationKeysTableTableManager($_db, $_db.allocationKeys)
+        .filter((f) => f.dimensionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_allocationKeysRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$CostDimensionsTableFilterComposer
+    extends Composer<_$AccountingDatabase, $CostDimensionsTable> {
+  $$CostDimensionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nameAr => $composableBuilder(
+      column: $table.nameAr, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<DimensionPolicy, DimensionPolicy, int>
+      get defaultPolicy => $composableBuilder(
+          column: $table.defaultPolicy,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnFilters<bool> get allowSplit => $composableBuilder(
+      column: $table.allowSplit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> costCentersRefs(
+      Expression<bool> Function($$CostCentersTableFilterComposer f) f) {
+    final $$CostCentersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.dimensionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableFilterComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> journalLineAllocationsRefs(
+      Expression<bool> Function($$JournalLineAllocationsTableFilterComposer f)
+          f) {
+    final $$JournalLineAllocationsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.journalLineAllocations,
+            getReferencedColumn: (t) => t.dimensionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$JournalLineAllocationsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.journalLineAllocations,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> costDimensionRulesRefs(
+      Expression<bool> Function($$CostDimensionRulesTableFilterComposer f) f) {
+    final $$CostDimensionRulesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.costDimensionRules,
+        getReferencedColumn: (t) => t.dimensionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionRulesTableFilterComposer(
+              $db: $db,
+              $table: $db.costDimensionRules,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> allocationKeysRefs(
+      Expression<bool> Function($$AllocationKeysTableFilterComposer f) f) {
+    final $$AllocationKeysTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.allocationKeys,
+        getReferencedColumn: (t) => t.dimensionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AllocationKeysTableFilterComposer(
+              $db: $db,
+              $table: $db.allocationKeys,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$CostDimensionsTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $CostDimensionsTable> {
+  $$CostDimensionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nameAr => $composableBuilder(
+      column: $table.nameAr, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get defaultPolicy => $composableBuilder(
+      column: $table.defaultPolicy,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get allowSplit => $composableBuilder(
+      column: $table.allowSplit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CostDimensionsTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $CostDimensionsTable> {
+  $$CostDimensionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameAr =>
+      $composableBuilder(column: $table.nameAr, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DimensionPolicy, int> get defaultPolicy =>
+      $composableBuilder(
+          column: $table.defaultPolicy, builder: (column) => column);
+
+  GeneratedColumn<bool> get allowSplit => $composableBuilder(
+      column: $table.allowSplit, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> costCentersRefs<T extends Object>(
+      Expression<T> Function($$CostCentersTableAnnotationComposer a) f) {
+    final $$CostCentersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.dimensionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> journalLineAllocationsRefs<T extends Object>(
+      Expression<T> Function($$JournalLineAllocationsTableAnnotationComposer a)
+          f) {
+    final $$JournalLineAllocationsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.journalLineAllocations,
+            getReferencedColumn: (t) => t.dimensionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$JournalLineAllocationsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.journalLineAllocations,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> costDimensionRulesRefs<T extends Object>(
+      Expression<T> Function($$CostDimensionRulesTableAnnotationComposer a) f) {
+    final $$CostDimensionRulesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.costDimensionRules,
+            getReferencedColumn: (t) => t.dimensionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CostDimensionRulesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.costDimensionRules,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> allocationKeysRefs<T extends Object>(
+      Expression<T> Function($$AllocationKeysTableAnnotationComposer a) f) {
+    final $$AllocationKeysTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.allocationKeys,
+        getReferencedColumn: (t) => t.dimensionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AllocationKeysTableAnnotationComposer(
+              $db: $db,
+              $table: $db.allocationKeys,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$CostDimensionsTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $CostDimensionsTable,
+    CostDimension,
+    $$CostDimensionsTableFilterComposer,
+    $$CostDimensionsTableOrderingComposer,
+    $$CostDimensionsTableAnnotationComposer,
+    $$CostDimensionsTableCreateCompanionBuilder,
+    $$CostDimensionsTableUpdateCompanionBuilder,
+    (CostDimension, $$CostDimensionsTableReferences),
+    CostDimension,
+    PrefetchHooks Function(
+        {bool costCentersRefs,
+        bool journalLineAllocationsRefs,
+        bool costDimensionRulesRefs,
+        bool allocationKeysRefs})> {
+  $$CostDimensionsTableTableManager(
+      _$AccountingDatabase db, $CostDimensionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CostDimensionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CostDimensionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CostDimensionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> code = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> nameAr = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<DimensionPolicy> defaultPolicy = const Value.absent(),
+            Value<bool> allowSplit = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<int> sortOrder = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              CostDimensionsCompanion(
+            id: id,
+            code: code,
+            name: name,
+            nameAr: nameAr,
+            description: description,
+            defaultPolicy: defaultPolicy,
+            allowSplit: allowSplit,
+            isActive: isActive,
+            sortOrder: sortOrder,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String code,
+            required String name,
+            Value<String?> nameAr = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<DimensionPolicy> defaultPolicy = const Value.absent(),
+            Value<bool> allowSplit = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<int> sortOrder = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              CostDimensionsCompanion.insert(
+            id: id,
+            code: code,
+            name: name,
+            nameAr: nameAr,
+            description: description,
+            defaultPolicy: defaultPolicy,
+            allowSplit: allowSplit,
+            isActive: isActive,
+            sortOrder: sortOrder,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$CostDimensionsTable, CostDimension>(table),
+                    $$CostDimensionsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {costCentersRefs = false,
+              journalLineAllocationsRefs = false,
+              costDimensionRulesRefs = false,
+              allocationKeysRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (costCentersRefs) db.costCenters,
+                if (journalLineAllocationsRefs) db.journalLineAllocations,
+                if (costDimensionRulesRefs) db.costDimensionRules,
+                if (allocationKeysRefs) db.allocationKeys
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (costCentersRefs)
+                    await $_getPrefetchedData<CostDimension,
+                            $CostDimensionsTable, CostCenter>(
+                        currentTable: table,
+                        referencedTable: $$CostDimensionsTableReferences
+                            ._costCentersRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CostDimensionsTableReferences(db, table, p0)
+                                .costCentersRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.dimensionId == item.id),
+                        typedResults: items),
+                  if (journalLineAllocationsRefs)
+                    await $_getPrefetchedData<CostDimension,
+                            $CostDimensionsTable, JournalLineAllocation>(
+                        currentTable: table,
+                        referencedTable: $$CostDimensionsTableReferences
+                            ._journalLineAllocationsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CostDimensionsTableReferences(db, table, p0)
+                                .journalLineAllocationsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.dimensionId == item.id),
+                        typedResults: items),
+                  if (costDimensionRulesRefs)
+                    await $_getPrefetchedData<CostDimension,
+                            $CostDimensionsTable, CostDimensionRule>(
+                        currentTable: table,
+                        referencedTable: $$CostDimensionsTableReferences
+                            ._costDimensionRulesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CostDimensionsTableReferences(db, table, p0)
+                                .costDimensionRulesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.dimensionId == item.id),
+                        typedResults: items),
+                  if (allocationKeysRefs)
+                    await $_getPrefetchedData<CostDimension,
+                            $CostDimensionsTable, AllocationKey>(
+                        currentTable: table,
+                        referencedTable: $$CostDimensionsTableReferences
+                            ._allocationKeysRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CostDimensionsTableReferences(db, table, p0)
+                                .allocationKeysRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.dimensionId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CostDimensionsTableProcessedTableManager = ProcessedTableManager<
+    _$AccountingDatabase,
+    $CostDimensionsTable,
+    CostDimension,
+    $$CostDimensionsTableFilterComposer,
+    $$CostDimensionsTableOrderingComposer,
+    $$CostDimensionsTableAnnotationComposer,
+    $$CostDimensionsTableCreateCompanionBuilder,
+    $$CostDimensionsTableUpdateCompanionBuilder,
+    (CostDimension, $$CostDimensionsTableReferences),
+    CostDimension,
+    PrefetchHooks Function(
+        {bool costCentersRefs,
+        bool journalLineAllocationsRefs,
+        bool costDimensionRulesRefs,
+        bool allocationKeysRefs})>;
+typedef $$CostCentersTableCreateCompanionBuilder = CostCentersCompanion
+    Function({
+  Value<int> id,
+  required int dimensionId,
+  required String code,
+  required String name,
+  Value<String?> nameAr,
+  Value<int?> parentId,
+  Value<int> level,
+  Value<bool> isActive,
+  Value<String?> description,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+typedef $$CostCentersTableUpdateCompanionBuilder = CostCentersCompanion
+    Function({
+  Value<int> id,
+  Value<int> dimensionId,
+  Value<String> code,
+  Value<String> name,
+  Value<String?> nameAr,
+  Value<int?> parentId,
+  Value<int> level,
+  Value<bool> isActive,
+  Value<String?> description,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+
+final class $$CostCentersTableReferences extends BaseReferences<
+    _$AccountingDatabase, $CostCentersTable, CostCenter> {
+  $$CostCentersTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CostDimensionsTable _dimensionIdTable(_$AccountingDatabase db) =>
+      db.costDimensions
+          .createAlias('cost_centers__dimension_id__cost_dimensions__id');
+
+  $$CostDimensionsTableProcessedTableManager get dimensionId {
+    final $_column = $_itemColumn<int>('dimension_id')!;
+
+    final manager = $$CostDimensionsTableTableManager($_db, $_db.costDimensions)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_dimensionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CostCentersTable _parentIdTable(_$AccountingDatabase db) =>
+      db.costCenters.createAlias('cost_centers__parent_id__cost_centers__id');
+
+  $$CostCentersTableProcessedTableManager? get parentId {
+    final $_column = $_itemColumn<int>('parent_id');
+    if ($_column == null) return null;
+    final manager = $$CostCentersTableTableManager($_db, $_db.costCenters)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_parentIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$JournalLineAllocationsTable,
+      List<JournalLineAllocation>> _journalLineAllocationsRefsTable(
+          _$AccountingDatabase db) =>
+      MultiTypedResultKey.fromTable(db.journalLineAllocations,
+          aliasName:
+              'cost_centers__id__journal_line_allocations__cost_center_id');
+
+  $$JournalLineAllocationsTableProcessedTableManager
+      get journalLineAllocationsRefs {
+    final manager = $$JournalLineAllocationsTableTableManager(
+            $_db, $_db.journalLineAllocations)
+        .filter((f) => f.costCenterId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_journalLineAllocationsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CostDimensionRulesTable,
+      List<CostDimensionRule>> _costDimensionRulesRefsTable(
+          _$AccountingDatabase db) =>
+      MultiTypedResultKey.fromTable(db.costDimensionRules,
+          aliasName:
+              'cost_centers__id__cost_dimension_rules__default_cost_center_id');
+
+  $$CostDimensionRulesTableProcessedTableManager get costDimensionRulesRefs {
+    final manager =
+        $$CostDimensionRulesTableTableManager($_db, $_db.costDimensionRules)
+            .filter((f) =>
+                f.defaultCostCenterId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_costDimensionRulesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$AllocationKeyItemsTable, List<AllocationKeyItem>>
+      _allocationKeyItemsRefsTable(_$AccountingDatabase db) =>
+          MultiTypedResultKey.fromTable(db.allocationKeyItems,
+              aliasName:
+                  'cost_centers__id__allocation_key_items__cost_center_id');
+
+  $$AllocationKeyItemsTableProcessedTableManager get allocationKeyItemsRefs {
+    final manager = $$AllocationKeyItemsTableTableManager(
+            $_db, $_db.allocationKeyItems)
+        .filter((f) => f.costCenterId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_allocationKeyItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$CostCentersTableFilterComposer
+    extends Composer<_$AccountingDatabase, $CostCentersTable> {
+  $$CostCentersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nameAr => $composableBuilder(
+      column: $table.nameAr, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get level => $composableBuilder(
+      column: $table.level, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  $$CostDimensionsTableFilterComposer get dimensionId {
+    final $$CostDimensionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableFilterComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableFilterComposer get parentId {
+    final $$CostCentersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.parentId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableFilterComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> journalLineAllocationsRefs(
+      Expression<bool> Function($$JournalLineAllocationsTableFilterComposer f)
+          f) {
+    final $$JournalLineAllocationsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.journalLineAllocations,
+            getReferencedColumn: (t) => t.costCenterId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$JournalLineAllocationsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.journalLineAllocations,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> costDimensionRulesRefs(
+      Expression<bool> Function($$CostDimensionRulesTableFilterComposer f) f) {
+    final $$CostDimensionRulesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.costDimensionRules,
+        getReferencedColumn: (t) => t.defaultCostCenterId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionRulesTableFilterComposer(
+              $db: $db,
+              $table: $db.costDimensionRules,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> allocationKeyItemsRefs(
+      Expression<bool> Function($$AllocationKeyItemsTableFilterComposer f) f) {
+    final $$AllocationKeyItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.allocationKeyItems,
+        getReferencedColumn: (t) => t.costCenterId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AllocationKeyItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.allocationKeyItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$CostCentersTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $CostCentersTable> {
+  $$CostCentersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nameAr => $composableBuilder(
+      column: $table.nameAr, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get level => $composableBuilder(
+      column: $table.level, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  $$CostDimensionsTableOrderingComposer get dimensionId {
+    final $$CostDimensionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableOrderingComposer get parentId {
+    final $$CostCentersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.parentId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableOrderingComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CostCentersTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $CostCentersTable> {
+  $$CostCentersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameAr =>
+      $composableBuilder(column: $table.nameAr, builder: (column) => column);
+
+  GeneratedColumn<int> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$CostDimensionsTableAnnotationComposer get dimensionId {
+    final $$CostDimensionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableAnnotationComposer get parentId {
+    final $$CostCentersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.parentId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> journalLineAllocationsRefs<T extends Object>(
+      Expression<T> Function($$JournalLineAllocationsTableAnnotationComposer a)
+          f) {
+    final $$JournalLineAllocationsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.journalLineAllocations,
+            getReferencedColumn: (t) => t.costCenterId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$JournalLineAllocationsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.journalLineAllocations,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> costDimensionRulesRefs<T extends Object>(
+      Expression<T> Function($$CostDimensionRulesTableAnnotationComposer a) f) {
+    final $$CostDimensionRulesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.costDimensionRules,
+            getReferencedColumn: (t) => t.defaultCostCenterId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CostDimensionRulesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.costDimensionRules,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> allocationKeyItemsRefs<T extends Object>(
+      Expression<T> Function($$AllocationKeyItemsTableAnnotationComposer a) f) {
+    final $$AllocationKeyItemsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.allocationKeyItems,
+            getReferencedColumn: (t) => t.costCenterId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$AllocationKeyItemsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.allocationKeyItems,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$CostCentersTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $CostCentersTable,
+    CostCenter,
+    $$CostCentersTableFilterComposer,
+    $$CostCentersTableOrderingComposer,
+    $$CostCentersTableAnnotationComposer,
+    $$CostCentersTableCreateCompanionBuilder,
+    $$CostCentersTableUpdateCompanionBuilder,
+    (CostCenter, $$CostCentersTableReferences),
+    CostCenter,
+    PrefetchHooks Function(
+        {bool dimensionId,
+        bool parentId,
+        bool journalLineAllocationsRefs,
+        bool costDimensionRulesRefs,
+        bool allocationKeyItemsRefs})> {
+  $$CostCentersTableTableManager(
+      _$AccountingDatabase db, $CostCentersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CostCentersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CostCentersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CostCentersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> dimensionId = const Value.absent(),
+            Value<String> code = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> nameAr = const Value.absent(),
+            Value<int?> parentId = const Value.absent(),
+            Value<int> level = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              CostCentersCompanion(
+            id: id,
+            dimensionId: dimensionId,
+            code: code,
+            name: name,
+            nameAr: nameAr,
+            parentId: parentId,
+            level: level,
+            isActive: isActive,
+            description: description,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int dimensionId,
+            required String code,
+            required String name,
+            Value<String?> nameAr = const Value.absent(),
+            Value<int?> parentId = const Value.absent(),
+            Value<int> level = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              CostCentersCompanion.insert(
+            id: id,
+            dimensionId: dimensionId,
+            code: code,
+            name: name,
+            nameAr: nameAr,
+            parentId: parentId,
+            level: level,
+            isActive: isActive,
+            description: description,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$CostCentersTable, CostCenter>(table),
+                    $$CostCentersTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {dimensionId = false,
+              parentId = false,
+              journalLineAllocationsRefs = false,
+              costDimensionRulesRefs = false,
+              allocationKeyItemsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (journalLineAllocationsRefs) db.journalLineAllocations,
+                if (costDimensionRulesRefs) db.costDimensionRules,
+                if (allocationKeyItemsRefs) db.allocationKeyItems
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (dimensionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.dimensionId,
+                    referencedTable:
+                        $$CostCentersTableReferences._dimensionIdTable(db),
+                    referencedColumn:
+                        $$CostCentersTableReferences._dimensionIdTable(db).id,
+                  ) as T;
+                }
+                if (parentId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.parentId,
+                    referencedTable:
+                        $$CostCentersTableReferences._parentIdTable(db),
+                    referencedColumn:
+                        $$CostCentersTableReferences._parentIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (journalLineAllocationsRefs)
+                    await $_getPrefetchedData<CostCenter, $CostCentersTable,
+                            JournalLineAllocation>(
+                        currentTable: table,
+                        referencedTable: $$CostCentersTableReferences
+                            ._journalLineAllocationsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CostCentersTableReferences(db, table, p0)
+                                .journalLineAllocationsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.costCenterId == item.id),
+                        typedResults: items),
+                  if (costDimensionRulesRefs)
+                    await $_getPrefetchedData<CostCenter, $CostCentersTable,
+                            CostDimensionRule>(
+                        currentTable: table,
+                        referencedTable: $$CostCentersTableReferences
+                            ._costDimensionRulesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CostCentersTableReferences(db, table, p0)
+                                .costDimensionRulesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.defaultCostCenterId == item.id),
+                        typedResults: items),
+                  if (allocationKeyItemsRefs)
+                    await $_getPrefetchedData<CostCenter, $CostCentersTable,
+                            AllocationKeyItem>(
+                        currentTable: table,
+                        referencedTable: $$CostCentersTableReferences
+                            ._allocationKeyItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CostCentersTableReferences(db, table, p0)
+                                .allocationKeyItemsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.costCenterId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CostCentersTableProcessedTableManager = ProcessedTableManager<
+    _$AccountingDatabase,
+    $CostCentersTable,
+    CostCenter,
+    $$CostCentersTableFilterComposer,
+    $$CostCentersTableOrderingComposer,
+    $$CostCentersTableAnnotationComposer,
+    $$CostCentersTableCreateCompanionBuilder,
+    $$CostCentersTableUpdateCompanionBuilder,
+    (CostCenter, $$CostCentersTableReferences),
+    CostCenter,
+    PrefetchHooks Function(
+        {bool dimensionId,
+        bool parentId,
+        bool journalLineAllocationsRefs,
+        bool costDimensionRulesRefs,
+        bool allocationKeyItemsRefs})>;
+typedef $$JournalLineAllocationsTableCreateCompanionBuilder
+    = JournalLineAllocationsCompanion Function({
+  Value<int> id,
+  required int lineId,
+  required int costCenterId,
+  required int dimensionId,
+  required double amount,
+  required double percentage,
+});
+typedef $$JournalLineAllocationsTableUpdateCompanionBuilder
+    = JournalLineAllocationsCompanion Function({
+  Value<int> id,
+  Value<int> lineId,
+  Value<int> costCenterId,
+  Value<int> dimensionId,
+  Value<double> amount,
+  Value<double> percentage,
+});
+
+final class $$JournalLineAllocationsTableReferences extends BaseReferences<
+    _$AccountingDatabase, $JournalLineAllocationsTable, JournalLineAllocation> {
+  $$JournalLineAllocationsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $JournalEntryLinesTable _lineIdTable(_$AccountingDatabase db) =>
+      db.journalEntryLines.createAlias(
+          'journal_line_allocations__line_id__journal_entry_lines__id');
+
+  $$JournalEntryLinesTableProcessedTableManager get lineId {
+    final $_column = $_itemColumn<int>('line_id')!;
+
+    final manager =
+        $$JournalEntryLinesTableTableManager($_db, $_db.journalEntryLines)
+            .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_lineIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CostCentersTable _costCenterIdTable(_$AccountingDatabase db) =>
+      db.costCenters.createAlias(
+          'journal_line_allocations__cost_center_id__cost_centers__id');
+
+  $$CostCentersTableProcessedTableManager get costCenterId {
+    final $_column = $_itemColumn<int>('cost_center_id')!;
+
+    final manager = $$CostCentersTableTableManager($_db, $_db.costCenters)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_costCenterIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CostDimensionsTable _dimensionIdTable(_$AccountingDatabase db) =>
+      db.costDimensions.createAlias(
+          'journal_line_allocations__dimension_id__cost_dimensions__id');
+
+  $$CostDimensionsTableProcessedTableManager get dimensionId {
+    final $_column = $_itemColumn<int>('dimension_id')!;
+
+    final manager = $$CostDimensionsTableTableManager($_db, $_db.costDimensions)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_dimensionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$JournalLineAllocationsTableFilterComposer
+    extends Composer<_$AccountingDatabase, $JournalLineAllocationsTable> {
+  $$JournalLineAllocationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get percentage => $composableBuilder(
+      column: $table.percentage, builder: (column) => ColumnFilters(column));
+
+  $$JournalEntryLinesTableFilterComposer get lineId {
+    final $$JournalEntryLinesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.lineId,
+        referencedTable: $db.journalEntryLines,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$JournalEntryLinesTableFilterComposer(
+              $db: $db,
+              $table: $db.journalEntryLines,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableFilterComposer get costCenterId {
+    final $$CostCentersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.costCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableFilterComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostDimensionsTableFilterComposer get dimensionId {
+    final $$CostDimensionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableFilterComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$JournalLineAllocationsTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $JournalLineAllocationsTable> {
+  $$JournalLineAllocationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get percentage => $composableBuilder(
+      column: $table.percentage, builder: (column) => ColumnOrderings(column));
+
+  $$JournalEntryLinesTableOrderingComposer get lineId {
+    final $$JournalEntryLinesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.lineId,
+        referencedTable: $db.journalEntryLines,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$JournalEntryLinesTableOrderingComposer(
+              $db: $db,
+              $table: $db.journalEntryLines,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableOrderingComposer get costCenterId {
+    final $$CostCentersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.costCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableOrderingComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostDimensionsTableOrderingComposer get dimensionId {
+    final $$CostDimensionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$JournalLineAllocationsTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $JournalLineAllocationsTable> {
+  $$JournalLineAllocationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<double> get percentage => $composableBuilder(
+      column: $table.percentage, builder: (column) => column);
+
+  $$JournalEntryLinesTableAnnotationComposer get lineId {
+    final $$JournalEntryLinesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.lineId,
+            referencedTable: $db.journalEntryLines,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$JournalEntryLinesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.journalEntryLines,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$CostCentersTableAnnotationComposer get costCenterId {
+    final $$CostCentersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.costCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostDimensionsTableAnnotationComposer get dimensionId {
+    final $$CostDimensionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$JournalLineAllocationsTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $JournalLineAllocationsTable,
+    JournalLineAllocation,
+    $$JournalLineAllocationsTableFilterComposer,
+    $$JournalLineAllocationsTableOrderingComposer,
+    $$JournalLineAllocationsTableAnnotationComposer,
+    $$JournalLineAllocationsTableCreateCompanionBuilder,
+    $$JournalLineAllocationsTableUpdateCompanionBuilder,
+    (JournalLineAllocation, $$JournalLineAllocationsTableReferences),
+    JournalLineAllocation,
+    PrefetchHooks Function(
+        {bool lineId, bool costCenterId, bool dimensionId})> {
+  $$JournalLineAllocationsTableTableManager(
+      _$AccountingDatabase db, $JournalLineAllocationsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$JournalLineAllocationsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$JournalLineAllocationsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$JournalLineAllocationsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> lineId = const Value.absent(),
+            Value<int> costCenterId = const Value.absent(),
+            Value<int> dimensionId = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<double> percentage = const Value.absent(),
+          }) =>
+              JournalLineAllocationsCompanion(
+            id: id,
+            lineId: lineId,
+            costCenterId: costCenterId,
+            dimensionId: dimensionId,
+            amount: amount,
+            percentage: percentage,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int lineId,
+            required int costCenterId,
+            required int dimensionId,
+            required double amount,
+            required double percentage,
+          }) =>
+              JournalLineAllocationsCompanion.insert(
+            id: id,
+            lineId: lineId,
+            costCenterId: costCenterId,
+            dimensionId: dimensionId,
+            amount: amount,
+            percentage: percentage,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$JournalLineAllocationsTable,
+                        JournalLineAllocation>(table),
+                    $$JournalLineAllocationsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {lineId = false, costCenterId = false, dimensionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (lineId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.lineId,
+                    referencedTable: $$JournalLineAllocationsTableReferences
+                        ._lineIdTable(db),
+                    referencedColumn: $$JournalLineAllocationsTableReferences
+                        ._lineIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (costCenterId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.costCenterId,
+                    referencedTable: $$JournalLineAllocationsTableReferences
+                        ._costCenterIdTable(db),
+                    referencedColumn: $$JournalLineAllocationsTableReferences
+                        ._costCenterIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (dimensionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.dimensionId,
+                    referencedTable: $$JournalLineAllocationsTableReferences
+                        ._dimensionIdTable(db),
+                    referencedColumn: $$JournalLineAllocationsTableReferences
+                        ._dimensionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$JournalLineAllocationsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AccountingDatabase,
+        $JournalLineAllocationsTable,
+        JournalLineAllocation,
+        $$JournalLineAllocationsTableFilterComposer,
+        $$JournalLineAllocationsTableOrderingComposer,
+        $$JournalLineAllocationsTableAnnotationComposer,
+        $$JournalLineAllocationsTableCreateCompanionBuilder,
+        $$JournalLineAllocationsTableUpdateCompanionBuilder,
+        (JournalLineAllocation, $$JournalLineAllocationsTableReferences),
+        JournalLineAllocation,
+        PrefetchHooks Function(
+            {bool lineId, bool costCenterId, bool dimensionId})>;
+typedef $$CostDimensionRulesTableCreateCompanionBuilder
+    = CostDimensionRulesCompanion Function({
+  Value<int> id,
+  required int dimensionId,
+  Value<int?> accountId,
+  Value<AccountType?> accountType,
+  required DimensionPolicy policy,
+  Value<int?> defaultCostCenterId,
+});
+typedef $$CostDimensionRulesTableUpdateCompanionBuilder
+    = CostDimensionRulesCompanion Function({
+  Value<int> id,
+  Value<int> dimensionId,
+  Value<int?> accountId,
+  Value<AccountType?> accountType,
+  Value<DimensionPolicy> policy,
+  Value<int?> defaultCostCenterId,
+});
+
+final class $$CostDimensionRulesTableReferences extends BaseReferences<
+    _$AccountingDatabase, $CostDimensionRulesTable, CostDimensionRule> {
+  $$CostDimensionRulesTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $CostDimensionsTable _dimensionIdTable(_$AccountingDatabase db) => db
+      .costDimensions
+      .createAlias('cost_dimension_rules__dimension_id__cost_dimensions__id');
+
+  $$CostDimensionsTableProcessedTableManager get dimensionId {
+    final $_column = $_itemColumn<int>('dimension_id')!;
+
+    final manager = $$CostDimensionsTableTableManager($_db, $_db.costDimensions)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_dimensionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $AccountsTable _accountIdTable(_$AccountingDatabase db) =>
+      db.accounts.createAlias('cost_dimension_rules__account_id__accounts__id');
+
+  $$AccountsTableProcessedTableManager? get accountId {
+    final $_column = $_itemColumn<int>('account_id');
+    if ($_column == null) return null;
+    final manager = $$AccountsTableTableManager($_db, $_db.accounts)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_accountIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CostCentersTable _defaultCostCenterIdTable(_$AccountingDatabase db) =>
+      db.costCenters.createAlias(
+          'cost_dimension_rules__default_cost_center_id__cost_centers__id');
+
+  $$CostCentersTableProcessedTableManager? get defaultCostCenterId {
+    final $_column = $_itemColumn<int>('default_cost_center_id');
+    if ($_column == null) return null;
+    final manager = $$CostCentersTableTableManager($_db, $_db.costCenters)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_defaultCostCenterIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CostDimensionRulesTableFilterComposer
+    extends Composer<_$AccountingDatabase, $CostDimensionRulesTable> {
+  $$CostDimensionRulesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<AccountType?, AccountType, int>
+      get accountType => $composableBuilder(
+          column: $table.accountType,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnWithTypeConverterFilters<DimensionPolicy, DimensionPolicy, int>
+      get policy => $composableBuilder(
+          column: $table.policy,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  $$CostDimensionsTableFilterComposer get dimensionId {
+    final $$CostDimensionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableFilterComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableFilterComposer get accountId {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableFilterComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableFilterComposer get defaultCostCenterId {
+    final $$CostCentersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.defaultCostCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableFilterComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CostDimensionRulesTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $CostDimensionRulesTable> {
+  $$CostDimensionRulesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get accountType => $composableBuilder(
+      column: $table.accountType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get policy => $composableBuilder(
+      column: $table.policy, builder: (column) => ColumnOrderings(column));
+
+  $$CostDimensionsTableOrderingComposer get dimensionId {
+    final $$CostDimensionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableOrderingComposer get accountId {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableOrderingComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableOrderingComposer get defaultCostCenterId {
+    final $$CostCentersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.defaultCostCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableOrderingComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CostDimensionRulesTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $CostDimensionRulesTable> {
+  $$CostDimensionRulesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<AccountType?, int> get accountType =>
+      $composableBuilder(
+          column: $table.accountType, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DimensionPolicy, int> get policy =>
+      $composableBuilder(column: $table.policy, builder: (column) => column);
+
+  $$CostDimensionsTableAnnotationComposer get dimensionId {
+    final $$CostDimensionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableAnnotationComposer get accountId {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableAnnotationComposer get defaultCostCenterId {
+    final $$CostCentersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.defaultCostCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CostDimensionRulesTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $CostDimensionRulesTable,
+    CostDimensionRule,
+    $$CostDimensionRulesTableFilterComposer,
+    $$CostDimensionRulesTableOrderingComposer,
+    $$CostDimensionRulesTableAnnotationComposer,
+    $$CostDimensionRulesTableCreateCompanionBuilder,
+    $$CostDimensionRulesTableUpdateCompanionBuilder,
+    (CostDimensionRule, $$CostDimensionRulesTableReferences),
+    CostDimensionRule,
+    PrefetchHooks Function(
+        {bool dimensionId, bool accountId, bool defaultCostCenterId})> {
+  $$CostDimensionRulesTableTableManager(
+      _$AccountingDatabase db, $CostDimensionRulesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CostDimensionRulesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CostDimensionRulesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CostDimensionRulesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> dimensionId = const Value.absent(),
+            Value<int?> accountId = const Value.absent(),
+            Value<AccountType?> accountType = const Value.absent(),
+            Value<DimensionPolicy> policy = const Value.absent(),
+            Value<int?> defaultCostCenterId = const Value.absent(),
+          }) =>
+              CostDimensionRulesCompanion(
+            id: id,
+            dimensionId: dimensionId,
+            accountId: accountId,
+            accountType: accountType,
+            policy: policy,
+            defaultCostCenterId: defaultCostCenterId,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int dimensionId,
+            Value<int?> accountId = const Value.absent(),
+            Value<AccountType?> accountType = const Value.absent(),
+            required DimensionPolicy policy,
+            Value<int?> defaultCostCenterId = const Value.absent(),
+          }) =>
+              CostDimensionRulesCompanion.insert(
+            id: id,
+            dimensionId: dimensionId,
+            accountId: accountId,
+            accountType: accountType,
+            policy: policy,
+            defaultCostCenterId: defaultCostCenterId,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$CostDimensionRulesTable, CostDimensionRule>(
+                        table),
+                    $$CostDimensionRulesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {dimensionId = false,
+              accountId = false,
+              defaultCostCenterId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (dimensionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.dimensionId,
+                    referencedTable: $$CostDimensionRulesTableReferences
+                        ._dimensionIdTable(db),
+                    referencedColumn: $$CostDimensionRulesTableReferences
+                        ._dimensionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (accountId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.accountId,
+                    referencedTable:
+                        $$CostDimensionRulesTableReferences._accountIdTable(db),
+                    referencedColumn: $$CostDimensionRulesTableReferences
+                        ._accountIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (defaultCostCenterId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.defaultCostCenterId,
+                    referencedTable: $$CostDimensionRulesTableReferences
+                        ._defaultCostCenterIdTable(db),
+                    referencedColumn: $$CostDimensionRulesTableReferences
+                        ._defaultCostCenterIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CostDimensionRulesTableProcessedTableManager = ProcessedTableManager<
+    _$AccountingDatabase,
+    $CostDimensionRulesTable,
+    CostDimensionRule,
+    $$CostDimensionRulesTableFilterComposer,
+    $$CostDimensionRulesTableOrderingComposer,
+    $$CostDimensionRulesTableAnnotationComposer,
+    $$CostDimensionRulesTableCreateCompanionBuilder,
+    $$CostDimensionRulesTableUpdateCompanionBuilder,
+    (CostDimensionRule, $$CostDimensionRulesTableReferences),
+    CostDimensionRule,
+    PrefetchHooks Function(
+        {bool dimensionId, bool accountId, bool defaultCostCenterId})>;
+typedef $$AllocationKeysTableCreateCompanionBuilder = AllocationKeysCompanion
+    Function({
+  Value<int> id,
+  required String code,
+  required String name,
+  Value<String?> nameAr,
+  required int dimensionId,
+  Value<String?> description,
+  Value<bool> isActive,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+typedef $$AllocationKeysTableUpdateCompanionBuilder = AllocationKeysCompanion
+    Function({
+  Value<int> id,
+  Value<String> code,
+  Value<String> name,
+  Value<String?> nameAr,
+  Value<int> dimensionId,
+  Value<String?> description,
+  Value<bool> isActive,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+
+final class $$AllocationKeysTableReferences extends BaseReferences<
+    _$AccountingDatabase, $AllocationKeysTable, AllocationKey> {
+  $$AllocationKeysTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $CostDimensionsTable _dimensionIdTable(_$AccountingDatabase db) =>
+      db.costDimensions
+          .createAlias('allocation_keys__dimension_id__cost_dimensions__id');
+
+  $$CostDimensionsTableProcessedTableManager get dimensionId {
+    final $_column = $_itemColumn<int>('dimension_id')!;
+
+    final manager = $$CostDimensionsTableTableManager($_db, $_db.costDimensions)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_dimensionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$AllocationKeyItemsTable, List<AllocationKeyItem>>
+      _allocationKeyItemsRefsTable(_$AccountingDatabase db) =>
+          MultiTypedResultKey.fromTable(db.allocationKeyItems,
+              aliasName: 'allocation_keys__id__allocation_key_items__key_id');
+
+  $$AllocationKeyItemsTableProcessedTableManager get allocationKeyItemsRefs {
+    final manager =
+        $$AllocationKeyItemsTableTableManager($_db, $_db.allocationKeyItems)
+            .filter((f) => f.keyId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_allocationKeyItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$AllocationKeysTableFilterComposer
+    extends Composer<_$AccountingDatabase, $AllocationKeysTable> {
+  $$AllocationKeysTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nameAr => $composableBuilder(
+      column: $table.nameAr, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  $$CostDimensionsTableFilterComposer get dimensionId {
+    final $$CostDimensionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableFilterComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> allocationKeyItemsRefs(
+      Expression<bool> Function($$AllocationKeyItemsTableFilterComposer f) f) {
+    final $$AllocationKeyItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.allocationKeyItems,
+        getReferencedColumn: (t) => t.keyId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AllocationKeyItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.allocationKeyItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$AllocationKeysTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $AllocationKeysTable> {
+  $$AllocationKeysTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nameAr => $composableBuilder(
+      column: $table.nameAr, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  $$CostDimensionsTableOrderingComposer get dimensionId {
+    final $$CostDimensionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AllocationKeysTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $AllocationKeysTable> {
+  $$AllocationKeysTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameAr =>
+      $composableBuilder(column: $table.nameAr, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$CostDimensionsTableAnnotationComposer get dimensionId {
+    final $$CostDimensionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.dimensionId,
+        referencedTable: $db.costDimensions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostDimensionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costDimensions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> allocationKeyItemsRefs<T extends Object>(
+      Expression<T> Function($$AllocationKeyItemsTableAnnotationComposer a) f) {
+    final $$AllocationKeyItemsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.allocationKeyItems,
+            getReferencedColumn: (t) => t.keyId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$AllocationKeyItemsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.allocationKeyItems,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$AllocationKeysTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $AllocationKeysTable,
+    AllocationKey,
+    $$AllocationKeysTableFilterComposer,
+    $$AllocationKeysTableOrderingComposer,
+    $$AllocationKeysTableAnnotationComposer,
+    $$AllocationKeysTableCreateCompanionBuilder,
+    $$AllocationKeysTableUpdateCompanionBuilder,
+    (AllocationKey, $$AllocationKeysTableReferences),
+    AllocationKey,
+    PrefetchHooks Function({bool dimensionId, bool allocationKeyItemsRefs})> {
+  $$AllocationKeysTableTableManager(
+      _$AccountingDatabase db, $AllocationKeysTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AllocationKeysTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AllocationKeysTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AllocationKeysTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> code = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> nameAr = const Value.absent(),
+            Value<int> dimensionId = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              AllocationKeysCompanion(
+            id: id,
+            code: code,
+            name: name,
+            nameAr: nameAr,
+            dimensionId: dimensionId,
+            description: description,
+            isActive: isActive,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String code,
+            required String name,
+            Value<String?> nameAr = const Value.absent(),
+            required int dimensionId,
+            Value<String?> description = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              AllocationKeysCompanion.insert(
+            id: id,
+            code: code,
+            name: name,
+            nameAr: nameAr,
+            dimensionId: dimensionId,
+            description: description,
+            isActive: isActive,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$AllocationKeysTable, AllocationKey>(table),
+                    $$AllocationKeysTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {dimensionId = false, allocationKeyItemsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (allocationKeyItemsRefs) db.allocationKeyItems
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (dimensionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.dimensionId,
+                    referencedTable:
+                        $$AllocationKeysTableReferences._dimensionIdTable(db),
+                    referencedColumn: $$AllocationKeysTableReferences
+                        ._dimensionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (allocationKeyItemsRefs)
+                    await $_getPrefetchedData<AllocationKey,
+                            $AllocationKeysTable, AllocationKeyItem>(
+                        currentTable: table,
+                        referencedTable: $$AllocationKeysTableReferences
+                            ._allocationKeyItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AllocationKeysTableReferences(db, table, p0)
+                                .allocationKeyItemsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.keyId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AllocationKeysTableProcessedTableManager = ProcessedTableManager<
+    _$AccountingDatabase,
+    $AllocationKeysTable,
+    AllocationKey,
+    $$AllocationKeysTableFilterComposer,
+    $$AllocationKeysTableOrderingComposer,
+    $$AllocationKeysTableAnnotationComposer,
+    $$AllocationKeysTableCreateCompanionBuilder,
+    $$AllocationKeysTableUpdateCompanionBuilder,
+    (AllocationKey, $$AllocationKeysTableReferences),
+    AllocationKey,
+    PrefetchHooks Function({bool dimensionId, bool allocationKeyItemsRefs})>;
+typedef $$AllocationKeyItemsTableCreateCompanionBuilder
+    = AllocationKeyItemsCompanion Function({
+  Value<int> id,
+  required int keyId,
+  required int costCenterId,
+  required double weight,
+});
+typedef $$AllocationKeyItemsTableUpdateCompanionBuilder
+    = AllocationKeyItemsCompanion Function({
+  Value<int> id,
+  Value<int> keyId,
+  Value<int> costCenterId,
+  Value<double> weight,
+});
+
+final class $$AllocationKeyItemsTableReferences extends BaseReferences<
+    _$AccountingDatabase, $AllocationKeyItemsTable, AllocationKeyItem> {
+  $$AllocationKeyItemsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $AllocationKeysTable _keyIdTable(_$AccountingDatabase db) =>
+      db.allocationKeys
+          .createAlias('allocation_key_items__key_id__allocation_keys__id');
+
+  $$AllocationKeysTableProcessedTableManager get keyId {
+    final $_column = $_itemColumn<int>('key_id')!;
+
+    final manager = $$AllocationKeysTableTableManager($_db, $_db.allocationKeys)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_keyIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CostCentersTable _costCenterIdTable(_$AccountingDatabase db) => db
+      .costCenters
+      .createAlias('allocation_key_items__cost_center_id__cost_centers__id');
+
+  $$CostCentersTableProcessedTableManager get costCenterId {
+    final $_column = $_itemColumn<int>('cost_center_id')!;
+
+    final manager = $$CostCentersTableTableManager($_db, $_db.costCenters)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_costCenterIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$AllocationKeyItemsTableFilterComposer
+    extends Composer<_$AccountingDatabase, $AllocationKeyItemsTable> {
+  $$AllocationKeyItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get weight => $composableBuilder(
+      column: $table.weight, builder: (column) => ColumnFilters(column));
+
+  $$AllocationKeysTableFilterComposer get keyId {
+    final $$AllocationKeysTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.keyId,
+        referencedTable: $db.allocationKeys,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AllocationKeysTableFilterComposer(
+              $db: $db,
+              $table: $db.allocationKeys,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableFilterComposer get costCenterId {
+    final $$CostCentersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.costCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableFilterComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AllocationKeyItemsTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $AllocationKeyItemsTable> {
+  $$AllocationKeyItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get weight => $composableBuilder(
+      column: $table.weight, builder: (column) => ColumnOrderings(column));
+
+  $$AllocationKeysTableOrderingComposer get keyId {
+    final $$AllocationKeysTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.keyId,
+        referencedTable: $db.allocationKeys,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AllocationKeysTableOrderingComposer(
+              $db: $db,
+              $table: $db.allocationKeys,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableOrderingComposer get costCenterId {
+    final $$CostCentersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.costCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableOrderingComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AllocationKeyItemsTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $AllocationKeyItemsTable> {
+  $$AllocationKeyItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get weight =>
+      $composableBuilder(column: $table.weight, builder: (column) => column);
+
+  $$AllocationKeysTableAnnotationComposer get keyId {
+    final $$AllocationKeysTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.keyId,
+        referencedTable: $db.allocationKeys,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AllocationKeysTableAnnotationComposer(
+              $db: $db,
+              $table: $db.allocationKeys,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableAnnotationComposer get costCenterId {
+    final $$CostCentersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.costCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AllocationKeyItemsTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $AllocationKeyItemsTable,
+    AllocationKeyItem,
+    $$AllocationKeyItemsTableFilterComposer,
+    $$AllocationKeyItemsTableOrderingComposer,
+    $$AllocationKeyItemsTableAnnotationComposer,
+    $$AllocationKeyItemsTableCreateCompanionBuilder,
+    $$AllocationKeyItemsTableUpdateCompanionBuilder,
+    (AllocationKeyItem, $$AllocationKeyItemsTableReferences),
+    AllocationKeyItem,
+    PrefetchHooks Function({bool keyId, bool costCenterId})> {
+  $$AllocationKeyItemsTableTableManager(
+      _$AccountingDatabase db, $AllocationKeyItemsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AllocationKeyItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AllocationKeyItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AllocationKeyItemsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> keyId = const Value.absent(),
+            Value<int> costCenterId = const Value.absent(),
+            Value<double> weight = const Value.absent(),
+          }) =>
+              AllocationKeyItemsCompanion(
+            id: id,
+            keyId: keyId,
+            costCenterId: costCenterId,
+            weight: weight,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int keyId,
+            required int costCenterId,
+            required double weight,
+          }) =>
+              AllocationKeyItemsCompanion.insert(
+            id: id,
+            keyId: keyId,
+            costCenterId: costCenterId,
+            weight: weight,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$AllocationKeyItemsTable, AllocationKeyItem>(
+                        table),
+                    $$AllocationKeyItemsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({keyId = false, costCenterId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (keyId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.keyId,
+                    referencedTable:
+                        $$AllocationKeyItemsTableReferences._keyIdTable(db),
+                    referencedColumn:
+                        $$AllocationKeyItemsTableReferences._keyIdTable(db).id,
+                  ) as T;
+                }
+                if (costCenterId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.costCenterId,
+                    referencedTable: $$AllocationKeyItemsTableReferences
+                        ._costCenterIdTable(db),
+                    referencedColumn: $$AllocationKeyItemsTableReferences
+                        ._costCenterIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AllocationKeyItemsTableProcessedTableManager = ProcessedTableManager<
+    _$AccountingDatabase,
+    $AllocationKeyItemsTable,
+    AllocationKeyItem,
+    $$AllocationKeyItemsTableFilterComposer,
+    $$AllocationKeyItemsTableOrderingComposer,
+    $$AllocationKeyItemsTableAnnotationComposer,
+    $$AllocationKeyItemsTableCreateCompanionBuilder,
+    $$AllocationKeyItemsTableUpdateCompanionBuilder,
+    (AllocationKeyItem, $$AllocationKeyItemsTableReferences),
+    AllocationKeyItem,
+    PrefetchHooks Function({bool keyId, bool costCenterId})>;
 
 class $AccountingDatabaseManager {
   final _$AccountingDatabase _db;
@@ -4079,4 +9784,17 @@ class $AccountingDatabaseManager {
       $$AccountingPeriodsTableTableManager(_db, _db.accountingPeriods);
   $$EntryTemplatesTableTableManager get entryTemplates =>
       $$EntryTemplatesTableTableManager(_db, _db.entryTemplates);
+  $$CostDimensionsTableTableManager get costDimensions =>
+      $$CostDimensionsTableTableManager(_db, _db.costDimensions);
+  $$CostCentersTableTableManager get costCenters =>
+      $$CostCentersTableTableManager(_db, _db.costCenters);
+  $$JournalLineAllocationsTableTableManager get journalLineAllocations =>
+      $$JournalLineAllocationsTableTableManager(
+          _db, _db.journalLineAllocations);
+  $$CostDimensionRulesTableTableManager get costDimensionRules =>
+      $$CostDimensionRulesTableTableManager(_db, _db.costDimensionRules);
+  $$AllocationKeysTableTableManager get allocationKeys =>
+      $$AllocationKeysTableTableManager(_db, _db.allocationKeys);
+  $$AllocationKeyItemsTableTableManager get allocationKeyItems =>
+      $$AllocationKeyItemsTableTableManager(_db, _db.allocationKeyItems);
 }

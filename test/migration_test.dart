@@ -1,5 +1,5 @@
 /// migration_test.dart
-/// التحقق من ترقية قاعدة بيانات الإصدار 1 (0.3.0) إلى الإصدار 2 دون فقد بيانات
+/// التحقق من ترقية قاعدة بيانات الإصدار 1 (0.3.0) إلى الإصدار الحالي دون فقد بيانات
 library;
 
 import 'package:drift/native.dart';
@@ -17,7 +17,7 @@ const _v1Schema = [
 int _epoch(DateTime d) => d.millisecondsSinceEpoch ~/ 1000;
 
 void main() {
-  test('ترقية قاعدة بيانات v1 إلى v2 مع الحفاظ على البيانات', () async {
+  test('ترقية قاعدة بيانات v1 إلى v3 مع الحفاظ على البيانات', () async {
     final executor = NativeDatabase.memory(setup: (raw) {
       final v = raw.userVersion;
       if (v != 0) return; // تُنفَّذ مرة واحدة فقط
@@ -41,7 +41,10 @@ void main() {
       raw.userVersion = 1;
     });
 
-    final fa = await FlutterAccounting.initialize(customExecutor: executor);
+    final fa = await FlutterAccounting.initialize(
+      customExecutor: executor,
+      config: const AccountingConfig(enableCostCenters: true),
+    );
     addTearDown(fa.dispose);
 
     // البيانات القديمة سليمة
@@ -64,8 +67,24 @@ void main() {
     await fa.templates.saveTemplate(StandardTemplates.cashSale);
     expect(await fa.templates.getCustomTemplates(), hasLength(1));
 
+    // جداول مراكز التكلفة (v3) تعمل على البيانات القديمة
+    final branch =
+        await fa.costCenters.ensureDimension(code: 'BRANCH', name: 'Branch');
+    final center = await fa.costCenters.createCostCenter(
+        CostCenterModel(dimensionId: branch.id!, code: 'B1', name: 'Main'));
+    await fa.record(JournalEntryBuilder(
+            description: 'with center', date: DateTime(2024, 7, 1))
+        .debit(1, 10,
+            allocations: [CostAllocationModel.full(center.id!)]).credit(2, 10));
+    final summary = await fa.costReports.getSummary(
+        dimensionId: branch.id!,
+        from: DateTime(2024),
+        to: DateTime(2024, 12, 31));
+    expect(summary.unallocatedRevenue, 115);
+    expect(await fa.costCenters.hasTransactions(center.id!), isTrue);
+
     final version =
         await fa.database.customSelect('PRAGMA user_version').getSingle();
-    expect(version.data.values.first, 2);
+    expect(version.data.values.first, 3);
   });
 }
