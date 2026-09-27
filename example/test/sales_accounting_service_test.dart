@@ -48,4 +48,52 @@ void main() {
     final tb = await fa.reports.getTrialBalance();
     expect(tb.isBalanced, isTrue);
   });
+
+  group('مع مراكز التكلفة', () {
+    late FlutterAccounting fc;
+    late SalesAccountingService withCenters;
+
+    setUp(() async {
+      fc = FlutterAccounting.forTesting(
+          config: const AccountingConfig(enableCostCenters: true));
+      await AccountingSeedData.seed(fc.accounts);
+      await CostCenterSeedData.seed(fc.costCenters);
+      await fc.periods.ensureOpenPeriodFor(DateTime.now());
+      await setupCostCenters(fc);
+      await setupCostCenters(fc); // لا يتكرر شيء
+      withCenters = SalesAccountingService(fc);
+    });
+
+    tearDown(() => fc.dispose());
+
+    test('ربحية الفروع: فاتورة لكل فرع وإيجار موزع حسب المساحة', () async {
+      await withCenters.onInvoiceCreated(
+          invoiceId: 1,
+          netAmount: 1000,
+          costAmount: 600,
+          branchCode: AppCostCenters.riyadh);
+      await withCenters.onInvoiceCreated(
+          invoiceId: 2, netAmount: 500, branchCode: AppCostCenters.jeddah);
+      await withCenters.onExpensePaid(
+          expenseCode: AppAccounts.rent,
+          amount: 300,
+          description: 'rent',
+          allocationKey: AppCostCenters.byArea,
+          allocations: [CostAllocationModel.code(AppCostCenters.adminDept)]);
+
+      final branch =
+          await fc.costCenters.getDimensionByCode(CostCenterSeedData.branch);
+      final summary = await fc.costReports.getSummary(dimensionId: branch!.id!);
+      double net(String code) =>
+          summary.rows.firstWhere((r) => r.code == code).netIncome;
+      expect(net(AppCostCenters.riyadh), 1000 - 600 - 180);
+      expect(net(AppCostCenters.jeddah), 500 - 120);
+
+      // القسم إلزامي للمصروفات
+      expect(
+          () => withCenters.onExpensePaid(
+              expenseCode: AppAccounts.rent, amount: 10, description: 'x'),
+          throwsA(isA<CostCenterRequiredException>()));
+    });
+  });
 }
