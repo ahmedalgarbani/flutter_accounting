@@ -14,6 +14,7 @@ import 'daos/accounts_dao.dart';
 import 'daos/journal_entries_dao.dart';
 import 'daos/entry_templates_dao.dart';
 import 'daos/cost_centers_dao.dart';
+import 'daos/currencies_dao.dart';
 
 part 'accounting_database.g.dart';
 
@@ -30,8 +31,17 @@ part 'accounting_database.g.dart';
     CostDimensionRules,
     AllocationKeys,
     AllocationKeyItems,
+    Currencies,
+    ExchangeRates,
+    AccountingSettings,
   ],
-  daos: [AccountsDao, JournalEntriesDao, EntryTemplatesDao, CostCentersDao],
+  daos: [
+    AccountsDao,
+    JournalEntriesDao,
+    EntryTemplatesDao,
+    CostCentersDao,
+    CurrenciesDao,
+  ],
 )
 class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase(super.e);
@@ -43,7 +53,8 @@ class AccountingDatabase extends _$AccountingDatabase {
   /// - 2: نوع القيد، ربط المصدر (sourceType/sourceId)، ربط القيد العكسي،
   ///      جدول القوالب المخصصة، وفهارس للأداء
   /// - 3: مراكز التكلفة: الأبعاد، المراكز، توزيع البنود، القواعد، مفاتيح التوزيع
-  int get schemaVersion => 3;
+  /// - 4: تعدد العملات: العملات، أسعار الصرف، عملة الحساب، عملة البند
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -73,6 +84,19 @@ class AccountingDatabase extends _$AccountingDatabase {
             await m.createIndex(idxCostCentersDimension);
             await m.createIndex(idxLineAllocationsLine);
             await m.createIndex(idxLineAllocationsCenter);
+          }
+          if (from < 4) {
+            await m.addColumn(accounts, accounts.currencyCode);
+            await m.addColumn(
+                journalEntryLines, journalEntryLines.currencyCode);
+            await m.addColumn(
+                journalEntryLines, journalEntryLines.amountCurrency);
+            await m.addColumn(
+                journalEntryLines, journalEntryLines.exchangeRate);
+            await m.createTable(currencies);
+            await m.createTable(exchangeRates);
+            await m.createTable(accountingSettings);
+            await m.createIndex(idxExchangeRatesLookup);
           }
         },
         beforeOpen: (details) async {

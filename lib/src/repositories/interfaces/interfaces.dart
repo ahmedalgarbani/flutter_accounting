@@ -15,6 +15,9 @@ import '../../models/allocation_key_model.dart';
 import '../../models/cost_allocation_run_model.dart';
 import '../../reports/report_models.dart';
 import '../../reports/cost_center_report_models.dart';
+import '../../models/currency_model.dart';
+import '../../models/currency_operation_model.dart';
+import '../../reports/currency_report_models.dart';
 
 // ─────────────────────────────────────────────────────────────
 // IAccountRepository - دليل الحسابات
@@ -384,5 +387,91 @@ abstract class ICostReportsRepository {
     DateTime? from,
     DateTime? to,
     bool incomeStatementOnly = true,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ICurrencyRepository - العملات وأسعار الصرف
+// ─────────────────────────────────────────────────────────────
+
+/// العملات وأسعار الصرف وأرصدة الحسابات بعملاتها.
+/// الكتابة ترمي [MultiCurrencyDisabledException] إن لم يكن تعدد العملات مفعّلاً.
+abstract class ICurrencyRepository {
+  /// رمز عملة الأساس (null إن كان تعدد العملات غير مفعّل)
+  String? get baseCurrencyCode;
+
+  /// يتأكد من وجود عملة الأساس وتثبيتها في قاعدة البيانات.
+  /// يرمي [BaseCurrencyMismatchException] إن تغيرت بعد تسجيل قيود.
+  Future<CurrencyModel> ensureBaseCurrency();
+
+  Future<List<CurrencyModel>> getCurrencies({bool activeOnly = false});
+  Future<CurrencyModel?> getCurrency(String code);
+  Future<CurrencyModel> createCurrency(CurrencyModel currency);
+  Future<CurrencyModel> updateCurrency(CurrencyModel currency);
+
+  /// يُعيد العملة إن كانت موجودة، وإلا ينشئها
+  Future<CurrencyModel> ensureCurrency({
+    required String code,
+    required String name,
+    String? nameAr,
+    String? symbol,
+    int decimalPlaces = 2,
+  });
+
+  Future<void> setCurrencyActive(String code, {required bool isActive});
+
+  /// تسجيل سعر صرف [code] مقابل عملة الأساس في [date] (الافتراضي: اليوم).
+  /// يستبدل سعر نفس اليوم إن وُجد.
+  Future<ExchangeRateModel> setExchangeRate(String code, double rate,
+      {DateTime? date});
+
+  Future<List<ExchangeRateModel>> getExchangeRates(
+      {String? code, DateTime? from, DateTime? to});
+  Future<void> deleteExchangeRate(int id);
+
+  /// آخر سعر مسجل في [date] أو قبله (عملة الأساس = 1).
+  /// يرمي [ExchangeRateNotFoundException] إن لم يوجد.
+  Future<double> getExchangeRate(String code, {DateTime? date});
+
+  /// تحويل مبلغ بين عملتين عبر عملة الأساس، مقرّباً لمنازل [to]
+  Future<double> convert(double amount,
+      {required String from, required String to, DateTime? date});
+
+  /// رصيد حساب بعملة (الافتراضي: عملة الحساب)
+  Future<CurrencyBalance> getAccountCurrencyBalance(int accountId,
+      {String? currencyCode, DateTime? asOf});
+
+  /// كشف حساب بعملته وبعملة الأساس
+  Future<CurrencyLedgerReport> getAccountCurrencyLedger(int accountId,
+      {String? currencyCode, DateTime? from, DateTime? to});
+}
+
+// ─────────────────────────────────────────────────────────────
+// IExchangeDifferenceRepository - فروقات العملة
+// ─────────────────────────────────────────────────────────────
+
+abstract class IExchangeDifferenceRepository {
+  /// أرصدة الحسابات بالعملات الأجنبية مع تقييمها بسعر [asOf].
+  /// الافتراضي: حسابات الأصول والخصوم؛ مرّر [accountIds] لحسابات محددة.
+  Future<ForeignCurrencyBalancesReport> getForeignCurrencyBalances(
+      {DateTime? asOf, List<int>? accountIds});
+
+  /// معاينة إعادة التقييم دون حفظ
+  Future<RevaluationPreview> previewRevaluation(RevaluationRequest request);
+
+  /// ينشئ قيود إعادة التقييم (`EntryType.exchangeDifference`): قيد للفروقات
+  /// المحققة، وقيد لغير المحققة يُعكس تلقائياً في `request.autoReverseOn`.
+  /// يرمي [InvalidCurrencyOperationException] إن لم توجد فروقات.
+  Future<RevaluationResult> runRevaluation(
+    RevaluationRequest request, {
+    bool post = true,
+    String? postedBy,
+  });
+
+  /// تسوية مبلغ بعملة أجنبية مع قيد فرق العملة المحقق في نفس القيد
+  Future<JournalEntryModel> settle(
+    SettlementRequest request, {
+    bool post = true,
+    String? postedBy,
   });
 }

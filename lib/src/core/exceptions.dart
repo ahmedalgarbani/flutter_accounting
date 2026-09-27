@@ -350,3 +350,76 @@ class DuplicateAllocationKeyCodeException extends AccountingException {
 class InvalidAllocationKeyException extends AccountingException {
   const InvalidAllocationKeyException(super.message);
 }
+
+// ─────────────────────────────────────────────────────────────
+// استثناءات تعدد العملات
+// ─────────────────────────────────────────────────────────────
+
+/// تعدد العملات غير مفعّل في [AccountingConfig.multiCurrency]
+class MultiCurrencyDisabledException extends AccountingException {
+  const MultiCurrencyDisabledException()
+      : super('تعدد العملات غير مفعّل. فعّله عبر '
+            'AccountingConfig(multiCurrency: MultiCurrencyConfig(baseCurrency: ...)).');
+}
+
+/// العملة غير معرّفة
+class CurrencyNotFoundException extends AccountingException {
+  final String code;
+  const CurrencyNotFoundException(this.code)
+      : super('العملة "$code" غير معرّفة.');
+}
+
+/// رمز العملة مكرر
+class DuplicateCurrencyCodeException extends AccountingException {
+  final String code;
+  const DuplicateCurrencyCodeException(this.code)
+      : super('العملة "$code" موجودة مسبقاً.');
+}
+
+/// العملة موقوفة
+class InactiveCurrencyException extends AccountingException {
+  final String code;
+  const InactiveCurrencyException(this.code)
+      : super('العملة "$code" موقوفة ولا يمكن التسجيل بها.');
+}
+
+/// لا يوجد سعر صرف للعملة في التاريخ المطلوب أو قبله
+class ExchangeRateNotFoundException extends AccountingException {
+  final String currencyCode;
+  final DateTime date;
+  const ExchangeRateNotFoundException(this.currencyCode, this.date)
+      : super('لا يوجد سعر صرف للعملة "$currencyCode" في تاريخ $date أو قبله. '
+            'أدخل السعر أولاً أو مرّره يدوياً.');
+}
+
+/// سعر صرف غير صالح (صفر أو سالب...)
+class InvalidExchangeRateException extends AccountingException {
+  const InvalidExchangeRateException(super.message);
+}
+
+/// عملة البند لا تطابق عملة الحساب
+class CurrencyMismatchException extends AccountingException {
+  final String accountCode;
+  final String accountCurrency;
+  final String lineCurrency;
+  const CurrencyMismatchException(
+      this.accountCode, this.accountCurrency, this.lineCurrency)
+      : super('الحساب "$accountCode" بعملة "$accountCurrency" ولا يقبل بنوداً '
+            'بعملة "$lineCurrency".');
+}
+
+/// عملة الأساس في الإعدادات تختلف عن المثبّتة في قاعدة البيانات
+class BaseCurrencyMismatchException extends AccountingException {
+  final String storedCurrency;
+  final String configuredCurrency;
+  const BaseCurrencyMismatchException(
+      this.storedCurrency, this.configuredCurrency)
+      : super(
+            'عملة الأساس في قاعدة البيانات "$storedCurrency" ولا يمكن تغييرها '
+            'إلى "$configuredCurrency" بعد تسجيل قيود.');
+}
+
+/// عملية عملات غير صالحة (تغيير عملة حساب عليه حركات، تسوية بلا رصيد...)
+class InvalidCurrencyOperationException extends AccountingException {
+  const InvalidCurrencyOperationException(super.message);
+}

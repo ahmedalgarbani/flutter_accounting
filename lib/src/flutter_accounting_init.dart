@@ -35,8 +35,11 @@ import 'repositories/impl/accounting_period_repository_impl.dart';
 import 'repositories/impl/cost_allocation_repository_impl.dart';
 import 'repositories/impl/cost_center_repository_impl.dart';
 import 'repositories/impl/cost_reports_repository_impl.dart';
+import 'repositories/impl/currency_repository_impl.dart';
+import 'repositories/impl/exchange_difference_repository_impl.dart';
 import 'seed/accounting_seed_data.dart';
 import 'seed/cost_center_seed_data.dart';
+import 'seed/currency_seed_data.dart';
 
 class FlutterAccounting {
   // ─────────────────────────────────────────────────────────────
@@ -68,6 +71,13 @@ class FlutterAccounting {
   /// تقارير مراكز التكلفة
   final ICostReportsRepository costReports;
 
+  /// العملات وأسعار الصرف وأرصدة الحسابات بعملاتها.
+  /// تتطلب `AccountingConfig(multiCurrency: MultiCurrencyConfig(...))`.
+  final ICurrencyRepository currencies;
+
+  /// فروقات العملة: إعادة التقييم والتسوية بالفرق المحقق
+  final IExchangeDifferenceRepository exchangeDifferences;
+
   /// الإعدادات المستخدمة
   final AccountingConfig config;
 
@@ -83,6 +93,8 @@ class FlutterAccounting {
     required this.costCenters,
     required this.costAllocations,
     required this.costReports,
+    required this.currencies,
+    required this.exchangeDifferences,
     required this.config,
     required this.database,
   });
@@ -93,9 +105,11 @@ class FlutterAccounting {
     AccountingConfig config,
   ) {
     final accounts =
-        AccountRepositoryImpl(db.accountsDao, db.journalEntriesDao);
-    final journalEntries = JournalEntryRepositoryImpl(
-        db.journalEntriesDao, db.accountsDao, config, db.costCentersDao);
+        AccountRepositoryImpl(db.accountsDao, db.journalEntriesDao, config);
+    final currencies =
+        CurrencyRepositoryImpl(db.currenciesDao, db.accountsDao, config);
+    final journalEntries = JournalEntryRepositoryImpl(db.journalEntriesDao,
+        db.accountsDao, config, db.costCentersDao, currencies);
     final costCenters =
         CostCenterRepositoryImpl(db.costCentersDao, db.accountsDao, config);
     return FlutterAccounting._(
@@ -111,6 +125,9 @@ class FlutterAccounting {
           db.accountsDao, costCenters, journalEntries, config),
       costReports: CostReportsRepositoryImpl(
           db.costCentersDao, db.accountsDao, db.journalEntriesDao),
+      currencies: currencies,
+      exchangeDifferences: ExchangeDifferenceRepositoryImpl(
+          db.currenciesDao, db.accountsDao, currencies, journalEntries, config),
     );
   }
 
@@ -148,6 +165,8 @@ class FlutterAccounting {
   /// - [seedDefaultCostDimensions] إنشاء الأبعاد الجاهزة (الفرع، المشروع،
   ///   القسم) إن لم تكن موجودة. يتطلب `config.enableCostCenters = true`.
   ///   بدونها يمكنك تعريف أبعادك الخاصة عبر `fa.costCenters`.
+  /// - [seedDefaultCurrencies] إضافة العملات الشائعة (يتطلب `config.multiCurrency`).
+  ///   عملة الأساس تُضاف وتُثبَّت تلقائياً في كل الأحوال.
   ///
   /// استدعاء [initialize] مرة ثانية يغلق النسخة السابقة أولاً.
   static Future<FlutterAccounting> initialize({
@@ -157,7 +176,12 @@ class FlutterAccounting {
     AccountingConfig config = const AccountingConfig(),
     bool seedDefaultAccounts = false,
     bool seedDefaultCostDimensions = false,
+    bool seedDefaultCurrencies = false,
   }) async {
+    if (seedDefaultCurrencies && !config.isMultiCurrency) {
+      throw ArgumentError(
+          'seedDefaultCurrencies يتطلب AccountingConfig(multiCurrency: ...).');
+    }
     if (seedDefaultCostDimensions && !config.enableCostCenters) {
       throw ArgumentError(
           'seedDefaultCostDimensions يتطلب AccountingConfig(enableCostCenters: true).');
@@ -177,6 +201,11 @@ class FlutterAccounting {
     if (seedDefaultAccounts) await AccountingSeedData.seed(fa.accounts);
     if (seedDefaultCostDimensions) {
       await CostCenterSeedData.seed(fa.costCenters);
+    }
+    if (config.isMultiCurrency) {
+      // تثبيت عملة الأساس مبكراً (يرمي إن تغيّرت بعد تسجيل قيود)
+      await fa.currencies.ensureBaseCurrency();
+      if (seedDefaultCurrencies) await CurrencySeedData.seed(fa.currencies);
     }
 
     return _instance = fa;

@@ -16,6 +16,10 @@ class AccountModel {
   final bool isActive;
   final String? description;
   final int level;
+
+  /// عملة الحساب (اختياري، يتطلب تعدد العملات). إن حُدّدت فكل بنود الحساب
+  /// يجب أن تكون بهذه العملة، مثل "بنك - دولار". `null` = أي عملة.
+  final String? currencyCode;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -29,6 +33,7 @@ class AccountModel {
     this.isActive = true,
     this.description,
     this.level = 1,
+    this.currencyCode,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -48,6 +53,7 @@ class AccountModel {
     int? parentId,
     bool isActive = true,
     String? description,
+    String? currencyCode,
   }) {
     final now = DateTime.now();
     return AccountModel(
@@ -58,6 +64,7 @@ class AccountModel {
       parentId: parentId,
       isActive: isActive,
       description: description,
+      currencyCode: currencyCode,
       createdAt: now,
       updatedAt: now,
     );
@@ -96,6 +103,7 @@ class AccountModel {
     bool? isActive,
     String? description,
     int? level,
+    String? currencyCode,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -109,6 +117,7 @@ class AccountModel {
       isActive: isActive ?? this.isActive,
       description: description ?? this.description,
       level: level ?? this.level,
+      currencyCode: currencyCode ?? this.currencyCode,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -124,6 +133,7 @@ class AccountModel {
         'isActive': isActive,
         'description': description,
         'level': level,
+        'currencyCode': currencyCode,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
       };
@@ -140,6 +150,7 @@ class AccountModel {
       isActive: (map['isActive'] as bool?) ?? true,
       description: map['description'] as String?,
       level: (map['level'] as int?) ?? 1,
+      currencyCode: map['currencyCode'] as String?,
       createdAt: map['createdAt'] == null
           ? now
           : DateTime.parse(map['createdAt'] as String),

@@ -17,7 +17,8 @@ const _v1Schema = [
 int _epoch(DateTime d) => d.millisecondsSinceEpoch ~/ 1000;
 
 void main() {
-  test('ترقية قاعدة بيانات v1 إلى v3 مع الحفاظ على البيانات', () async {
+  test('ترقية قاعدة بيانات v1 إلى الإصدار الحالي مع الحفاظ على البيانات',
+      () async {
     final executor = NativeDatabase.memory(setup: (raw) {
       final v = raw.userVersion;
       if (v != 0) return; // تُنفَّذ مرة واحدة فقط
@@ -43,7 +44,10 @@ void main() {
 
     final fa = await FlutterAccounting.initialize(
       customExecutor: executor,
-      config: const AccountingConfig(enableCostCenters: true),
+      config: const AccountingConfig(
+        enableCostCenters: true,
+        multiCurrency: MultiCurrencyConfig(baseCurrency: 'SAR'),
+      ),
     );
     addTearDown(fa.dispose);
 
@@ -83,8 +87,19 @@ void main() {
     expect(summary.unallocatedRevenue, 115);
     expect(await fa.costCenters.hasTransactions(center.id!), isTrue);
 
+    // تعدد العملات (v4): البنود القديمة تُعتبر بعملة الأساس
+    expect(old.lines.first.currencyCode, isNull);
+    await fa.currencies.ensureCurrency(code: 'USD', name: 'US Dollar');
+    await fa.currencies.setExchangeRate('USD', 3.75, date: DateTime(2024));
+    final usd = await fa.record(
+        JournalEntryBuilder(description: 'usd', date: DateTime(2024, 8, 1))
+            .currency('USD')
+            .debit(1, 10)
+            .credit(2, 10));
+    expect(usd.totalDebits, 37.5);
+
     final version =
         await fa.database.customSelect('PRAGMA user_version').getSingle();
-    expect(version.data.values.first, 3);
+    expect(version.data.values.first, 4);
   });
 }

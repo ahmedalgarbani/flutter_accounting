@@ -188,6 +188,8 @@ class AccountingSeedData {
           revenue.id, 2, now),
       _acc('44', 'Interest Income', 'إيرادات الفوائد', AccountType.revenue,
           revenue.id, 2, now),
+      _acc('45', 'Foreign Exchange Gain', 'أرباح فروقات العملة',
+          AccountType.revenue, revenue.id, 2, now),
     ]);
 
     // ═══════════════════════════════════════════════════════════
@@ -204,6 +206,8 @@ class AccountingSeedData {
     ));
 
     await _createAccounts(repo, [
+      _acc('50', 'Foreign Exchange Loss', 'خسائر فروقات العملة',
+          AccountType.expense, expenses.id, 2, now),
       _acc('51', 'Cost of Goods Sold', 'تكلفة البضاعة المباعة',
           AccountType.expense, expenses.id, 2, now),
       _acc('52', 'Salaries Expense', 'مصاريف الرواتب', AccountType.expense,

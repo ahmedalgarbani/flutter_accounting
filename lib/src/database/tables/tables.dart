@@ -22,6 +22,9 @@ class Accounts extends Table {
   /// مستوى الحساب في التسلسل الهرمي (1 = حساب رئيسي، 2 = فرعي، ...)
   IntColumn get level => integer().withDefault(const Constant(1))();
 
+  /// عملة الحساب (Schema v4) - null = أي عملة
+  TextColumn get currencyCode => text().withLength(min: 3, max: 3).nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
@@ -120,6 +123,13 @@ class JournalEntryLines extends Table {
 
   /// ترتيب البند داخل القيد
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  // ── Schema v4: تعدد العملات (null = عملة الأساس) ──
+  TextColumn get currencyCode => text().withLength(min: 3, max: 3).nullable()();
+
+  /// المبلغ بعملة البند (موجب، والجهة تتبع المدين/الدائن)
+  RealColumn get amountCurrency => real().nullable()();
+  RealColumn get exchangeRate => real().nullable()();
 
   @override
   String get tableName => 'journal_entry_lines';
@@ -268,4 +278,55 @@ class AllocationKeyItems extends Table {
 
   @override
   String get tableName => 'allocation_key_items';
+}
+
+// ─────────────────────────────────────────────────────────────
+// تعدد العملات - Multi-currency (Schema v4)
+// ─────────────────────────────────────────────────────────────
+
+class Currencies extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get code => text().withLength(min: 3, max: 3)();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get nameAr => text().withLength(min: 1, max: 100).nullable()();
+  TextColumn get symbol => text().withLength(min: 1, max: 10).nullable()();
+  IntColumn get decimalPlaces => integer().withDefault(const Constant(2))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {code}
+      ];
+
+  @override
+  String get tableName => 'currencies';
+}
+
+/// أسعار الصرف مقابل عملة الأساس (سعر واحد لكل عملة في اليوم)
+@TableIndex(name: 'idx_exchange_rates_lookup', columns: {#currencyCode, #date})
+class ExchangeRates extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get currencyCode => text().withLength(min: 3, max: 3)();
+  DateTimeColumn get date => dateTime()();
+  RealColumn get rate => real()();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {currencyCode, date}
+      ];
+
+  @override
+  String get tableName => 'exchange_rates';
+}
+
+/// إعدادات مثبّتة في قاعدة البيانات (مثل عملة الأساس)
+class AccountingSettings extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+
+  @override
+  String get tableName => 'accounting_settings';
 }

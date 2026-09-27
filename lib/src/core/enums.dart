@@ -132,6 +132,7 @@ enum EntryType {
   reversal, // قيد عكسي
   adjustment, // قيد تسوية
   costAllocation, // قيد توزيع تكاليف بين مراكز التكلفة
+  exchangeDifference, // قيد فروقات عملة (محققة أو إعادة تقييم)
 }
 
 extension EntryTypeX on EntryType {
@@ -159,6 +160,8 @@ extension EntryTypeX on EntryType {
         return 'قيد تسوية';
       case EntryType.costAllocation:
         return 'توزيع تكاليف';
+      case EntryType.exchangeDifference:
+        return 'فروقات عملة';
     }
   }
 
@@ -186,6 +189,8 @@ extension EntryTypeX on EntryType {
         return 'Adjustment';
       case EntryType.costAllocation:
         return 'Cost Allocation';
+      case EntryType.exchangeDifference:
+        return 'Exchange Difference';
     }
   }
 }

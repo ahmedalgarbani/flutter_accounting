@@ -13,6 +13,8 @@ import '../../core/enums.dart';
 import '../../core/exceptions.dart';
 import '../../core/accounting_validator.dart';
 import '../../core/cost_allocation_calculator.dart';
+import '../../core/money.dart';
+import '../../models/currency_model.dart';
 import '../../models/cost_allocation_model.dart';
 import '../../models/journal_entry_model.dart';
 import '../../models/journal_entry_line_model.dart';
@@ -28,13 +30,19 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   final AccountsDao _accountsDao;
   final AccountingConfig _config;
   final CostCentersDao? _costCentersDao;
+  final ICurrencyRepository? _currencyRepository;
 
   JournalEntryRepositoryImpl(
     this._entriesDao,
     this._accountsDao, [
     this._config = const AccountingConfig(),
     this._costCentersDao,
+    this._currencyRepository,
   ]);
+
+  ICurrencyRepository get _currencies =>
+      _currencyRepository ??
+      (throw StateError('ICurrencyRepository مطلوب لتعدد العملات.'));
 
   CostCentersDao get _costDao =>
       _costCentersDao ?? _entriesDao.attachedDatabase.costCentersDao;
@@ -271,6 +279,10 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
             sortOrder: line.sortOrder,
             // نفس توزيع البند الأصلي كي يلغي أثره على كل مركز
             allocations: line.allocations,
+            // ونفس العملة والسعر كي يلغي أثره بالعملة وبعملة الأساس
+            currencyCode: line.currencyCode,
+            amountCurrency: line.amountCurrency,
+            exchangeRate: line.exchangeRate,
           ),
       ];
 
@@ -341,6 +353,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   /// يتحقق من القيد ويُعيد بنوده بعد حل توزيعها على مراكز التكلفة
   Future<List<JournalEntryLineModel>> _validateEntry(
       JournalEntryModel entry) async {
+    // 0. تحويل البنود بالعملات الأجنبية إلى عملة الأساس
+    entry = entry.copyWith(lines: await _resolveCurrencies(entry));
+
     // 1. التحقق من القواعد المحاسبية للبنود
     await _validateLines(entry.lines);
 
@@ -436,7 +451,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
         }
         if (effective.policy == DimensionPolicy.required &&
             !has &&
-            entry.entryType != EntryType.costAllocation) {
+            entry.entryType != EntryType.costAllocation &&
+            entry.entryType != EntryType.exchangeDifference) {
           throw CostCenterRequiredException(
               await _accountCode(line.accountId), dimension.code);
         }
@@ -474,6 +490,118 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
         ));
       }
       result.add(line.copyWith(allocations: resolved));
+    }
+    return result;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // تعدد العملات
+  // ─────────────────────────────────────────────────────────────
+
+  /// يحوّل كل بند إلى عملة الأساس ([debit]/[credit]) مع حفظ مبلغه بعملته
+  /// وسعر الصرف، ويتحقق من عملة الحساب، ويسوّي فرق التقريب الصغير.
+  Future<List<JournalEntryLineModel>> _resolveCurrencies(
+      JournalEntryModel entry) async {
+    final mc = _config.multiCurrency;
+    if (mc == null) {
+      if (entry.lines
+          .any((l) => l.currencyCode != null || l.amountCurrency != null)) {
+        throw const MultiCurrencyDisabledException();
+      }
+      return entry.lines;
+    }
+
+    final base = await _currencies.ensureBaseCurrency();
+    final isReversal = entry.reversalOfId != null;
+    final isSystem =
+        entry.entryType == EntryType.exchangeDifference || isReversal;
+    final currencies = <String, CurrencyModel>{};
+    final result = <JournalEntryLineModel>[];
+    var anyForeign = false;
+
+    JournalEntryLineModel convert(JournalEntryLineModel line, double amount,
+            {String? code, double? foreign, double? rate}) =>
+        JournalEntryLineModel(
+          id: line.id,
+          entryId: line.entryId,
+          accountId: line.accountId,
+          accountCode: line.accountCode,
+          accountName: line.accountName,
+          debit: line.isDebit ? amount : 0,
+          credit: line.isDebit ? 0 : amount,
+          description: line.description,
+          sortOrder: line.sortOrder,
+          allocations: line.allocations,
+          currencyCode: code,
+          amountCurrency: foreign,
+          exchangeRate: rate,
+        );
+
+    for (final line in entry.lines) {
+      final account = await _accountsDao.getAccountById(line.accountId);
+      final lockCode = account?.currencyCode;
+      final code = line.currencyCode ?? lockCode ?? base.code;
+      if (lockCode != null && lockCode != code) {
+        throw CurrencyMismatchException(account!.code, lockCode, code);
+      }
+
+      // بند بعملة الأساس
+      if (code == base.code) {
+        result.add(convert(
+            line,
+            Money.round(
+                line.amountCurrency ?? line.amount, base.decimalPlaces)));
+        continue;
+      }
+
+      final currency = currencies[code] ??=
+          await _currencies.getCurrency(code) ??
+              (throw CurrencyNotFoundException(code));
+      if (!currency.isActive && !isReversal) {
+        throw InactiveCurrencyException(code);
+      }
+      anyForeign = true;
+
+      // تعديل بعملة الأساس فقط (قيود فروقات العملة وعكسها)
+      if (line.amountCurrency == 0 && isSystem) {
+        result.add(convert(line, Money.round(line.amount, base.decimalPlaces),
+            code: code, foreign: 0));
+        continue;
+      }
+
+      final foreign = Money.round(
+          line.amountCurrency ?? line.amount, currency.decimalPlaces);
+      final rate = line.exchangeRate ??
+          await _currencies.getExchangeRate(code, date: entry.date);
+      if (rate <= 0 || rate.isNaN || rate.isInfinite) {
+        throw const InvalidExchangeRateException(
+            'سعر الصرف يجب أن يكون أكبر من صفر.');
+      }
+      result.add(convert(line, Money.round(foreign * rate, base.decimalPlaces),
+          code: code, foreign: foreign, rate: rate));
+    }
+
+    // تسوية فرق التقريب الناتج عن التحويل
+    if (anyForeign) {
+      final diff = Money.round(
+          AccountingValidator.totalDebits(result) -
+              AccountingValidator.totalCredits(result),
+          base.decimalPlaces);
+      if (diff != 0 && diff.abs() <= mc.roundingTolerance) {
+        final code = mc.roundingAccountCode ??
+            (diff > 0
+                ? mc.realizedGainAccountCode
+                : mc.realizedLossAccountCode);
+        final account = await _accountsDao.getAccountByCode(code);
+        if (account == null) throw AccountNotFoundException(code);
+        result.add(JournalEntryLineModel(
+          accountId: account.id,
+          debit: diff < 0 ? -diff : 0,
+          credit: diff > 0 ? diff : 0,
+          description: 'فرق تقريب تحويل العملة',
+          sortOrder: result.length,
+        ));
+      }
     }
     return result;
   }
