@@ -423,3 +423,59 @@ class BaseCurrencyMismatchException extends AccountingException {
 class InvalidCurrencyOperationException extends AccountingException {
   const InvalidCurrencyOperationException(super.message);
 }
+
+// ─────────────────────────────────────────────────────────────
+// استثناءات الفروع
+// ─────────────────────────────────────────────────────────────
+
+/// الفروع غير مفعّلة في [AccountingConfig.branches]
+class BranchesDisabledException extends AccountingException {
+  const BranchesDisabledException()
+      : super(
+            'الفروع غير مفعّلة. فعّلها عبر AccountingConfig(branches: BranchConfig()).');
+}
+
+/// الفرع غير موجود
+class BranchNotFoundException extends AccountingException {
+  final dynamic identifier;
+  const BranchNotFoundException(this.identifier)
+      : super('الفرع "$identifier" غير موجود.');
+}
+
+/// رمز الفرع مكرر
+class DuplicateBranchCodeException extends AccountingException {
+  final String code;
+  const DuplicateBranchCodeException(this.code)
+      : super('رمز الفرع "$code" موجود مسبقاً.');
+}
+
+/// الفرع موقوف
+class InactiveBranchException extends AccountingException {
+  final String code;
+  const InactiveBranchException(this.code)
+      : super('الفرع "$code" موقوف ولا يمكن التسجيل عليه.');
+}
+
+/// القيد يجب أن يحدد فرعاً ([BranchConfig.requireBranch])
+class BranchRequiredException extends AccountingException {
+  const BranchRequiredException() : super('يجب تحديد فرع القيد.');
+}
+
+/// الحساب مقيّد بفروع أخرى
+class AccountNotAllowedForBranchException extends AccountingException {
+  final String accountCode;
+  final String? branchCode;
+  const AccountNotAllowedForBranchException(this.accountCode, this.branchCode)
+      : super('الحساب "$accountCode" غير مسموح للفرع "${branchCode ?? '-'}".');
+}
+
+/// لا يمكن حذف فرع عليه قيود
+class BranchHasEntriesException extends AccountingException {
+  const BranchHasEntriesException()
+      : super('لا يمكن حذف الفرع لأنه يحتوي على قيود. أوقفه بدلاً من ذلك.');
+}
+
+/// عملية فروع غير صالحة (فرع بلا حساب جاري، معاملة بين فروع غير متوازنة...)
+class InvalidBranchOperationException extends AccountingException {
+  const InvalidBranchOperationException(super.message);
+}

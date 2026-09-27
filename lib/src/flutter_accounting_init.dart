@@ -37,6 +37,8 @@ import 'repositories/impl/cost_center_repository_impl.dart';
 import 'repositories/impl/cost_reports_repository_impl.dart';
 import 'repositories/impl/currency_repository_impl.dart';
 import 'repositories/impl/exchange_difference_repository_impl.dart';
+import 'repositories/impl/branch_repository_impl.dart';
+import 'repositories/impl/branch_reports_repository_impl.dart';
 import 'seed/accounting_seed_data.dart';
 import 'seed/cost_center_seed_data.dart';
 import 'seed/currency_seed_data.dart';
@@ -78,6 +80,14 @@ class FlutterAccounting {
   /// فروقات العملة: إعادة التقييم والتسوية بالفرق المحقق
   final IExchangeDifferenceRepository exchangeDifferences;
 
+  /// الفروع كوحدات محاسبية: الفروع، تقييد الحسابات، إقفال الفترات،
+  /// والمعاملات بين الفروع. تتطلب `AccountingConfig(branches: BranchConfig())`.
+  final IBranchRepository branches;
+
+  /// تقارير الفروع: المقارنة، التقارير الموحّدة، ومطابقة الحسابات الجارية.
+  /// (تقارير `reports` الحالية تقبل أيضاً `branchIds` لفرع أو أكثر)
+  final IBranchReportsRepository branchReports;
+
   /// الإعدادات المستخدمة
   final AccountingConfig config;
 
@@ -95,6 +105,8 @@ class FlutterAccounting {
     required this.costReports,
     required this.currencies,
     required this.exchangeDifferences,
+    required this.branches,
+    required this.branchReports,
     required this.config,
     required this.database,
   });
@@ -112,12 +124,13 @@ class FlutterAccounting {
         db.accountsDao, config, db.costCentersDao, currencies);
     final costCenters =
         CostCenterRepositoryImpl(db.costCentersDao, db.accountsDao, config);
+    final reports = ReportsRepositoryImpl(db.journalEntriesDao, db.accountsDao);
     return FlutterAccounting._(
       database: db,
       config: config,
       accounts: accounts,
       journalEntries: journalEntries,
-      reports: ReportsRepositoryImpl(db.journalEntriesDao, db.accountsDao),
+      reports: reports,
       templates: EntryTemplateRepositoryImpl(accounts, db.entryTemplatesDao),
       periods: AccountingPeriodRepositoryImpl(db.journalEntriesDao),
       costCenters: costCenters,
@@ -128,6 +141,10 @@ class FlutterAccounting {
       currencies: currencies,
       exchangeDifferences: ExchangeDifferenceRepositoryImpl(
           db.currenciesDao, db.accountsDao, currencies, journalEntries, config),
+      branches: BranchRepositoryImpl(db.branchesDao, db.accountsDao,
+          db.journalEntriesDao, accounts, journalEntries, config),
+      branchReports: BranchReportsRepositoryImpl(
+          db.branchesDao, db.accountsDao, db.journalEntriesDao, reports),
     );
   }
 
@@ -241,7 +258,8 @@ class FlutterAccounting {
     bool post = true,
     String? postedBy,
   }) async {
-    final entry = await builder.resolve(accounts, costCenters: costCenters);
+    final entry = await builder.resolve(accounts,
+        costCenters: costCenters, branches: branches);
     return post
         ? journalEntries.createAndPost(entry, postedBy: postedBy)
         : journalEntries.createEntry(entry);

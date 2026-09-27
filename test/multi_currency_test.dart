@@ -82,16 +82,16 @@ void main() {
       final rev = await off.accounts.createAccount(AccountModel.create(
           code: '4', name: 'Rev', type: AccountType.revenue));
 
-      expect(() => off.currencies.setExchangeRate('USD', 3.75),
+      await expectLater(() => off.currencies.setExchangeRate('USD', 3.75),
           throwsA(isA<MultiCurrencyDisabledException>()));
-      expect(
+      await expectLater(
           () => off.accounts.createAccount(AccountModel.create(
               code: '2',
               name: 'x',
               type: AccountType.asset,
               currencyCode: 'USD')),
           throwsA(isA<MultiCurrencyDisabledException>()));
-      expect(
+      await expectLater(
           () => off.record(JournalEntryBuilder(description: 'x', date: march)
               .currency('USD')
               .debit(cash.id!, 1)
@@ -109,9 +109,10 @@ void main() {
       final base = await fa.currencies.ensureBaseCurrency();
       expect(base.code, 'SAR');
       expect(await fa.currencies.getExchangeRate('SAR'), 1);
-      expect(() => fa.currencies.setExchangeRate('SAR', 1),
+      await expectLater(() => fa.currencies.setExchangeRate('SAR', 1),
           throwsA(isA<InvalidExchangeRateException>()));
-      expect(() => fa.currencies.updateCurrency(base.copyWith(isActive: false)),
+      await expectLater(
+          () => fa.currencies.updateCurrency(base.copyWith(isActive: false)),
           throwsA(isA<InvalidCurrencyOperationException>()));
     });
 
@@ -143,7 +144,8 @@ void main() {
 
     test('seedDefaultCurrencies يتطلب التفعيل، والعملات الجاهزة بمنازل صحيحة',
         () async {
-      expect(() => FlutterAccounting.initialize(seedDefaultCurrencies: true),
+      await expectLater(
+          () => FlutterAccounting.initialize(seedDefaultCurrencies: true),
           throwsArgumentError);
       expect((await fa.currencies.getCurrency('KWD'))!.decimalPlaces, 3);
       expect((await fa.currencies.getCurrency('JPY'))!.decimalPlaces, 0);
@@ -152,11 +154,11 @@ void main() {
     });
 
     test('رمز عملة غير صالح أو مكرر', () async {
-      expect(
+      await expectLater(
           () => fa.currencies
               .createCurrency(const CurrencyModel(code: 'usd', name: 'x')),
           throwsA(isA<InvalidCurrencyOperationException>()));
-      expect(
+      await expectLater(
           () => fa.currencies
               .createCurrency(const CurrencyModel(code: 'USD', name: 'x')),
           throwsA(isA<DuplicateCurrencyCodeException>()));
@@ -172,11 +174,11 @@ void main() {
           await fa.currencies
               .getExchangeRate('USD', date: DateTime(2024, 6, 1, 18)),
           3.80);
-      expect(
+      await expectLater(
           () => fa.currencies
               .getExchangeRate('USD', date: DateTime(2023, 12, 31)),
           throwsA(isA<ExchangeRateNotFoundException>()));
-      expect(() => fa.currencies.getExchangeRate('GBP', date: march),
+      await expectLater(() => fa.currencies.getExchangeRate('GBP', date: march),
           throwsA(isA<ExchangeRateNotFoundException>()));
     });
 
@@ -184,9 +186,9 @@ void main() {
       await fa.currencies.setExchangeRate('USD', 3.76, date: DateTime(2024));
       expect(await fa.currencies.getExchangeRate('USD', date: march), 3.76);
       expect(await fa.currencies.getExchangeRates(code: 'USD'), hasLength(2));
-      expect(() => fa.currencies.setExchangeRate('USD', 0),
+      await expectLater(() => fa.currencies.setExchangeRate('USD', 0),
           throwsA(isA<InvalidExchangeRateException>()));
-      expect(() => fa.currencies.setExchangeRate('XYZ', 1),
+      await expectLater(() => fa.currencies.setExchangeRate('XYZ', 1),
           throwsA(isA<CurrencyNotFoundException>()));
     });
 
@@ -253,13 +255,13 @@ void main() {
     });
 
     test('عملة البند يجب أن تطابق عملة الحساب', () async {
-      expect(
+      await expectLater(
           () => fa.record(JournalEntryBuilder(description: 'x', date: march)
               .currency('EUR')
               .debit(usdBankId, 10)
               .credit(salesId, 10)),
           throwsA(isA<CurrencyMismatchException>()));
-      expect(
+      await expectLater(
           () => fa.record(JournalEntryBuilder(description: 'x', date: march)
               .debit(usdBankId, 10, currency: 'SAR')
               .credit(salesId, 10)),
@@ -267,20 +269,20 @@ void main() {
     });
 
     test('عملة غير معرّفة أو موقوفة أو بلا سعر', () async {
-      expect(
+      await expectLater(
           () => fa.record(JournalEntryBuilder(description: 'x', date: march)
               .currency('XYZ')
               .debit(purchasesId, 1)
               .credit(sarBankId, 1)),
           throwsA(isA<CurrencyNotFoundException>()));
-      expect(
+      await expectLater(
           () => fa.record(JournalEntryBuilder(description: 'x', date: march)
               .currency('GBP')
               .debit(purchasesId, 1)
               .credit(sarBankId, 1)),
           throwsA(isA<ExchangeRateNotFoundException>()));
       await fa.currencies.setCurrencyActive('EUR', isActive: false);
-      expect(
+      await expectLater(
           () => fa.record(JournalEntryBuilder(description: 'x', date: march)
               .currency('EUR')
               .debit(purchasesId, 1)
@@ -302,7 +304,7 @@ void main() {
       expect(rounding.debit, 0.01);
       expect(e.isBalanced, isTrue);
 
-      expect(
+      await expectLater(
           () => fa.record(JournalEntryBuilder(description: 'x', date: march)
               .currency('USD')
               .debit(purchasesId, 100)
@@ -340,11 +342,11 @@ void main() {
     test('لا يمكن تغيير عملة حساب عليه قيود', () async {
       await usdPurchase(10);
       final supplier = await fa.accounts.getAccountById(usdSupplierId);
-      expect(
+      await expectLater(
           () => fa.accounts
               .updateAccount(supplier!.copyWith(currencyCode: 'EUR')),
           throwsA(isA<InvalidCurrencyOperationException>()));
-      expect(
+      await expectLater(
           () => fa.currencies.updateCurrency(const CurrencyModel(
               code: 'USD', name: 'US Dollar', decimalPlaces: 3)),
           throwsA(isA<InvalidCurrencyOperationException>()));
@@ -444,14 +446,14 @@ void main() {
     });
 
     test('تسوية بلا رصيد أو بعملة الأساس مرفوضة', () async {
-      expect(
+      await expectLater(
           () => fa.exchangeDifferences.settle(SettlementRequest(
               accountId: usdCustomerId,
               amount: 10,
               counterAccountId: sarBankId,
               date: june)),
           throwsA(isA<InvalidCurrencyOperationException>()));
-      expect(
+      await expectLater(
           () => fa.exchangeDifferences.settle(SettlementRequest(
               accountId: sarBankId,
               amount: 10,
@@ -531,7 +533,7 @@ void main() {
       expect(preview.rows.single.revaluedBalance, 400);
       expect(preview.rows.single.difference, 25);
 
-      expect(
+      await expectLater(
           () => fa.exchangeDifferences
               .runRevaluation(RevaluationRequest(asOf: DateTime(2024, 3, 31))),
           throwsA(isA<InvalidCurrencyOperationException>()));

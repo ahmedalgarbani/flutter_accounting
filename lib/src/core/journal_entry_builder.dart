@@ -64,6 +64,7 @@ class JournalEntryBuilder {
   String? _sourceId;
   String? _currency;
   double? _rate;
+  Object? _branch;
   final List<_PendingLine> _lines = [];
 
   // ─────────────────────────────────────────────────────────────
@@ -103,6 +104,12 @@ class JournalEntryBuilder {
   /// رقم تسلسلي يدوي (إن لم يُحدَّد يُولَّد تلقائياً)
   JournalEntryBuilder serialNumber(String? value) {
     _serialNumber = value;
+    return this;
+  }
+
+  /// فرع القيد بالمعرّف (`int`) أو بالرمز (`String`، يُحلّ عند [resolve])
+  JournalEntryBuilder branch(Object idOrCode) {
+    _branch = idOrCode;
     return this;
   }
 
@@ -220,6 +227,7 @@ class JournalEntryBuilder {
 
   /// هل توجد بنود تشير لحسابات بالرمز أو لمفاتيح توزيع وتحتاج إلى [resolve]؟
   bool get needsResolution =>
+      _branch is String ||
       _lines.any((l) => l.accountId == null || l.allocationKey != null);
 
   // ─────────────────────────────────────────────────────────────
@@ -234,7 +242,7 @@ class JournalEntryBuilder {
         'بعض البنود تستخدم رموز حسابات أو مفاتيح توزيع. استخدم resolve() أو fa.record() بدلاً من build().',
       );
     }
-    return _toModel({}, {});
+    return _toModel({}, {}, _branch as int?);
   }
 
   /// يحلّ رموز الحسابات إلى معرّفات ومفاتيح التوزيع إلى حصص، ثم يبني القيد.
@@ -244,7 +252,21 @@ class JournalEntryBuilder {
   Future<JournalEntryModel> resolve(
     IAccountRepository accounts, {
     ICostCenterRepository? costCenters,
+    IBranchRepository? branches,
   }) async {
+    int? branchId;
+    final branch = _branch;
+    if (branch is String) {
+      if (branches == null) {
+        throw StateError('branch(code) يتطلب تمرير branches إلى resolve().');
+      }
+      final found = await branches.getBranchByCode(branch);
+      if (found == null) throw BranchNotFoundException(branch);
+      branchId = found.id;
+    } else {
+      branchId = branch as int?;
+    }
+
     final ids = <String, int>{};
     for (final line in _lines) {
       final code = line.accountCode;
@@ -271,12 +293,13 @@ class JournalEntryBuilder {
       keyShares[i] = await costCenters.splitByKey(
           key.id!, line.debit > 0 ? line.debit : line.credit);
     }
-    return _toModel(ids, keyShares);
+    return _toModel(ids, keyShares, branchId);
   }
 
   JournalEntryModel _toModel(
     Map<String, int> codeIds,
     Map<int, List<CostAllocationModel>> keyShares,
+    int? branchId,
   ) {
     final lines = <JournalEntryLineModel>[];
     for (var i = 0; i < _lines.length; i++) {
@@ -308,6 +331,7 @@ class JournalEntryBuilder {
       entryType: _entryType,
       sourceType: _sourceType,
       sourceId: _sourceId,
+      branchId: branchId,
       lines: lines,
     );
   }

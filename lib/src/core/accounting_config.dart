@@ -38,6 +38,10 @@ class AccountingConfig {
   /// مرّر [MultiCurrencyConfig] لتفعيله وتحديد عملة الأساس وحسابات الفروقات.
   final MultiCurrencyConfig? multiCurrency;
 
+  /// الفروع كوحدات محاسبية (اختياري). `null` (الافتراضي) = موقوفة.
+  /// مرّر [BranchConfig] لتفعيلها.
+  final BranchConfig? branches;
+
   const AccountingConfig({
     this.requireOpenPeriod = true,
     this.serialPrefix = 'JV',
@@ -45,7 +49,11 @@ class AccountingConfig {
     this.enableCostCenters = false,
     this.allocationDecimals = 2,
     this.multiCurrency,
+    this.branches,
   });
+
+  /// هل الفروع مفعّلة؟
+  bool get isBranchesEnabled => branches != null;
 
   /// هل تعدد العملات مفعّل؟
   bool get isMultiCurrency => multiCurrency != null;
@@ -57,6 +65,7 @@ class AccountingConfig {
     bool? enableCostCenters,
     int? allocationDecimals,
     MultiCurrencyConfig? multiCurrency,
+    BranchConfig? branches,
   }) =>
       AccountingConfig(
         requireOpenPeriod: requireOpenPeriod ?? this.requireOpenPeriod,
@@ -65,6 +74,7 @@ class AccountingConfig {
         enableCostCenters: enableCostCenters ?? this.enableCostCenters,
         allocationDecimals: allocationDecimals ?? this.allocationDecimals,
         multiCurrency: multiCurrency ?? this.multiCurrency,
+        branches: branches ?? this.branches,
       );
 }
 
@@ -118,4 +128,37 @@ class MultiCurrencyConfig {
       unrealizedGainAccountCode ?? realizedGainAccountCode;
   String get unrealizedLossCode =>
       unrealizedLossAccountCode ?? realizedLossAccountCode;
+}
+
+/// إعدادات الفروع كوحدات محاسبية.
+///
+/// كل قيد ينتمي لفرع واحد، فيكون لكل فرع ميزان مراجعة وميزانية متوازنة،
+/// والمعاملات بين الفروع تمر على حسابات "جاري الفرع".
+///
+/// ```dart
+/// AccountingConfig(branches: BranchConfig(requireBranch: true))
+/// ```
+@immutable
+class BranchConfig {
+  /// هل يجب أن يحدد كل قيد فرعه؟ (الافتراضي: لا، القيد بلا فرع مسموح)
+  final bool requireBranch;
+
+  /// ترقيم مستقل لكل فرع: `JV-RYD-2026-0001` بدل `JV-2026-0001`
+  final bool serialPerBranch;
+
+  /// الحساب الأب الذي تُنشأ تحته حسابات "جاري الفرع" تلقائياً عند إنشاء
+  /// فرع بلا حساب جاري (الافتراضي من الدليل الجاهز: `11` الأصول المتداولة).
+  /// `null` = لا إنشاء تلقائي.
+  final String? interBranchParentCode;
+
+  /// نسبة حركات القيد تلقائياً لمركز تكلفة الفرع (إن رُبط الفرع بمركز
+  /// وكانت مراكز التكلفة مفعّلة)
+  final bool linkCostCenters;
+
+  const BranchConfig({
+    this.requireBranch = false,
+    this.serialPerBranch = false,
+    this.interBranchParentCode = '11',
+    this.linkCostCenters = true,
+  });
 }

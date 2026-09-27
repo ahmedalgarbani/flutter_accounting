@@ -15,6 +15,7 @@ import 'daos/journal_entries_dao.dart';
 import 'daos/entry_templates_dao.dart';
 import 'daos/cost_centers_dao.dart';
 import 'daos/currencies_dao.dart';
+import 'daos/branches_dao.dart';
 
 part 'accounting_database.g.dart';
 
@@ -34,6 +35,9 @@ part 'accounting_database.g.dart';
     Currencies,
     ExchangeRates,
     AccountingSettings,
+    Branches,
+    BranchPeriodClosures,
+    AccountBranches,
   ],
   daos: [
     AccountsDao,
@@ -41,6 +45,7 @@ part 'accounting_database.g.dart';
     EntryTemplatesDao,
     CostCentersDao,
     CurrenciesDao,
+    BranchesDao,
   ],
 )
 class AccountingDatabase extends _$AccountingDatabase {
@@ -54,7 +59,8 @@ class AccountingDatabase extends _$AccountingDatabase {
   ///      جدول القوالب المخصصة، وفهارس للأداء
   /// - 3: مراكز التكلفة: الأبعاد، المراكز، توزيع البنود، القواعد، مفاتيح التوزيع
   /// - 4: تعدد العملات: العملات، أسعار الصرف، عملة الحساب، عملة البند
-  int get schemaVersion => 4;
+  /// - 5: الفروع: جدول الفروع، فرع القيد، إقفال الفترات وتقييد الحسابات لكل فرع
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -97,6 +103,13 @@ class AccountingDatabase extends _$AccountingDatabase {
             await m.createTable(exchangeRates);
             await m.createTable(accountingSettings);
             await m.createIndex(idxExchangeRatesLookup);
+          }
+          if (from < 5) {
+            await m.addColumn(journalEntries, journalEntries.branchId);
+            await m.createTable(branches);
+            await m.createTable(branchPeriodClosures);
+            await m.createTable(accountBranches);
+            await m.createIndex(idxJournalEntriesBranch);
           }
         },
         beforeOpen: (details) async {

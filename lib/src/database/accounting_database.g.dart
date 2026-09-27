@@ -700,6 +700,12 @@ class $JournalEntriesTable extends JournalEntries
   late final GeneratedColumn<int> reversalOfId = GeneratedColumn<int>(
       'reversal_of_id', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _branchIdMeta =
+      const VerificationMeta('branchId');
+  @override
+  late final GeneratedColumn<int> branchId = GeneratedColumn<int>(
+      'branch_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -732,6 +738,7 @@ class $JournalEntriesTable extends JournalEntries
         sourceType,
         sourceId,
         reversalOfId,
+        branchId,
         createdAt,
         updatedAt
       ];
@@ -806,6 +813,10 @@ class $JournalEntriesTable extends JournalEntries
           reversalOfId.isAcceptableOrUnknown(
               data['reversal_of_id']!, _reversalOfIdMeta));
     }
+    if (data.containsKey('branch_id')) {
+      context.handle(_branchIdMeta,
+          branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -857,6 +868,8 @@ class $JournalEntriesTable extends JournalEntries
           .read(DriftSqlType.string, data['${effectivePrefix}source_id']),
       reversalOfId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}reversal_of_id']),
+      branchId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}branch_id']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -902,6 +915,9 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
 
   /// إن كان هذا القيد قيداً عكسياً: معرّف القيد الأصلي
   final int? reversalOfId;
+
+  /// الفرع الذي ينتمي إليه القيد (Schema v5)
+  final int? branchId;
   final DateTime createdAt;
   final DateTime updatedAt;
   const JournalEntry(
@@ -919,6 +935,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       this.sourceType,
       this.sourceId,
       this.reversalOfId,
+      this.branchId,
       required this.createdAt,
       required this.updatedAt});
   @override
@@ -960,6 +977,9 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
     if (!nullToAbsent || reversalOfId != null) {
       map['reversal_of_id'] = Variable<int>(reversalOfId);
     }
+    if (!nullToAbsent || branchId != null) {
+      map['branch_id'] = Variable<int>(branchId);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -998,6 +1018,9 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       reversalOfId: reversalOfId == null && nullToAbsent
           ? const Value.absent()
           : Value(reversalOfId),
+      branchId: branchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(branchId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1023,6 +1046,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       sourceType: serializer.fromJson<String?>(json['sourceType']),
       sourceId: serializer.fromJson<String?>(json['sourceId']),
       reversalOfId: serializer.fromJson<int?>(json['reversalOfId']),
+      branchId: serializer.fromJson<int?>(json['branchId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1047,6 +1071,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       'sourceType': serializer.toJson<String?>(sourceType),
       'sourceId': serializer.toJson<String?>(sourceId),
       'reversalOfId': serializer.toJson<int?>(reversalOfId),
+      'branchId': serializer.toJson<int?>(branchId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1067,6 +1092,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
           Value<String?> sourceType = const Value.absent(),
           Value<String?> sourceId = const Value.absent(),
           Value<int?> reversalOfId = const Value.absent(),
+          Value<int?> branchId = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
       JournalEntry(
@@ -1085,6 +1111,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
         sourceId: sourceId.present ? sourceId.value : this.sourceId,
         reversalOfId:
             reversalOfId.present ? reversalOfId.value : this.reversalOfId,
+        branchId: branchId.present ? branchId.value : this.branchId,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
@@ -1110,6 +1137,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       reversalOfId: data.reversalOfId.present
           ? data.reversalOfId.value
           : this.reversalOfId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1132,6 +1160,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
           ..write('sourceType: $sourceType, ')
           ..write('sourceId: $sourceId, ')
           ..write('reversalOfId: $reversalOfId, ')
+          ..write('branchId: $branchId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1154,6 +1183,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
       sourceType,
       sourceId,
       reversalOfId,
+      branchId,
       createdAt,
       updatedAt);
   @override
@@ -1174,6 +1204,7 @@ class JournalEntry extends DataClass implements Insertable<JournalEntry> {
           other.sourceType == this.sourceType &&
           other.sourceId == this.sourceId &&
           other.reversalOfId == this.reversalOfId &&
+          other.branchId == this.branchId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -1193,6 +1224,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
   final Value<String?> sourceType;
   final Value<String?> sourceId;
   final Value<int?> reversalOfId;
+  final Value<int?> branchId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const JournalEntriesCompanion({
@@ -1210,6 +1242,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     this.sourceType = const Value.absent(),
     this.sourceId = const Value.absent(),
     this.reversalOfId = const Value.absent(),
+    this.branchId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -1228,6 +1261,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     this.sourceType = const Value.absent(),
     this.sourceId = const Value.absent(),
     this.reversalOfId = const Value.absent(),
+    this.branchId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   })  : serialNumber = Value(serialNumber),
@@ -1249,6 +1283,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     Expression<String>? sourceType,
     Expression<String>? sourceId,
     Expression<int>? reversalOfId,
+    Expression<int>? branchId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -1267,6 +1302,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
       if (sourceType != null) 'source_type': sourceType,
       if (sourceId != null) 'source_id': sourceId,
       if (reversalOfId != null) 'reversal_of_id': reversalOfId,
+      if (branchId != null) 'branch_id': branchId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -1287,6 +1323,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
       Value<String?>? sourceType,
       Value<String?>? sourceId,
       Value<int?>? reversalOfId,
+      Value<int?>? branchId,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt}) {
     return JournalEntriesCompanion(
@@ -1304,6 +1341,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
       sourceType: sourceType ?? this.sourceType,
       sourceId: sourceId ?? this.sourceId,
       reversalOfId: reversalOfId ?? this.reversalOfId,
+      branchId: branchId ?? this.branchId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -1356,6 +1394,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
     if (reversalOfId.present) {
       map['reversal_of_id'] = Variable<int>(reversalOfId.value);
     }
+    if (branchId.present) {
+      map['branch_id'] = Variable<int>(branchId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1382,6 +1423,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntry> {
           ..write('sourceType: $sourceType, ')
           ..write('sourceId: $sourceId, ')
           ..write('reversalOfId: $reversalOfId, ')
+          ..write('branchId: $branchId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -6048,6 +6090,1039 @@ class AccountingSettingsCompanion extends UpdateCompanion<AccountingSetting> {
   }
 }
 
+class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branch> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BranchesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+      'code', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 30),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
+  @override
+  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
+      'name_ar', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _isHeadOfficeMeta =
+      const VerificationMeta('isHeadOffice');
+  @override
+  late final GeneratedColumn<bool> isHeadOffice = GeneratedColumn<bool>(
+      'is_head_office', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_head_office" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _interBranchAccountIdMeta =
+      const VerificationMeta('interBranchAccountId');
+  @override
+  late final GeneratedColumn<int> interBranchAccountId = GeneratedColumn<int>(
+      'inter_branch_account_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES accounts (id)'));
+  static const VerificationMeta _costCenterIdMeta =
+      const VerificationMeta('costCenterId');
+  @override
+  late final GeneratedColumn<int> costCenterId = GeneratedColumn<int>(
+      'cost_center_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES cost_centers (id)'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        code,
+        name,
+        nameAr,
+        description,
+        isActive,
+        isHeadOffice,
+        interBranchAccountId,
+        costCenterId,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'branches';
+  @override
+  VerificationContext validateIntegrity(Insertable<Branch> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+          _codeMeta, code.isAcceptableOrUnknown(data['code']!, _codeMeta));
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_ar')) {
+      context.handle(_nameArMeta,
+          nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta));
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
+    if (data.containsKey('is_head_office')) {
+      context.handle(
+          _isHeadOfficeMeta,
+          isHeadOffice.isAcceptableOrUnknown(
+              data['is_head_office']!, _isHeadOfficeMeta));
+    }
+    if (data.containsKey('inter_branch_account_id')) {
+      context.handle(
+          _interBranchAccountIdMeta,
+          interBranchAccountId.isAcceptableOrUnknown(
+              data['inter_branch_account_id']!, _interBranchAccountIdMeta));
+    }
+    if (data.containsKey('cost_center_id')) {
+      context.handle(
+          _costCenterIdMeta,
+          costCenterId.isAcceptableOrUnknown(
+              data['cost_center_id']!, _costCenterIdMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {code},
+      ];
+  @override
+  Branch map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Branch(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      code: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}code'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      nameAr: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name_ar']),
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+      isHeadOffice: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_head_office'])!,
+      interBranchAccountId: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}inter_branch_account_id']),
+      costCenterId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cost_center_id']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $BranchesTable createAlias(String alias) {
+    return $BranchesTable(attachedDatabase, alias);
+  }
+}
+
+class Branch extends DataClass implements Insertable<Branch> {
+  final int id;
+  final String code;
+  final String name;
+  final String? nameAr;
+  final String? description;
+  final bool isActive;
+  final bool isHeadOffice;
+
+  /// حساب "جاري الفرع" الذي تسجل عليه الفروع الأخرى معاملاتها معه
+  final int? interBranchAccountId;
+
+  /// مركز التكلفة المرتبط (بُعد الفرع) لنسبة الحركات إليه تلقائياً
+  final int? costCenterId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const Branch(
+      {required this.id,
+      required this.code,
+      required this.name,
+      this.nameAr,
+      this.description,
+      required this.isActive,
+      required this.isHeadOffice,
+      this.interBranchAccountId,
+      this.costCenterId,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['code'] = Variable<String>(code);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || nameAr != null) {
+      map['name_ar'] = Variable<String>(nameAr);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['is_active'] = Variable<bool>(isActive);
+    map['is_head_office'] = Variable<bool>(isHeadOffice);
+    if (!nullToAbsent || interBranchAccountId != null) {
+      map['inter_branch_account_id'] = Variable<int>(interBranchAccountId);
+    }
+    if (!nullToAbsent || costCenterId != null) {
+      map['cost_center_id'] = Variable<int>(costCenterId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  BranchesCompanion toCompanion(bool nullToAbsent) {
+    return BranchesCompanion(
+      id: Value(id),
+      code: Value(code),
+      name: Value(name),
+      nameAr:
+          nameAr == null && nullToAbsent ? const Value.absent() : Value(nameAr),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      isActive: Value(isActive),
+      isHeadOffice: Value(isHeadOffice),
+      interBranchAccountId: interBranchAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(interBranchAccountId),
+      costCenterId: costCenterId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(costCenterId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory Branch.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Branch(
+      id: serializer.fromJson<int>(json['id']),
+      code: serializer.fromJson<String>(json['code']),
+      name: serializer.fromJson<String>(json['name']),
+      nameAr: serializer.fromJson<String?>(json['nameAr']),
+      description: serializer.fromJson<String?>(json['description']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      isHeadOffice: serializer.fromJson<bool>(json['isHeadOffice']),
+      interBranchAccountId:
+          serializer.fromJson<int?>(json['interBranchAccountId']),
+      costCenterId: serializer.fromJson<int?>(json['costCenterId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'code': serializer.toJson<String>(code),
+      'name': serializer.toJson<String>(name),
+      'nameAr': serializer.toJson<String?>(nameAr),
+      'description': serializer.toJson<String?>(description),
+      'isActive': serializer.toJson<bool>(isActive),
+      'isHeadOffice': serializer.toJson<bool>(isHeadOffice),
+      'interBranchAccountId': serializer.toJson<int?>(interBranchAccountId),
+      'costCenterId': serializer.toJson<int?>(costCenterId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  Branch copyWith(
+          {int? id,
+          String? code,
+          String? name,
+          Value<String?> nameAr = const Value.absent(),
+          Value<String?> description = const Value.absent(),
+          bool? isActive,
+          bool? isHeadOffice,
+          Value<int?> interBranchAccountId = const Value.absent(),
+          Value<int?> costCenterId = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      Branch(
+        id: id ?? this.id,
+        code: code ?? this.code,
+        name: name ?? this.name,
+        nameAr: nameAr.present ? nameAr.value : this.nameAr,
+        description: description.present ? description.value : this.description,
+        isActive: isActive ?? this.isActive,
+        isHeadOffice: isHeadOffice ?? this.isHeadOffice,
+        interBranchAccountId: interBranchAccountId.present
+            ? interBranchAccountId.value
+            : this.interBranchAccountId,
+        costCenterId:
+            costCenterId.present ? costCenterId.value : this.costCenterId,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  Branch copyWithCompanion(BranchesCompanion data) {
+    return Branch(
+      id: data.id.present ? data.id.value : this.id,
+      code: data.code.present ? data.code.value : this.code,
+      name: data.name.present ? data.name.value : this.name,
+      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
+      description:
+          data.description.present ? data.description.value : this.description,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      isHeadOffice: data.isHeadOffice.present
+          ? data.isHeadOffice.value
+          : this.isHeadOffice,
+      interBranchAccountId: data.interBranchAccountId.present
+          ? data.interBranchAccountId.value
+          : this.interBranchAccountId,
+      costCenterId: data.costCenterId.present
+          ? data.costCenterId.value
+          : this.costCenterId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Branch(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('description: $description, ')
+          ..write('isActive: $isActive, ')
+          ..write('isHeadOffice: $isHeadOffice, ')
+          ..write('interBranchAccountId: $interBranchAccountId, ')
+          ..write('costCenterId: $costCenterId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, code, name, nameAr, description, isActive,
+      isHeadOffice, interBranchAccountId, costCenterId, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Branch &&
+          other.id == this.id &&
+          other.code == this.code &&
+          other.name == this.name &&
+          other.nameAr == this.nameAr &&
+          other.description == this.description &&
+          other.isActive == this.isActive &&
+          other.isHeadOffice == this.isHeadOffice &&
+          other.interBranchAccountId == this.interBranchAccountId &&
+          other.costCenterId == this.costCenterId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class BranchesCompanion extends UpdateCompanion<Branch> {
+  final Value<int> id;
+  final Value<String> code;
+  final Value<String> name;
+  final Value<String?> nameAr;
+  final Value<String?> description;
+  final Value<bool> isActive;
+  final Value<bool> isHeadOffice;
+  final Value<int?> interBranchAccountId;
+  final Value<int?> costCenterId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const BranchesCompanion({
+    this.id = const Value.absent(),
+    this.code = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameAr = const Value.absent(),
+    this.description = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.isHeadOffice = const Value.absent(),
+    this.interBranchAccountId = const Value.absent(),
+    this.costCenterId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  BranchesCompanion.insert({
+    this.id = const Value.absent(),
+    required String code,
+    required String name,
+    this.nameAr = const Value.absent(),
+    this.description = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.isHeadOffice = const Value.absent(),
+    this.interBranchAccountId = const Value.absent(),
+    this.costCenterId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  })  : code = Value(code),
+        name = Value(name);
+  static Insertable<Branch> custom({
+    Expression<int>? id,
+    Expression<String>? code,
+    Expression<String>? name,
+    Expression<String>? nameAr,
+    Expression<String>? description,
+    Expression<bool>? isActive,
+    Expression<bool>? isHeadOffice,
+    Expression<int>? interBranchAccountId,
+    Expression<int>? costCenterId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (code != null) 'code': code,
+      if (name != null) 'name': name,
+      if (nameAr != null) 'name_ar': nameAr,
+      if (description != null) 'description': description,
+      if (isActive != null) 'is_active': isActive,
+      if (isHeadOffice != null) 'is_head_office': isHeadOffice,
+      if (interBranchAccountId != null)
+        'inter_branch_account_id': interBranchAccountId,
+      if (costCenterId != null) 'cost_center_id': costCenterId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  BranchesCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? code,
+      Value<String>? name,
+      Value<String?>? nameAr,
+      Value<String?>? description,
+      Value<bool>? isActive,
+      Value<bool>? isHeadOffice,
+      Value<int?>? interBranchAccountId,
+      Value<int?>? costCenterId,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt}) {
+    return BranchesCompanion(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      nameAr: nameAr ?? this.nameAr,
+      description: description ?? this.description,
+      isActive: isActive ?? this.isActive,
+      isHeadOffice: isHeadOffice ?? this.isHeadOffice,
+      interBranchAccountId: interBranchAccountId ?? this.interBranchAccountId,
+      costCenterId: costCenterId ?? this.costCenterId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameAr.present) {
+      map['name_ar'] = Variable<String>(nameAr.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (isHeadOffice.present) {
+      map['is_head_office'] = Variable<bool>(isHeadOffice.value);
+    }
+    if (interBranchAccountId.present) {
+      map['inter_branch_account_id'] =
+          Variable<int>(interBranchAccountId.value);
+    }
+    if (costCenterId.present) {
+      map['cost_center_id'] = Variable<int>(costCenterId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BranchesCompanion(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('description: $description, ')
+          ..write('isActive: $isActive, ')
+          ..write('isHeadOffice: $isHeadOffice, ')
+          ..write('interBranchAccountId: $interBranchAccountId, ')
+          ..write('costCenterId: $costCenterId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $BranchPeriodClosuresTable extends BranchPeriodClosures
+    with TableInfo<$BranchPeriodClosuresTable, BranchPeriodClosure> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BranchPeriodClosuresTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _periodIdMeta =
+      const VerificationMeta('periodId');
+  @override
+  late final GeneratedColumn<int> periodId = GeneratedColumn<int>(
+      'period_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES accounting_periods (id)'));
+  static const VerificationMeta _branchIdMeta =
+      const VerificationMeta('branchId');
+  @override
+  late final GeneratedColumn<int> branchId = GeneratedColumn<int>(
+      'branch_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES branches (id)'));
+  @override
+  List<GeneratedColumn> get $columns => [id, periodId, branchId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'branch_period_closures';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<BranchPeriodClosure> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('period_id')) {
+      context.handle(_periodIdMeta,
+          periodId.isAcceptableOrUnknown(data['period_id']!, _periodIdMeta));
+    } else if (isInserting) {
+      context.missing(_periodIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(_branchIdMeta,
+          branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta));
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {periodId, branchId},
+      ];
+  @override
+  BranchPeriodClosure map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BranchPeriodClosure(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      periodId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}period_id'])!,
+      branchId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}branch_id'])!,
+    );
+  }
+
+  @override
+  $BranchPeriodClosuresTable createAlias(String alias) {
+    return $BranchPeriodClosuresTable(attachedDatabase, alias);
+  }
+}
+
+class BranchPeriodClosure extends DataClass
+    implements Insertable<BranchPeriodClosure> {
+  final int id;
+  final int periodId;
+  final int branchId;
+  const BranchPeriodClosure(
+      {required this.id, required this.periodId, required this.branchId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['period_id'] = Variable<int>(periodId);
+    map['branch_id'] = Variable<int>(branchId);
+    return map;
+  }
+
+  BranchPeriodClosuresCompanion toCompanion(bool nullToAbsent) {
+    return BranchPeriodClosuresCompanion(
+      id: Value(id),
+      periodId: Value(periodId),
+      branchId: Value(branchId),
+    );
+  }
+
+  factory BranchPeriodClosure.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BranchPeriodClosure(
+      id: serializer.fromJson<int>(json['id']),
+      periodId: serializer.fromJson<int>(json['periodId']),
+      branchId: serializer.fromJson<int>(json['branchId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'periodId': serializer.toJson<int>(periodId),
+      'branchId': serializer.toJson<int>(branchId),
+    };
+  }
+
+  BranchPeriodClosure copyWith({int? id, int? periodId, int? branchId}) =>
+      BranchPeriodClosure(
+        id: id ?? this.id,
+        periodId: periodId ?? this.periodId,
+        branchId: branchId ?? this.branchId,
+      );
+  BranchPeriodClosure copyWithCompanion(BranchPeriodClosuresCompanion data) {
+    return BranchPeriodClosure(
+      id: data.id.present ? data.id.value : this.id,
+      periodId: data.periodId.present ? data.periodId.value : this.periodId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BranchPeriodClosure(')
+          ..write('id: $id, ')
+          ..write('periodId: $periodId, ')
+          ..write('branchId: $branchId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, periodId, branchId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BranchPeriodClosure &&
+          other.id == this.id &&
+          other.periodId == this.periodId &&
+          other.branchId == this.branchId);
+}
+
+class BranchPeriodClosuresCompanion
+    extends UpdateCompanion<BranchPeriodClosure> {
+  final Value<int> id;
+  final Value<int> periodId;
+  final Value<int> branchId;
+  const BranchPeriodClosuresCompanion({
+    this.id = const Value.absent(),
+    this.periodId = const Value.absent(),
+    this.branchId = const Value.absent(),
+  });
+  BranchPeriodClosuresCompanion.insert({
+    this.id = const Value.absent(),
+    required int periodId,
+    required int branchId,
+  })  : periodId = Value(periodId),
+        branchId = Value(branchId);
+  static Insertable<BranchPeriodClosure> custom({
+    Expression<int>? id,
+    Expression<int>? periodId,
+    Expression<int>? branchId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (periodId != null) 'period_id': periodId,
+      if (branchId != null) 'branch_id': branchId,
+    });
+  }
+
+  BranchPeriodClosuresCompanion copyWith(
+      {Value<int>? id, Value<int>? periodId, Value<int>? branchId}) {
+    return BranchPeriodClosuresCompanion(
+      id: id ?? this.id,
+      periodId: periodId ?? this.periodId,
+      branchId: branchId ?? this.branchId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (periodId.present) {
+      map['period_id'] = Variable<int>(periodId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<int>(branchId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BranchPeriodClosuresCompanion(')
+          ..write('id: $id, ')
+          ..write('periodId: $periodId, ')
+          ..write('branchId: $branchId')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AccountBranchesTable extends AccountBranches
+    with TableInfo<$AccountBranchesTable, AccountBranche> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountBranchesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _accountIdMeta =
+      const VerificationMeta('accountId');
+  @override
+  late final GeneratedColumn<int> accountId = GeneratedColumn<int>(
+      'account_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES accounts (id)'));
+  static const VerificationMeta _branchIdMeta =
+      const VerificationMeta('branchId');
+  @override
+  late final GeneratedColumn<int> branchId = GeneratedColumn<int>(
+      'branch_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES branches (id)'));
+  @override
+  List<GeneratedColumn> get $columns => [id, accountId, branchId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'account_branches';
+  @override
+  VerificationContext validateIntegrity(Insertable<AccountBranche> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(_accountIdMeta,
+          accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta));
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(_branchIdMeta,
+          branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta));
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {accountId, branchId},
+      ];
+  @override
+  AccountBranche map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AccountBranche(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      accountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}account_id'])!,
+      branchId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}branch_id'])!,
+    );
+  }
+
+  @override
+  $AccountBranchesTable createAlias(String alias) {
+    return $AccountBranchesTable(attachedDatabase, alias);
+  }
+}
+
+class AccountBranche extends DataClass implements Insertable<AccountBranche> {
+  final int id;
+  final int accountId;
+  final int branchId;
+  const AccountBranche(
+      {required this.id, required this.accountId, required this.branchId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['account_id'] = Variable<int>(accountId);
+    map['branch_id'] = Variable<int>(branchId);
+    return map;
+  }
+
+  AccountBranchesCompanion toCompanion(bool nullToAbsent) {
+    return AccountBranchesCompanion(
+      id: Value(id),
+      accountId: Value(accountId),
+      branchId: Value(branchId),
+    );
+  }
+
+  factory AccountBranche.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AccountBranche(
+      id: serializer.fromJson<int>(json['id']),
+      accountId: serializer.fromJson<int>(json['accountId']),
+      branchId: serializer.fromJson<int>(json['branchId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'accountId': serializer.toJson<int>(accountId),
+      'branchId': serializer.toJson<int>(branchId),
+    };
+  }
+
+  AccountBranche copyWith({int? id, int? accountId, int? branchId}) =>
+      AccountBranche(
+        id: id ?? this.id,
+        accountId: accountId ?? this.accountId,
+        branchId: branchId ?? this.branchId,
+      );
+  AccountBranche copyWithCompanion(AccountBranchesCompanion data) {
+    return AccountBranche(
+      id: data.id.present ? data.id.value : this.id,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountBranche(')
+          ..write('id: $id, ')
+          ..write('accountId: $accountId, ')
+          ..write('branchId: $branchId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, accountId, branchId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AccountBranche &&
+          other.id == this.id &&
+          other.accountId == this.accountId &&
+          other.branchId == this.branchId);
+}
+
+class AccountBranchesCompanion extends UpdateCompanion<AccountBranche> {
+  final Value<int> id;
+  final Value<int> accountId;
+  final Value<int> branchId;
+  const AccountBranchesCompanion({
+    this.id = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.branchId = const Value.absent(),
+  });
+  AccountBranchesCompanion.insert({
+    this.id = const Value.absent(),
+    required int accountId,
+    required int branchId,
+  })  : accountId = Value(accountId),
+        branchId = Value(branchId);
+  static Insertable<AccountBranche> custom({
+    Expression<int>? id,
+    Expression<int>? accountId,
+    Expression<int>? branchId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (accountId != null) 'account_id': accountId,
+      if (branchId != null) 'branch_id': branchId,
+    });
+  }
+
+  AccountBranchesCompanion copyWith(
+      {Value<int>? id, Value<int>? accountId, Value<int>? branchId}) {
+    return AccountBranchesCompanion(
+      id: id ?? this.id,
+      accountId: accountId ?? this.accountId,
+      branchId: branchId ?? this.branchId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<int>(accountId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<int>(branchId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountBranchesCompanion(')
+          ..write('id: $id, ')
+          ..write('accountId: $accountId, ')
+          ..write('branchId: $branchId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AccountingDatabase extends GeneratedDatabase {
   _$AccountingDatabase(QueryExecutor e) : super(e);
   $AccountingDatabaseManager get managers => $AccountingDatabaseManager(this);
@@ -6071,10 +7146,17 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
   late final $ExchangeRatesTable exchangeRates = $ExchangeRatesTable(this);
   late final $AccountingSettingsTable accountingSettings =
       $AccountingSettingsTable(this);
+  late final $BranchesTable branches = $BranchesTable(this);
+  late final $BranchPeriodClosuresTable branchPeriodClosures =
+      $BranchPeriodClosuresTable(this);
+  late final $AccountBranchesTable accountBranches =
+      $AccountBranchesTable(this);
   late final Index idxJournalEntriesDate = Index('idx_journal_entries_date',
       'CREATE INDEX idx_journal_entries_date ON journal_entries (date)');
   late final Index idxJournalEntriesSource = Index('idx_journal_entries_source',
       'CREATE INDEX idx_journal_entries_source ON journal_entries (source_type, source_id)');
+  late final Index idxJournalEntriesBranch = Index('idx_journal_entries_branch',
+      'CREATE INDEX idx_journal_entries_branch ON journal_entries (branch_id)');
   late final Index idxJournalEntryLinesEntry = Index(
       'idx_journal_entry_lines_entry',
       'CREATE INDEX idx_journal_entry_lines_entry ON journal_entry_lines (entry_id)');
@@ -6099,6 +7181,7 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
       CostCentersDao(this as AccountingDatabase);
   late final CurrenciesDao currenciesDao =
       CurrenciesDao(this as AccountingDatabase);
+  late final BranchesDao branchesDao = BranchesDao(this as AccountingDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6118,8 +7201,12 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
         currencies,
         exchangeRates,
         accountingSettings,
+        branches,
+        branchPeriodClosures,
+        accountBranches,
         idxJournalEntriesDate,
         idxJournalEntriesSource,
+        idxJournalEntriesBranch,
         idxJournalEntryLinesEntry,
         idxJournalEntryLinesAccount,
         idxCostCentersDimension,
@@ -6204,6 +7291,36 @@ final class $$AccountsTableReferences
 
     final cache =
         $_typedResult.readTableOrNull(_costDimensionRulesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$BranchesTable, List<Branch>> _branchesRefsTable(
+          _$AccountingDatabase db) =>
+      MultiTypedResultKey.fromTable(db.branches,
+          aliasName: 'accounts__id__branches__inter_branch_account_id');
+
+  $$BranchesTableProcessedTableManager get branchesRefs {
+    final manager = $$BranchesTableTableManager($_db, $_db.branches).filter(
+        (f) => f.interBranchAccountId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_branchesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$AccountBranchesTable, List<AccountBranche>>
+      _accountBranchesRefsTable(_$AccountingDatabase db) =>
+          MultiTypedResultKey.fromTable(db.accountBranches,
+              aliasName: 'accounts__id__account_branches__account_id');
+
+  $$AccountBranchesTableProcessedTableManager get accountBranchesRefs {
+    final manager =
+        $$AccountBranchesTableTableManager($_db, $_db.accountBranches)
+            .filter((f) => f.accountId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_accountBranchesRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -6307,6 +7424,48 @@ class $$AccountsTableFilterComposer
             $$CostDimensionRulesTableFilterComposer(
               $db: $db,
               $table: $db.costDimensionRules,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> branchesRefs(
+      Expression<bool> Function($$BranchesTableFilterComposer f) f) {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.interBranchAccountId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableFilterComposer(
+              $db: $db,
+              $table: $db.branches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> accountBranchesRefs(
+      Expression<bool> Function($$AccountBranchesTableFilterComposer f) f) {
+    final $$AccountBranchesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.accountBranches,
+        getReferencedColumn: (t) => t.accountId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountBranchesTableFilterComposer(
+              $db: $db,
+              $table: $db.accountBranches,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -6485,6 +7644,48 @@ class $$AccountsTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> branchesRefs<T extends Object>(
+      Expression<T> Function($$BranchesTableAnnotationComposer a) f) {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.interBranchAccountId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.branches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> accountBranchesRefs<T extends Object>(
+      Expression<T> Function($$AccountBranchesTableAnnotationComposer a) f) {
+    final $$AccountBranchesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.accountBranches,
+        getReferencedColumn: (t) => t.accountId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountBranchesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accountBranches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$AccountsTableTableManager extends RootTableManager<
@@ -6501,7 +7702,9 @@ class $$AccountsTableTableManager extends RootTableManager<
     PrefetchHooks Function(
         {bool parentId,
         bool journalEntryLinesRefs,
-        bool costDimensionRulesRefs})> {
+        bool costDimensionRulesRefs,
+        bool branchesRefs,
+        bool accountBranchesRefs})> {
   $$AccountsTableTableManager(_$AccountingDatabase db, $AccountsTable table)
       : super(TableManagerState(
           db: db,
@@ -6577,12 +7780,16 @@ class $$AccountsTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {parentId = false,
               journalEntryLinesRefs = false,
-              costDimensionRulesRefs = false}) {
+              costDimensionRulesRefs = false,
+              branchesRefs = false,
+              accountBranchesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (journalEntryLinesRefs) db.journalEntryLines,
-                if (costDimensionRulesRefs) db.costDimensionRules
+                if (costDimensionRulesRefs) db.costDimensionRules,
+                if (branchesRefs) db.branches,
+                if (accountBranchesRefs) db.accountBranches
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -6637,6 +7844,31 @@ class $$AccountsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.accountId == item.id),
+                        typedResults: items),
+                  if (branchesRefs)
+                    await $_getPrefetchedData<Account, $AccountsTable, Branch>(
+                        currentTable: table,
+                        referencedTable:
+                            $$AccountsTableReferences._branchesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AccountsTableReferences(db, table, p0)
+                                .branchesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                                (e) => e.interBranchAccountId == item.id),
+                        typedResults: items),
+                  if (accountBranchesRefs)
+                    await $_getPrefetchedData<Account, $AccountsTable,
+                            AccountBranche>(
+                        currentTable: table,
+                        referencedTable: $$AccountsTableReferences
+                            ._accountBranchesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AccountsTableReferences(db, table, p0)
+                                .accountBranchesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.accountId == item.id),
                         typedResults: items)
                 ];
               },
@@ -6659,7 +7891,9 @@ typedef $$AccountsTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function(
         {bool parentId,
         bool journalEntryLinesRefs,
-        bool costDimensionRulesRefs})>;
+        bool costDimensionRulesRefs,
+        bool branchesRefs,
+        bool accountBranchesRefs})>;
 typedef $$JournalEntriesTableCreateCompanionBuilder = JournalEntriesCompanion
     Function({
   Value<int> id,
@@ -6676,6 +7910,7 @@ typedef $$JournalEntriesTableCreateCompanionBuilder = JournalEntriesCompanion
   Value<String?> sourceType,
   Value<String?> sourceId,
   Value<int?> reversalOfId,
+  Value<int?> branchId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -6695,6 +7930,7 @@ typedef $$JournalEntriesTableUpdateCompanionBuilder = JournalEntriesCompanion
   Value<String?> sourceType,
   Value<String?> sourceId,
   Value<int?> reversalOfId,
+  Value<int?> branchId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -6775,6 +8011,9 @@ class $$JournalEntriesTableFilterComposer
 
   ColumnFilters<int> get reversalOfId => $composableBuilder(
       column: $table.reversalOfId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get branchId => $composableBuilder(
+      column: $table.branchId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -6857,6 +8096,9 @@ class $$JournalEntriesTableOrderingComposer
       column: $table.reversalOfId,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get branchId => $composableBuilder(
+      column: $table.branchId, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -6914,6 +8156,9 @@ class $$JournalEntriesTableAnnotationComposer
 
   GeneratedColumn<int> get reversalOfId => $composableBuilder(
       column: $table.reversalOfId, builder: (column) => column);
+
+  GeneratedColumn<int> get branchId =>
+      $composableBuilder(column: $table.branchId, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -6982,6 +8227,7 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
             Value<String?> sourceType = const Value.absent(),
             Value<String?> sourceId = const Value.absent(),
             Value<int?> reversalOfId = const Value.absent(),
+            Value<int?> branchId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
@@ -7000,6 +8246,7 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
             sourceType: sourceType,
             sourceId: sourceId,
             reversalOfId: reversalOfId,
+            branchId: branchId,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
@@ -7018,6 +8265,7 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
             Value<String?> sourceType = const Value.absent(),
             Value<String?> sourceId = const Value.absent(),
             Value<int?> reversalOfId = const Value.absent(),
+            Value<int?> branchId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
@@ -7036,6 +8284,7 @@ class $$JournalEntriesTableTableManager extends RootTableManager<
             sourceType: sourceType,
             sourceId: sourceId,
             reversalOfId: reversalOfId,
+            branchId: branchId,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
@@ -7619,6 +8868,31 @@ typedef $$AccountingPeriodsTableUpdateCompanionBuilder
   Value<DateTime> createdAt,
 });
 
+final class $$AccountingPeriodsTableReferences extends BaseReferences<
+    _$AccountingDatabase, $AccountingPeriodsTable, AccountingPeriod> {
+  $$AccountingPeriodsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$BranchPeriodClosuresTable,
+      List<BranchPeriodClosure>> _branchPeriodClosuresRefsTable(
+          _$AccountingDatabase db) =>
+      MultiTypedResultKey.fromTable(db.branchPeriodClosures,
+          aliasName:
+              'accounting_periods__id__branch_period_closures__period_id');
+
+  $$BranchPeriodClosuresTableProcessedTableManager
+      get branchPeriodClosuresRefs {
+    final manager =
+        $$BranchPeriodClosuresTableTableManager($_db, $_db.branchPeriodClosures)
+            .filter((f) => f.periodId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_branchPeriodClosuresRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
 class $$AccountingPeriodsTableFilterComposer
     extends Composer<_$AccountingDatabase, $AccountingPeriodsTable> {
   $$AccountingPeriodsTableFilterComposer({
@@ -7645,6 +8919,28 @@ class $$AccountingPeriodsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> branchPeriodClosuresRefs(
+      Expression<bool> Function($$BranchPeriodClosuresTableFilterComposer f)
+          f) {
+    final $$BranchPeriodClosuresTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.branchPeriodClosures,
+        getReferencedColumn: (t) => t.periodId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchPeriodClosuresTableFilterComposer(
+              $db: $db,
+              $table: $db.branchPeriodClosures,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$AccountingPeriodsTableOrderingComposer
@@ -7701,6 +8997,29 @@ class $$AccountingPeriodsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> branchPeriodClosuresRefs<T extends Object>(
+      Expression<T> Function($$BranchPeriodClosuresTableAnnotationComposer a)
+          f) {
+    final $$BranchPeriodClosuresTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.branchPeriodClosures,
+            getReferencedColumn: (t) => t.periodId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$BranchPeriodClosuresTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.branchPeriodClosures,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$AccountingPeriodsTableTableManager extends RootTableManager<
@@ -7712,13 +9031,9 @@ class $$AccountingPeriodsTableTableManager extends RootTableManager<
     $$AccountingPeriodsTableAnnotationComposer,
     $$AccountingPeriodsTableCreateCompanionBuilder,
     $$AccountingPeriodsTableUpdateCompanionBuilder,
-    (
-      AccountingPeriod,
-      BaseReferences<_$AccountingDatabase, $AccountingPeriodsTable,
-          AccountingPeriod>
-    ),
+    (AccountingPeriod, $$AccountingPeriodsTableReferences),
     AccountingPeriod,
-    PrefetchHooks Function()> {
+    PrefetchHooks Function({bool branchPeriodClosuresRefs})> {
   $$AccountingPeriodsTableTableManager(
       _$AccountingDatabase db, $AccountingPeriodsTable table)
       : super(TableManagerState(
@@ -7767,11 +9082,35 @@ class $$AccountingPeriodsTableTableManager extends RootTableManager<
               .map((e) => (
                     e.readTable<$AccountingPeriodsTable, AccountingPeriod>(
                         table),
-                    BaseReferences<_$AccountingDatabase,
-                        $AccountingPeriodsTable, AccountingPeriod>(db, table, e)
+                    $$AccountingPeriodsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({branchPeriodClosuresRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (branchPeriodClosuresRefs) db.branchPeriodClosures
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (branchPeriodClosuresRefs)
+                    await $_getPrefetchedData<AccountingPeriod,
+                            $AccountingPeriodsTable, BranchPeriodClosure>(
+                        currentTable: table,
+                        referencedTable: $$AccountingPeriodsTableReferences
+                            ._branchPeriodClosuresRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AccountingPeriodsTableReferences(db, table, p0)
+                                .branchPeriodClosuresRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.periodId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
         ));
 }
 
@@ -7784,13 +9123,9 @@ typedef $$AccountingPeriodsTableProcessedTableManager = ProcessedTableManager<
     $$AccountingPeriodsTableAnnotationComposer,
     $$AccountingPeriodsTableCreateCompanionBuilder,
     $$AccountingPeriodsTableUpdateCompanionBuilder,
-    (
-      AccountingPeriod,
-      BaseReferences<_$AccountingDatabase, $AccountingPeriodsTable,
-          AccountingPeriod>
-    ),
+    (AccountingPeriod, $$AccountingPeriodsTableReferences),
     AccountingPeriod,
-    PrefetchHooks Function()>;
+    PrefetchHooks Function({bool branchPeriodClosuresRefs})>;
 typedef $$EntryTemplatesTableCreateCompanionBuilder = EntryTemplatesCompanion
     Function({
   Value<int> id,
@@ -8677,6 +10012,20 @@ final class $$CostCentersTableReferences extends BaseReferences<
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$BranchesTable, List<Branch>> _branchesRefsTable(
+          _$AccountingDatabase db) =>
+      MultiTypedResultKey.fromTable(db.branches,
+          aliasName: 'cost_centers__id__branches__cost_center_id');
+
+  $$BranchesTableProcessedTableManager get branchesRefs {
+    final manager = $$BranchesTableTableManager($_db, $_db.branches)
+        .filter((f) => f.costCenterId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_branchesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$CostCentersTableFilterComposer
@@ -8812,6 +10161,27 @@ class $$CostCentersTableFilterComposer
             $$AllocationKeyItemsTableFilterComposer(
               $db: $db,
               $table: $db.allocationKeyItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> branchesRefs(
+      Expression<bool> Function($$BranchesTableFilterComposer f) f) {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.costCenterId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableFilterComposer(
+              $db: $db,
+              $table: $db.branches,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -9040,6 +10410,27 @@ class $$CostCentersTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> branchesRefs<T extends Object>(
+      Expression<T> Function($$BranchesTableAnnotationComposer a) f) {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.costCenterId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.branches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$CostCentersTableTableManager extends RootTableManager<
@@ -9058,7 +10449,8 @@ class $$CostCentersTableTableManager extends RootTableManager<
         bool parentId,
         bool journalLineAllocationsRefs,
         bool costDimensionRulesRefs,
-        bool allocationKeyItemsRefs})> {
+        bool allocationKeyItemsRefs,
+        bool branchesRefs})> {
   $$CostCentersTableTableManager(
       _$AccountingDatabase db, $CostCentersTable table)
       : super(TableManagerState(
@@ -9133,13 +10525,15 @@ class $$CostCentersTableTableManager extends RootTableManager<
               parentId = false,
               journalLineAllocationsRefs = false,
               costDimensionRulesRefs = false,
-              allocationKeyItemsRefs = false}) {
+              allocationKeyItemsRefs = false,
+              branchesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (journalLineAllocationsRefs) db.journalLineAllocations,
                 if (costDimensionRulesRefs) db.costDimensionRules,
-                if (allocationKeyItemsRefs) db.allocationKeyItems
+                if (allocationKeyItemsRefs) db.allocationKeyItems,
+                if (branchesRefs) db.branches
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -9217,6 +10611,19 @@ class $$CostCentersTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.costCenterId == item.id),
+                        typedResults: items),
+                  if (branchesRefs)
+                    await $_getPrefetchedData<CostCenter, $CostCentersTable,
+                            Branch>(
+                        currentTable: table,
+                        referencedTable:
+                            $$CostCentersTableReferences._branchesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CostCentersTableReferences(db, table, p0)
+                                .branchesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.costCenterId == item.id),
                         typedResults: items)
                 ];
               },
@@ -9241,7 +10648,8 @@ typedef $$CostCentersTableProcessedTableManager = ProcessedTableManager<
         bool parentId,
         bool journalLineAllocationsRefs,
         bool costDimensionRulesRefs,
-        bool allocationKeyItemsRefs})>;
+        bool allocationKeyItemsRefs,
+        bool branchesRefs})>;
 typedef $$JournalLineAllocationsTableCreateCompanionBuilder
     = JournalLineAllocationsCompanion Function({
   Value<int> id,
@@ -11385,6 +12793,1243 @@ typedef $$AccountingSettingsTableProcessedTableManager = ProcessedTableManager<
     ),
     AccountingSetting,
     PrefetchHooks Function()>;
+typedef $$BranchesTableCreateCompanionBuilder = BranchesCompanion Function({
+  Value<int> id,
+  required String code,
+  required String name,
+  Value<String?> nameAr,
+  Value<String?> description,
+  Value<bool> isActive,
+  Value<bool> isHeadOffice,
+  Value<int?> interBranchAccountId,
+  Value<int?> costCenterId,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+typedef $$BranchesTableUpdateCompanionBuilder = BranchesCompanion Function({
+  Value<int> id,
+  Value<String> code,
+  Value<String> name,
+  Value<String?> nameAr,
+  Value<String?> description,
+  Value<bool> isActive,
+  Value<bool> isHeadOffice,
+  Value<int?> interBranchAccountId,
+  Value<int?> costCenterId,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+
+final class $$BranchesTableReferences
+    extends BaseReferences<_$AccountingDatabase, $BranchesTable, Branch> {
+  $$BranchesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $AccountsTable _interBranchAccountIdTable(_$AccountingDatabase db) =>
+      db.accounts
+          .createAlias('branches__inter_branch_account_id__accounts__id');
+
+  $$AccountsTableProcessedTableManager? get interBranchAccountId {
+    final $_column = $_itemColumn<int>('inter_branch_account_id');
+    if ($_column == null) return null;
+    final manager = $$AccountsTableTableManager($_db, $_db.accounts)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item =
+        $_typedResult.readTableOrNull(_interBranchAccountIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CostCentersTable _costCenterIdTable(_$AccountingDatabase db) =>
+      db.costCenters.createAlias('branches__cost_center_id__cost_centers__id');
+
+  $$CostCentersTableProcessedTableManager? get costCenterId {
+    final $_column = $_itemColumn<int>('cost_center_id');
+    if ($_column == null) return null;
+    final manager = $$CostCentersTableTableManager($_db, $_db.costCenters)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_costCenterIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$BranchPeriodClosuresTable,
+      List<BranchPeriodClosure>> _branchPeriodClosuresRefsTable(
+          _$AccountingDatabase db) =>
+      MultiTypedResultKey.fromTable(db.branchPeriodClosures,
+          aliasName: 'branches__id__branch_period_closures__branch_id');
+
+  $$BranchPeriodClosuresTableProcessedTableManager
+      get branchPeriodClosuresRefs {
+    final manager =
+        $$BranchPeriodClosuresTableTableManager($_db, $_db.branchPeriodClosures)
+            .filter((f) => f.branchId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_branchPeriodClosuresRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$AccountBranchesTable, List<AccountBranche>>
+      _accountBranchesRefsTable(_$AccountingDatabase db) =>
+          MultiTypedResultKey.fromTable(db.accountBranches,
+              aliasName: 'branches__id__account_branches__branch_id');
+
+  $$AccountBranchesTableProcessedTableManager get accountBranchesRefs {
+    final manager =
+        $$AccountBranchesTableTableManager($_db, $_db.accountBranches)
+            .filter((f) => f.branchId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_accountBranchesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$BranchesTableFilterComposer
+    extends Composer<_$AccountingDatabase, $BranchesTable> {
+  $$BranchesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nameAr => $composableBuilder(
+      column: $table.nameAr, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isHeadOffice => $composableBuilder(
+      column: $table.isHeadOffice, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  $$AccountsTableFilterComposer get interBranchAccountId {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.interBranchAccountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableFilterComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableFilterComposer get costCenterId {
+    final $$CostCentersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.costCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableFilterComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> branchPeriodClosuresRefs(
+      Expression<bool> Function($$BranchPeriodClosuresTableFilterComposer f)
+          f) {
+    final $$BranchPeriodClosuresTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.branchPeriodClosures,
+        getReferencedColumn: (t) => t.branchId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchPeriodClosuresTableFilterComposer(
+              $db: $db,
+              $table: $db.branchPeriodClosures,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> accountBranchesRefs(
+      Expression<bool> Function($$AccountBranchesTableFilterComposer f) f) {
+    final $$AccountBranchesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.accountBranches,
+        getReferencedColumn: (t) => t.branchId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountBranchesTableFilterComposer(
+              $db: $db,
+              $table: $db.accountBranches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$BranchesTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $BranchesTable> {
+  $$BranchesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nameAr => $composableBuilder(
+      column: $table.nameAr, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isHeadOffice => $composableBuilder(
+      column: $table.isHeadOffice,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  $$AccountsTableOrderingComposer get interBranchAccountId {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.interBranchAccountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableOrderingComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableOrderingComposer get costCenterId {
+    final $$CostCentersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.costCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableOrderingComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$BranchesTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $BranchesTable> {
+  $$BranchesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameAr =>
+      $composableBuilder(column: $table.nameAr, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<bool> get isHeadOffice => $composableBuilder(
+      column: $table.isHeadOffice, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$AccountsTableAnnotationComposer get interBranchAccountId {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.interBranchAccountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CostCentersTableAnnotationComposer get costCenterId {
+    final $$CostCentersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.costCenterId,
+        referencedTable: $db.costCenters,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CostCentersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.costCenters,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> branchPeriodClosuresRefs<T extends Object>(
+      Expression<T> Function($$BranchPeriodClosuresTableAnnotationComposer a)
+          f) {
+    final $$BranchPeriodClosuresTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.branchPeriodClosures,
+            getReferencedColumn: (t) => t.branchId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$BranchPeriodClosuresTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.branchPeriodClosures,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> accountBranchesRefs<T extends Object>(
+      Expression<T> Function($$AccountBranchesTableAnnotationComposer a) f) {
+    final $$AccountBranchesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.accountBranches,
+        getReferencedColumn: (t) => t.branchId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountBranchesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accountBranches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$BranchesTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $BranchesTable,
+    Branch,
+    $$BranchesTableFilterComposer,
+    $$BranchesTableOrderingComposer,
+    $$BranchesTableAnnotationComposer,
+    $$BranchesTableCreateCompanionBuilder,
+    $$BranchesTableUpdateCompanionBuilder,
+    (Branch, $$BranchesTableReferences),
+    Branch,
+    PrefetchHooks Function(
+        {bool interBranchAccountId,
+        bool costCenterId,
+        bool branchPeriodClosuresRefs,
+        bool accountBranchesRefs})> {
+  $$BranchesTableTableManager(_$AccountingDatabase db, $BranchesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BranchesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BranchesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BranchesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> code = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> nameAr = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<bool> isHeadOffice = const Value.absent(),
+            Value<int?> interBranchAccountId = const Value.absent(),
+            Value<int?> costCenterId = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              BranchesCompanion(
+            id: id,
+            code: code,
+            name: name,
+            nameAr: nameAr,
+            description: description,
+            isActive: isActive,
+            isHeadOffice: isHeadOffice,
+            interBranchAccountId: interBranchAccountId,
+            costCenterId: costCenterId,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String code,
+            required String name,
+            Value<String?> nameAr = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<bool> isHeadOffice = const Value.absent(),
+            Value<int?> interBranchAccountId = const Value.absent(),
+            Value<int?> costCenterId = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              BranchesCompanion.insert(
+            id: id,
+            code: code,
+            name: name,
+            nameAr: nameAr,
+            description: description,
+            isActive: isActive,
+            isHeadOffice: isHeadOffice,
+            interBranchAccountId: interBranchAccountId,
+            costCenterId: costCenterId,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$BranchesTable, Branch>(table),
+                    $$BranchesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {interBranchAccountId = false,
+              costCenterId = false,
+              branchPeriodClosuresRefs = false,
+              accountBranchesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (branchPeriodClosuresRefs) db.branchPeriodClosures,
+                if (accountBranchesRefs) db.accountBranches
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (interBranchAccountId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.interBranchAccountId,
+                    referencedTable: $$BranchesTableReferences
+                        ._interBranchAccountIdTable(db),
+                    referencedColumn: $$BranchesTableReferences
+                        ._interBranchAccountIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (costCenterId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.costCenterId,
+                    referencedTable:
+                        $$BranchesTableReferences._costCenterIdTable(db),
+                    referencedColumn:
+                        $$BranchesTableReferences._costCenterIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (branchPeriodClosuresRefs)
+                    await $_getPrefetchedData<Branch, $BranchesTable,
+                            BranchPeriodClosure>(
+                        currentTable: table,
+                        referencedTable: $$BranchesTableReferences
+                            ._branchPeriodClosuresRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$BranchesTableReferences(db, table, p0)
+                                .branchPeriodClosuresRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.branchId == item.id),
+                        typedResults: items),
+                  if (accountBranchesRefs)
+                    await $_getPrefetchedData<Branch, $BranchesTable,
+                            AccountBranche>(
+                        currentTable: table,
+                        referencedTable: $$BranchesTableReferences
+                            ._accountBranchesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$BranchesTableReferences(db, table, p0)
+                                .accountBranchesRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.branchId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$BranchesTableProcessedTableManager = ProcessedTableManager<
+    _$AccountingDatabase,
+    $BranchesTable,
+    Branch,
+    $$BranchesTableFilterComposer,
+    $$BranchesTableOrderingComposer,
+    $$BranchesTableAnnotationComposer,
+    $$BranchesTableCreateCompanionBuilder,
+    $$BranchesTableUpdateCompanionBuilder,
+    (Branch, $$BranchesTableReferences),
+    Branch,
+    PrefetchHooks Function(
+        {bool interBranchAccountId,
+        bool costCenterId,
+        bool branchPeriodClosuresRefs,
+        bool accountBranchesRefs})>;
+typedef $$BranchPeriodClosuresTableCreateCompanionBuilder
+    = BranchPeriodClosuresCompanion Function({
+  Value<int> id,
+  required int periodId,
+  required int branchId,
+});
+typedef $$BranchPeriodClosuresTableUpdateCompanionBuilder
+    = BranchPeriodClosuresCompanion Function({
+  Value<int> id,
+  Value<int> periodId,
+  Value<int> branchId,
+});
+
+final class $$BranchPeriodClosuresTableReferences extends BaseReferences<
+    _$AccountingDatabase, $BranchPeriodClosuresTable, BranchPeriodClosure> {
+  $$BranchPeriodClosuresTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $AccountingPeriodsTable _periodIdTable(_$AccountingDatabase db) => db
+      .accountingPeriods
+      .createAlias('branch_period_closures__period_id__accounting_periods__id');
+
+  $$AccountingPeriodsTableProcessedTableManager get periodId {
+    final $_column = $_itemColumn<int>('period_id')!;
+
+    final manager =
+        $$AccountingPeriodsTableTableManager($_db, $_db.accountingPeriods)
+            .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_periodIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $BranchesTable _branchIdTable(_$AccountingDatabase db) => db.branches
+      .createAlias('branch_period_closures__branch_id__branches__id');
+
+  $$BranchesTableProcessedTableManager get branchId {
+    final $_column = $_itemColumn<int>('branch_id')!;
+
+    final manager = $$BranchesTableTableManager($_db, $_db.branches)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$BranchPeriodClosuresTableFilterComposer
+    extends Composer<_$AccountingDatabase, $BranchPeriodClosuresTable> {
+  $$BranchPeriodClosuresTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  $$AccountingPeriodsTableFilterComposer get periodId {
+    final $$AccountingPeriodsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.periodId,
+        referencedTable: $db.accountingPeriods,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountingPeriodsTableFilterComposer(
+              $db: $db,
+              $table: $db.accountingPeriods,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.branchId,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableFilterComposer(
+              $db: $db,
+              $table: $db.branches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$BranchPeriodClosuresTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $BranchPeriodClosuresTable> {
+  $$BranchPeriodClosuresTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  $$AccountingPeriodsTableOrderingComposer get periodId {
+    final $$AccountingPeriodsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.periodId,
+        referencedTable: $db.accountingPeriods,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountingPeriodsTableOrderingComposer(
+              $db: $db,
+              $table: $db.accountingPeriods,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.branchId,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableOrderingComposer(
+              $db: $db,
+              $table: $db.branches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$BranchPeriodClosuresTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $BranchPeriodClosuresTable> {
+  $$BranchPeriodClosuresTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  $$AccountingPeriodsTableAnnotationComposer get periodId {
+    final $$AccountingPeriodsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.periodId,
+            referencedTable: $db.accountingPeriods,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$AccountingPeriodsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.accountingPeriods,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.branchId,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.branches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$BranchPeriodClosuresTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $BranchPeriodClosuresTable,
+    BranchPeriodClosure,
+    $$BranchPeriodClosuresTableFilterComposer,
+    $$BranchPeriodClosuresTableOrderingComposer,
+    $$BranchPeriodClosuresTableAnnotationComposer,
+    $$BranchPeriodClosuresTableCreateCompanionBuilder,
+    $$BranchPeriodClosuresTableUpdateCompanionBuilder,
+    (BranchPeriodClosure, $$BranchPeriodClosuresTableReferences),
+    BranchPeriodClosure,
+    PrefetchHooks Function({bool periodId, bool branchId})> {
+  $$BranchPeriodClosuresTableTableManager(
+      _$AccountingDatabase db, $BranchPeriodClosuresTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BranchPeriodClosuresTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BranchPeriodClosuresTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BranchPeriodClosuresTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> periodId = const Value.absent(),
+            Value<int> branchId = const Value.absent(),
+          }) =>
+              BranchPeriodClosuresCompanion(
+            id: id,
+            periodId: periodId,
+            branchId: branchId,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int periodId,
+            required int branchId,
+          }) =>
+              BranchPeriodClosuresCompanion.insert(
+            id: id,
+            periodId: periodId,
+            branchId: branchId,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$BranchPeriodClosuresTable,
+                        BranchPeriodClosure>(table),
+                    $$BranchPeriodClosuresTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({periodId = false, branchId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (periodId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.periodId,
+                    referencedTable: $$BranchPeriodClosuresTableReferences
+                        ._periodIdTable(db),
+                    referencedColumn: $$BranchPeriodClosuresTableReferences
+                        ._periodIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (branchId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.branchId,
+                    referencedTable: $$BranchPeriodClosuresTableReferences
+                        ._branchIdTable(db),
+                    referencedColumn: $$BranchPeriodClosuresTableReferences
+                        ._branchIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$BranchPeriodClosuresTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AccountingDatabase,
+        $BranchPeriodClosuresTable,
+        BranchPeriodClosure,
+        $$BranchPeriodClosuresTableFilterComposer,
+        $$BranchPeriodClosuresTableOrderingComposer,
+        $$BranchPeriodClosuresTableAnnotationComposer,
+        $$BranchPeriodClosuresTableCreateCompanionBuilder,
+        $$BranchPeriodClosuresTableUpdateCompanionBuilder,
+        (BranchPeriodClosure, $$BranchPeriodClosuresTableReferences),
+        BranchPeriodClosure,
+        PrefetchHooks Function({bool periodId, bool branchId})>;
+typedef $$AccountBranchesTableCreateCompanionBuilder = AccountBranchesCompanion
+    Function({
+  Value<int> id,
+  required int accountId,
+  required int branchId,
+});
+typedef $$AccountBranchesTableUpdateCompanionBuilder = AccountBranchesCompanion
+    Function({
+  Value<int> id,
+  Value<int> accountId,
+  Value<int> branchId,
+});
+
+final class $$AccountBranchesTableReferences extends BaseReferences<
+    _$AccountingDatabase, $AccountBranchesTable, AccountBranche> {
+  $$AccountBranchesTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $AccountsTable _accountIdTable(_$AccountingDatabase db) =>
+      db.accounts.createAlias('account_branches__account_id__accounts__id');
+
+  $$AccountsTableProcessedTableManager get accountId {
+    final $_column = $_itemColumn<int>('account_id')!;
+
+    final manager = $$AccountsTableTableManager($_db, $_db.accounts)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_accountIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $BranchesTable _branchIdTable(_$AccountingDatabase db) =>
+      db.branches.createAlias('account_branches__branch_id__branches__id');
+
+  $$BranchesTableProcessedTableManager get branchId {
+    final $_column = $_itemColumn<int>('branch_id')!;
+
+    final manager = $$BranchesTableTableManager($_db, $_db.branches)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$AccountBranchesTableFilterComposer
+    extends Composer<_$AccountingDatabase, $AccountBranchesTable> {
+  $$AccountBranchesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  $$AccountsTableFilterComposer get accountId {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableFilterComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.branchId,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableFilterComposer(
+              $db: $db,
+              $table: $db.branches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AccountBranchesTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $AccountBranchesTable> {
+  $$AccountBranchesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  $$AccountsTableOrderingComposer get accountId {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableOrderingComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.branchId,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableOrderingComposer(
+              $db: $db,
+              $table: $db.branches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AccountBranchesTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $AccountBranchesTable> {
+  $$AccountBranchesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  $$AccountsTableAnnotationComposer get accountId {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountId,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.branchId,
+        referencedTable: $db.branches,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$BranchesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.branches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AccountBranchesTableTableManager extends RootTableManager<
+    _$AccountingDatabase,
+    $AccountBranchesTable,
+    AccountBranche,
+    $$AccountBranchesTableFilterComposer,
+    $$AccountBranchesTableOrderingComposer,
+    $$AccountBranchesTableAnnotationComposer,
+    $$AccountBranchesTableCreateCompanionBuilder,
+    $$AccountBranchesTableUpdateCompanionBuilder,
+    (AccountBranche, $$AccountBranchesTableReferences),
+    AccountBranche,
+    PrefetchHooks Function({bool accountId, bool branchId})> {
+  $$AccountBranchesTableTableManager(
+      _$AccountingDatabase db, $AccountBranchesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AccountBranchesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AccountBranchesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AccountBranchesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> accountId = const Value.absent(),
+            Value<int> branchId = const Value.absent(),
+          }) =>
+              AccountBranchesCompanion(
+            id: id,
+            accountId: accountId,
+            branchId: branchId,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int accountId,
+            required int branchId,
+          }) =>
+              AccountBranchesCompanion.insert(
+            id: id,
+            accountId: accountId,
+            branchId: branchId,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$AccountBranchesTable, AccountBranche>(table),
+                    $$AccountBranchesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({accountId = false, branchId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (accountId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.accountId,
+                    referencedTable:
+                        $$AccountBranchesTableReferences._accountIdTable(db),
+                    referencedColumn:
+                        $$AccountBranchesTableReferences._accountIdTable(db).id,
+                  ) as T;
+                }
+                if (branchId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.branchId,
+                    referencedTable:
+                        $$AccountBranchesTableReferences._branchIdTable(db),
+                    referencedColumn:
+                        $$AccountBranchesTableReferences._branchIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AccountBranchesTableProcessedTableManager = ProcessedTableManager<
+    _$AccountingDatabase,
+    $AccountBranchesTable,
+    AccountBranche,
+    $$AccountBranchesTableFilterComposer,
+    $$AccountBranchesTableOrderingComposer,
+    $$AccountBranchesTableAnnotationComposer,
+    $$AccountBranchesTableCreateCompanionBuilder,
+    $$AccountBranchesTableUpdateCompanionBuilder,
+    (AccountBranche, $$AccountBranchesTableReferences),
+    AccountBranche,
+    PrefetchHooks Function({bool accountId, bool branchId})>;
 
 class $AccountingDatabaseManager {
   final _$AccountingDatabase _db;
@@ -11418,4 +14063,10 @@ class $AccountingDatabaseManager {
       $$ExchangeRatesTableTableManager(_db, _db.exchangeRates);
   $$AccountingSettingsTableTableManager get accountingSettings =>
       $$AccountingSettingsTableTableManager(_db, _db.accountingSettings);
+  $$BranchesTableTableManager get branches =>
+      $$BranchesTableTableManager(_db, _db.branches);
+  $$BranchPeriodClosuresTableTableManager get branchPeriodClosures =>
+      $$BranchPeriodClosuresTableTableManager(_db, _db.branchPeriodClosures);
+  $$AccountBranchesTableTableManager get accountBranches =>
+      $$AccountBranchesTableTableManager(_db, _db.accountBranches);
 }

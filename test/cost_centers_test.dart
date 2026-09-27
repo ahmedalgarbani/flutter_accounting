@@ -88,9 +88,10 @@ void main() {
       final c = (await off.accounts.createAccount(cashAccount())).id!;
       final r = (await off.accounts.createAccount(revenueAccount())).id!;
 
-      expect(() => off.costCenters.ensureDimension(code: 'X', name: 'X'),
+      await expectLater(
+          () => off.costCenters.ensureDimension(code: 'X', name: 'X'),
           throwsA(isA<CostCentersDisabledException>()));
-      expect(
+      await expectLater(
           () => off.record(JournalEntryBuilder(description: 'x', date: d)
               .debit(c, 10)
               .credit(r, 10, allocations: [CostAllocationModel.full(1)])),
@@ -105,7 +106,7 @@ void main() {
     });
 
     test('زرع الأبعاد الجاهزة يتطلب تفعيل الميزة', () async {
-      expect(
+      await expectLater(
           () => FlutterAccounting.initialize(
               customExecutor: NativeDatabase.memory(),
               seedDefaultCostDimensions: true),
@@ -128,11 +129,11 @@ void main() {
   // ─────────────────────────────────────────────────────────────
   group('CostCenterRepository', () {
     test('رموز مكررة مرفوضة', () async {
-      expect(
+      await expectLater(
           () => fa.costCenters.createDimension(
               const CostDimensionModel(code: 'BRANCH', name: 'x')),
           throwsA(isA<DuplicateCostDimensionCodeException>()));
-      expect(
+      await expectLater(
           () => fa.costCenters.createCostCenter(CostCenterModel(
               dimensionId: project.id!, code: 'BR-RYD', name: 'x')),
           throwsA(isA<DuplicateCostCenterCodeException>()));
@@ -140,7 +141,7 @@ void main() {
 
     test('المستوى يُحسب تلقائياً والأب يجب أن يكون من نفس البعد', () async {
       expect(jed.level, 2);
-      expect(
+      await expectLater(
           () => fa.costCenters.createCostCenter(CostCenterModel(
               dimensionId: project.id!,
               code: 'PRJ-X',
@@ -150,11 +151,11 @@ void main() {
     });
 
     test('منع الدورات في الشجرة ومنع تغيير البعد', () async {
-      expect(
+      await expectLater(
           () =>
               fa.costCenters.updateCostCenter(west.copyWith(parentId: jed.id)),
           throwsA(isA<InvalidCostCenterHierarchyException>()));
-      expect(
+      await expectLater(
           () => fa.costCenters
               .updateCostCenter(ryd.copyWith(dimensionId: project.id)),
           throwsA(isA<InvalidCostCenterHierarchyException>()));
@@ -174,23 +175,23 @@ void main() {
     test('لا مركز فرعي تحت مركز عليه حركات، ولا حذف لمركز عليه حركات',
         () async {
       await sale(100, [CostAllocationModel.full(ryd.id!)]);
-      expect(
+      await expectLater(
           () => fa.costCenters.createCostCenter(CostCenterModel(
               dimensionId: branch.id!,
               code: 'BR-RYD-1',
               name: 'x',
               parentId: ryd.id)),
           throwsA(isA<ParentCostCenterHasTransactionsException>()));
-      expect(() => fa.costCenters.deleteCostCenter(ryd.id!),
+      await expectLater(() => fa.costCenters.deleteCostCenter(ryd.id!),
           throwsA(isA<CostCenterHasTransactionsException>()));
-      expect(() => fa.costCenters.deleteCostCenter(west.id!),
+      await expectLater(() => fa.costCenters.deleteCostCenter(west.id!),
           throwsA(isA<CostCenterHasChildrenException>()));
       expect(await fa.costCenters.hasTransactions(ryd.id!), isTrue);
     });
 
     test('حذف بعد يحتوي على مراكز مرفوض، والبعد الفارغ يُحذف مع قواعده',
         () async {
-      expect(() => fa.costCenters.deleteDimension(branch.id!),
+      await expectLater(() => fa.costCenters.deleteDimension(branch.id!),
           throwsA(isA<CostDimensionHasCentersException>()));
       final extra =
           await fa.costCenters.ensureDimension(code: 'REGION', name: 'Region');
@@ -276,26 +277,26 @@ void main() {
     });
 
     test('توزيع لا يساوي مبلغ البند مرفوض', () async {
-      expect(
+      await expectLater(
           () => expense(rentId, 500, [
                 CostAllocationModel.amount(ryd.id!, 200),
                 CostAllocationModel.amount(jed.id!, 200),
               ]),
           throwsA(isA<InvalidCostAllocationException>()));
-      expect(
+      await expectLater(
           () =>
               expense(rentId, 500, [CostAllocationModel.percent(ryd.id!, 50)]),
           throwsA(isA<InvalidCostAllocationException>()));
     });
 
     test('حصة سالبة أو مركز مكرر مرفوض', () async {
-      expect(
+      await expectLater(
           () => expense(rentId, 100, [
                 CostAllocationModel.amount(ryd.id!, 150),
                 CostAllocationModel.amount(jed.id!, -50),
               ]),
           throwsA(isA<InvalidCostAllocationException>()));
-      expect(
+      await expectLater(
           () => expense(rentId, 100, [
                 CostAllocationModel.percent(ryd.id!, 50),
                 CostAllocationModel.percent(ryd.id!, 50),
@@ -304,24 +305,28 @@ void main() {
     });
 
     test('مركز أب أو موقوف أو غير موجود مرفوض', () async {
-      expect(() => expense(rentId, 100, [CostAllocationModel.full(west.id!)]),
+      await expectLater(
+          () => expense(rentId, 100, [CostAllocationModel.full(west.id!)]),
           throwsA(isA<CostCenterIsParentException>()));
-      expect(() => expense(rentId, 100, [CostAllocationModel.code('NOPE')]),
+      await expectLater(
+          () => expense(rentId, 100, [CostAllocationModel.code('NOPE')]),
           throwsA(isA<CostCenterNotFoundException>()));
 
       await fa.costCenters.setCostCenterActive(ryd.id!, isActive: false);
-      expect(() => expense(rentId, 100, [CostAllocationModel.full(ryd.id!)]),
+      await expectLater(
+          () => expense(rentId, 100, [CostAllocationModel.full(ryd.id!)]),
           throwsA(isA<InactiveCostCenterException>()));
 
       await fa.costCenters.setDimensionActive(project.id!, isActive: false);
-      expect(() => expense(rentId, 100, [CostAllocationModel.full(prjA.id!)]),
+      await expectLater(
+          () => expense(rentId, 100, [CostAllocationModel.full(prjA.id!)]),
           throwsA(isA<InactiveCostCenterException>()));
     });
 
     test('بُعد لا يسمح بالتقسيم', () async {
       await fa.costCenters
           .updateDimension(department.copyWith(allowSplit: false));
-      expect(
+      await expectLater(
           () => expense(rentId, 100, [
                 CostAllocationModel.percent(admin.id!, 50),
                 CostAllocationModel.percent(sales.id!, 50),
@@ -395,7 +400,7 @@ void main() {
           accountType: AccountType.expense,
           policy: DimensionPolicy.required));
 
-      expect(() => expense(rentId, 100, const []),
+      await expectLater(() => expense(rentId, 100, const []),
           throwsA(isA<CostCenterRequiredException>()));
       await expense(rentId, 100, [CostAllocationModel.full(admin.id!)]);
       // الإيرادات غير متأثرة
@@ -416,7 +421,8 @@ void main() {
           await fa.costCenters
               .getEffectivePolicy(accountId: rentId, dimensionId: project.id!),
           DimensionPolicy.forbidden);
-      expect(() => expense(rentId, 100, [CostAllocationModel.full(prjA.id!)]),
+      await expectLater(
+          () => expense(rentId, 100, [CostAllocationModel.full(prjA.id!)]),
           throwsA(isA<CostCenterNotAllowedException>()));
       await expense(rentId, 100, const []);
 
@@ -440,7 +446,7 @@ void main() {
       expect(r2.id, r1.id);
       expect(await fa.costCenters.getRules(dimensionId: department.id),
           hasLength(1));
-      expect(
+      await expectLater(
           () => fa.costCenters.setRule(DimensionRuleModel(
               dimensionId: department.id!, policy: DimensionPolicy.required)),
           throwsArgumentError);
@@ -464,13 +470,13 @@ void main() {
     });
 
     test('المركز الافتراضي يجب أن يكون مركزاً نهائياً من نفس البعد', () async {
-      expect(
+      await expectLater(
           () => fa.costCenters.setRule(DimensionRuleModel.forType(
               dimensionId: branch.id!,
               accountType: AccountType.expense,
               defaultCostCenterId: west.id)),
           throwsA(isA<CostCenterIsParentException>()));
-      expect(
+      await expectLater(
           () => fa.costCenters.setRule(DimensionRuleModel.forType(
               dimensionId: branch.id!,
               accountType: AccountType.expense,
@@ -481,7 +487,7 @@ void main() {
     test('السياسة الافتراضية للبعد، والبعد الموقوف لا تُطبق سياسته', () async {
       await fa.costCenters.updateDimension(
           branch.copyWith(defaultPolicy: DimensionPolicy.required));
-      expect(() => sale(100, const []),
+      await expectLater(() => sale(100, const []),
           throwsA(isA<CostCenterRequiredException>()));
 
       await fa.costCenters.setDimensionActive(branch.id!, isActive: false);
@@ -526,23 +532,23 @@ void main() {
       AllocationKeyModel key(List<AllocationKeyItemModel> items) =>
           AllocationKeyModel(
               code: 'K', name: 'K', dimensionId: branch.id!, items: items);
-      expect(() => fa.costCenters.saveAllocationKey(key([])),
+      await expectLater(() => fa.costCenters.saveAllocationKey(key([])),
           throwsA(isA<InvalidAllocationKeyException>()));
-      expect(
+      await expectLater(
           () => fa.costCenters.saveAllocationKey(
               key([AllocationKeyItemModel(costCenterId: ryd.id!, weight: 0)])),
           throwsA(isA<InvalidAllocationKeyException>()));
-      expect(
+      await expectLater(
           () => fa.costCenters.saveAllocationKey(key([
                 AllocationKeyItemModel(costCenterId: ryd.id!, weight: 1),
                 AllocationKeyItemModel(costCenterId: ryd.id!, weight: 1),
               ])),
           throwsA(isA<InvalidAllocationKeyException>()));
-      expect(
+      await expectLater(
           () => fa.costCenters.saveAllocationKey(
               key([AllocationKeyItemModel(costCenterId: prjA.id!, weight: 1)])),
           throwsA(isA<InvalidCostAllocationException>()));
-      expect(
+      await expectLater(
           () => fa.costCenters.saveAllocationKey(
               key([AllocationKeyItemModel(costCenterId: west.id!, weight: 1)])),
           throwsA(isA<CostCenterIsParentException>()));
@@ -562,7 +568,7 @@ void main() {
               .where((a) => a.dimensionId == branch.id)
               .map((a) => a.amount),
           [300, 200, 100]);
-      expect(
+      await expectLater(
           () => JournalEntryBuilder(description: 'x')
               .debit(rentId, 1, allocationKey: 'AREA')
               .credit(cashId, 1)
@@ -572,7 +578,7 @@ void main() {
 
     test('المركز المستخدم في مفتاح لا يُحذف', () async {
       await areaKey();
-      expect(() => fa.costCenters.deleteCostCenter(mkk.id!),
+      await expectLater(() => fa.costCenters.deleteCostCenter(mkk.id!),
           throwsA(isA<CostCenterHasTransactionsException>()));
     });
   });
@@ -631,7 +637,7 @@ void main() {
       expect(summary.totalExpenses, 1450); // أرصدة الحسابات لم تتغير
 
       // لا شيء للتوزيع بعد التنفيذ
-      expect(() => fa.costAllocations.runAllocation(request()),
+      await expectLater(() => fa.costAllocations.runAllocation(request()),
           throwsA(isA<InvalidCostAllocationException>()));
     });
 
@@ -667,14 +673,14 @@ void main() {
               items: [
             AllocationKeyItemModel(costCenterId: prjA.id!, weight: 1),
           ]));
-      expect(
+      await expectLater(
           () => fa.costAllocations.previewAllocation(CostAllocationRequest(
               sourceCostCenterId: hq.id!,
               allocationKeyId: projectKey.id!,
               from: yearStart,
               to: yearEnd)),
           throwsA(isA<InvalidAllocationKeyException>()));
-      expect(
+      await expectLater(
           () => fa.costAllocations.previewAllocation(CostAllocationRequest(
               sourceCostCenterId: west.id!,
               allocationKeyId: key.id!,
@@ -844,7 +850,7 @@ void main() {
       expect(m.rowTotal(west.id).netIncome, 400);
       expect(m.columnTotal(prjB.id).netIncome, 80);
       expect(m.grandTotal.netIncome, 1130);
-      expect(
+      await expectLater(
           () => fa.costReports.getMatrix(
               rowDimensionId: branch.id!, columnDimensionId: branch.id!),
           throwsArgumentError);

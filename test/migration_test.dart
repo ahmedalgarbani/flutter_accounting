@@ -100,6 +100,6 @@ void main() {
 
     final version =
         await fa.database.customSelect('PRAGMA user_version').getSingle();
-    expect(version.data.values.first, 4);
+    expect(version.data.values.first, 5);
   });
 }

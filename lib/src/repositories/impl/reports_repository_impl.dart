@@ -30,6 +30,7 @@ class ReportsRepositoryImpl implements IReportsRepository {
   Future<TrialBalanceReport> getTrialBalance({
     DateTime? from,
     DateTime? to,
+    List<int>? branchIds,
   }) async {
     final now = DateTime.now();
     final fromDate = startOfDay(from ?? DateTime(now.year, 1, 1));
@@ -38,6 +39,7 @@ class ReportsRepositoryImpl implements IReportsRepository {
     final balances = await _entriesDao.getAccountBalances(
       from: fromDate,
       toExclusive: startOfNextDay(toDate),
+      branchIds: branchIds,
     );
 
     final rows =
@@ -71,10 +73,14 @@ class ReportsRepositoryImpl implements IReportsRepository {
   // ─────────────────────────────────────────────────────────────
 
   @override
-  Future<BalanceSheetReport> getBalanceSheet({required DateTime asOf}) async {
+  Future<BalanceSheetReport> getBalanceSheet({
+    required DateTime asOf,
+    List<int>? branchIds,
+  }) async {
     final now = DateTime.now();
     final balances = await _entriesDao.getAccountBalances(
       toExclusive: startOfNextDay(asOf),
+      branchIds: branchIds,
     );
 
     final assetRows = <BalanceSheetRow>[];
@@ -131,11 +137,13 @@ class ReportsRepositoryImpl implements IReportsRepository {
   Future<IncomeStatementReport> getIncomeStatement({
     required DateTime from,
     required DateTime to,
+    List<int>? branchIds,
   }) async {
     final now = DateTime.now();
     final balances = await _entriesDao.getAccountBalances(
       from: startOfDay(from),
       toExclusive: startOfNextDay(to),
+      branchIds: branchIds,
     );
 
     final revenueRows = <IncomeStatementRow>[];
@@ -180,6 +188,7 @@ class ReportsRepositoryImpl implements IReportsRepository {
     int accountId, {
     DateTime? asOf,
     bool includeChildren = true,
+    List<int>? branchIds,
   }) async {
     final account = await _accounts.getAccountById(accountId);
     if (account == null) throw AccountNotFoundException(accountId);
@@ -190,6 +199,7 @@ class ReportsRepositoryImpl implements IReportsRepository {
     };
     final balances = await _entriesDao.getAccountBalances(
       toExclusive: asOf != null ? startOfNextDay(asOf) : null,
+      branchIds: branchIds,
     );
 
     double debit = 0, credit = 0;
@@ -210,6 +220,7 @@ class ReportsRepositoryImpl implements IReportsRepository {
     DateTime? from,
     DateTime? to,
     bool includeChildren = true,
+    List<int>? branchIds,
   }) async {
     final account = await _accounts.getAccountById(accountId);
     if (account == null) throw AccountNotFoundException(accountId);
@@ -226,6 +237,7 @@ class ReportsRepositoryImpl implements IReportsRepository {
     if (from != null) {
       final before = await _entriesDao.getAccountBalances(
         toExclusive: startOfDay(from),
+        branchIds: branchIds,
       );
       double d = 0, c = 0;
       for (final b in before.where((b) => ids.contains(b.accountId))) {
@@ -239,6 +251,7 @@ class ReportsRepositoryImpl implements IReportsRepository {
       accountIds: ids,
       from: from != null ? startOfDay(from) : null,
       toExclusive: startOfNextDay(toDate),
+      branchIds: branchIds,
     );
 
     var running = opening;

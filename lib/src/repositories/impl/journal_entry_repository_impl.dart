@@ -19,6 +19,7 @@ import '../../models/cost_allocation_model.dart';
 import '../../models/journal_entry_model.dart';
 import '../../models/journal_entry_line_model.dart';
 import '../../database/daos/accounts_dao.dart';
+import '../../database/daos/branches_dao.dart';
 import '../../database/daos/cost_centers_dao.dart';
 import '../../database/daos/journal_entries_dao.dart';
 import '../../database/mappers/mappers.dart';
@@ -46,6 +47,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
 
   CostCentersDao get _costDao =>
       _costCentersDao ?? _entriesDao.attachedDatabase.costCentersDao;
+
+  BranchesDao get _branchDao => _entriesDao.attachedDatabase.branchesDao;
 
   // ─────────────────────────────────────────────────────────────
   // القراءة
@@ -133,7 +136,7 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     final serial = entry.serialNumber ??
         await _entriesDao.generateNextSerialNumber(
           entry.date,
-          prefix: _config.serialPrefix,
+          prefix: await _serialPrefix(entry),
           padding: _config.serialPadding,
         );
 
@@ -187,6 +190,7 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
         entryType: entry.entryType,
         sourceType: entry.sourceType,
         sourceId: entry.sourceId,
+        branchId: entry.branchId,
         createdAt: existing.createdAt,
         updatedAt: DateTime.now(),
       );
@@ -299,6 +303,7 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
         sourceType: original.sourceType,
         sourceId: original.sourceId,
         reversalOfId: original.id,
+        branchId: original.branchId,
       ));
 
       // تحديث حالة القيد الأصلي إلى "معكوس"
@@ -369,6 +374,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       throw PeriodClosedException(entry.date);
     }
 
+    // 2.5 الفروع
+    await _validateBranch(entry, period);
+
     // 3. مراكز التكلفة (القيد العكسي ينسخ توزيع الأصل كما هو دون إعادة تحقق،
     //    كي يُلغى أثره حتى لو أُوقف مركز أو تغيرت السياسات بعد ذلك)
     if (entry.reversalOfId != null) return entry.lines;
@@ -430,6 +438,16 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
           dimensionId: c.dimensionId,
         );
 
+    // مركز تكلفة فرع القيد (يُنسب إليه كل بند لم يحدد مركزاً من بُعده)
+    CostCenter? branchCenter;
+    final branchId = entry.branchId;
+    if (branchId != null && _config.branches?.linkCostCenters == true) {
+      final centerId = (await _branchDao.getBranchById(branchId))?.costCenterId;
+      if (centerId != null) {
+        branchCenter = await _costDao.getCenterById(centerId);
+      }
+    }
+
     final result = <JournalEntryLineModel>[];
     for (final line in entry.lines) {
       final allocations = <CostAllocationModel>[
@@ -441,7 +459,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       for (final dimension in resolver.activeDimensions) {
         final effective = await resolver.resolve(line.accountId, dimension.id);
         var has = allocations.any((a) => a.dimensionId == dimension.id);
-        final defaultId = effective.defaultCostCenterId;
+        final defaultId = branchCenter?.dimensionId == dimension.id
+            ? branchCenter!.id
+            : effective.defaultCostCenterId;
         if (!has &&
             defaultId != null &&
             effective.policy != DimensionPolicy.forbidden) {
@@ -604,6 +624,71 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       }
     }
     return result;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // الفروع
+  // ─────────────────────────────────────────────────────────────
+
+  /// بادئة الترقيم: `JV` أو `JV-RYD` عند الترقيم المستقل لكل فرع
+  Future<String> _serialPrefix(JournalEntryModel entry) async {
+    final branchId = entry.branchId;
+    if (branchId == null || _config.branches?.serialPerBranch != true) {
+      return _config.serialPrefix;
+    }
+    final branch = await _branchDao.getBranchById(branchId);
+    return branch == null
+        ? _config.serialPrefix
+        : '${_config.serialPrefix}-${branch.code}';
+  }
+
+  Future<void> _validateBranch(
+      JournalEntryModel entry, AccountingPeriod? period) async {
+    final config = _config.branches;
+    final branchId = entry.branchId;
+    if (config == null) {
+      if (branchId != null) throw const BranchesDisabledException();
+      return;
+    }
+    final isReversal = entry.reversalOfId != null;
+
+    Branch? branch;
+    if (branchId == null) {
+      if (config.requireBranch && !isReversal) {
+        throw const BranchRequiredException();
+      }
+    } else {
+      branch = await _branchDao.getBranchById(branchId);
+      if (branch == null) throw BranchNotFoundException(branchId);
+      if (!branch.isActive && !isReversal) {
+        throw InactiveBranchException(branch.code);
+      }
+      if (period != null &&
+          await _branchDao.isPeriodClosed(period.id, branchId)) {
+        throw PeriodClosedException(entry.date);
+      }
+    }
+    if (isReversal) return;
+
+    // تقييد الحسابات: أقرب تقييد على الحساب أو أحد آبائه يحدد الفروع المسموحة
+    for (final accountId in entry.lines.map((l) => l.accountId).toSet()) {
+      Account? current = await _accountsDao.getAccountById(accountId);
+      final visited = <int>{};
+      while (current != null && visited.add(current.id)) {
+        final allowed = await _branchDao.getAccountBranchIds(current.id);
+        if (allowed.isNotEmpty) {
+          if (branchId == null || !allowed.contains(branchId)) {
+            throw AccountNotAllowedForBranchException(
+                await _accountCode(accountId), branch?.code);
+          }
+          break;
+        }
+        final parentId = current.parentId;
+        current = parentId == null
+            ? null
+            : await _accountsDao.getAccountById(parentId);
+      }
+    }
   }
 
   Future<String> _accountCode(int accountId) async =>

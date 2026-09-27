@@ -34,6 +34,9 @@ class JournalEntryModel {
   /// إن كان القيد قيداً عكسياً: معرّف القيد الأصلي
   final int? reversalOfId;
 
+  /// الفرع الذي ينتمي إليه القيد (يتطلب تفعيل الفروع)
+  final int? branchId;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -53,6 +56,7 @@ class JournalEntryModel {
     this.sourceType,
     this.sourceId,
     this.reversalOfId,
+    this.branchId,
     this.createdAt,
     this.updatedAt,
   });
@@ -94,6 +98,7 @@ class JournalEntryModel {
     String? sourceType,
     String? sourceId,
     int? reversalOfId,
+    int? branchId,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? serialNumber,
@@ -114,6 +119,7 @@ class JournalEntryModel {
       sourceType: sourceType ?? this.sourceType,
       sourceId: sourceId ?? this.sourceId,
       reversalOfId: reversalOfId ?? this.reversalOfId,
+      branchId: branchId ?? this.branchId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -138,6 +144,7 @@ class JournalEntryModel {
         'sourceType': sourceType,
         'sourceId': sourceId,
         'reversalOfId': reversalOfId,
+        'branchId': branchId,
         'createdAt': createdAt?.toIso8601String(),
         'updatedAt': updatedAt?.toIso8601String(),
         'lines': lines.map((l) => l.toMap()).toList(),
@@ -165,6 +172,7 @@ class JournalEntryModel {
       sourceType: map['sourceType'] as String?,
       sourceId: map['sourceId'] as String?,
       reversalOfId: map['reversalOfId'] as int?,
+      branchId: map['branchId'] as int?,
       createdAt: parseDate(map['createdAt']),
       updatedAt: parseDate(map['updatedAt']),
       lines: ((map['lines'] as List?) ?? const [])

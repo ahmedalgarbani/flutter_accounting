@@ -6,6 +6,7 @@ import '../../core/accounting_config.dart';
 import '../../core/date_utils.dart';
 import '../../core/enums.dart';
 import '../../core/exceptions.dart';
+import '../../core/system_sources.dart';
 import '../../core/money.dart';
 import '../../database/accounting_database.dart';
 import '../../database/daos/accounts_dao.dart';
@@ -24,9 +25,6 @@ class ExchangeDifferenceRepositoryImpl
   final ICurrencyRepository _currencies;
   final IJournalEntryRepository _journalEntries;
   final AccountingConfig _config;
-
-  /// نوع المصدر لقيود إعادة التقييم (sourceId = تاريخ التقييم)
-  static const revaluationSource = 'fx_revaluation';
 
   ExchangeDifferenceRepositoryImpl(
     this._dao,
@@ -174,7 +172,7 @@ class ExchangeDifferenceRepositoryImpl
                 ? 'فروقات عملة محققة'
                 : 'إعادة تقييم أرصدة العملات الأجنبية'),
         entryType: EntryType.exchangeDifference,
-        sourceType: revaluationSource,
+        sourceType: SystemSources.fxRevaluation,
         sourceId: startOfDay(request.asOf).toIso8601String().substring(0, 10),
         lines: lines,
       );

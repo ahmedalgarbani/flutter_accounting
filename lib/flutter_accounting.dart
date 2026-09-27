@@ -23,6 +23,7 @@ export 'src/models/allocation_key_model.dart';
 export 'src/models/cost_allocation_run_model.dart';
 export 'src/models/currency_model.dart';
 export 'src/models/currency_operation_model.dart';
+export 'src/models/branch_model.dart';
 
 // ── التعدادات ──
 export 'src/core/enums.dart';
@@ -36,6 +37,7 @@ export 'src/core/accounting_config.dart';
 export 'src/core/journal_entry_builder.dart';
 export 'src/core/cost_allocation_calculator.dart';
 export 'src/core/money.dart';
+export 'src/core/system_sources.dart';
 
 // ── الواجهات (للـ DI والاختبار) ──
 export 'src/repositories/interfaces/interfaces.dart';
@@ -44,6 +46,7 @@ export 'src/repositories/interfaces/interfaces.dart';
 export 'src/reports/report_models.dart';
 export 'src/reports/cost_center_report_models.dart';
 export 'src/reports/currency_report_models.dart';
+export 'src/reports/branch_report_models.dart';
 
 // ── القوالب القياسية ودليل الحسابات الافتراضي ──
 export 'src/core/standard_templates.dart';

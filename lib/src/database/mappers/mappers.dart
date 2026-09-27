@@ -18,6 +18,7 @@ import '../../models/cost_center_model.dart';
 import '../../models/cost_allocation_model.dart';
 import '../../models/allocation_key_model.dart';
 import '../../models/currency_model.dart';
+import '../../models/branch_model.dart';
 
 /// يحوّل النص الفارغ إلى null (الأعمدة الاختيارية لا تقبل نصاً فارغاً)
 String? _nullIfBlank(String? v) => (v == null || v.trim().isEmpty) ? null : v;
@@ -133,6 +134,7 @@ class JournalEntryMapper {
         sourceType: data.sourceType,
         sourceId: data.sourceId,
         reversalOfId: data.reversalOfId,
+        branchId: data.branchId,
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
       );
@@ -155,6 +157,7 @@ class JournalEntryMapper {
         sourceType: Value(_nullIfBlank(model.sourceType)),
         sourceId: Value(_nullIfBlank(model.sourceId)),
         reversalOfId: Value(model.reversalOfId),
+        branchId: Value(model.branchId),
         updatedAt: Value(DateTime.now()),
       );
 }
@@ -422,5 +425,40 @@ class CurrencyMapper {
         currencyCode: data.currencyCode,
         date: data.date,
         rate: data.rate,
+      );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Branch Mapper
+// ─────────────────────────────────────────────────────────────
+
+class BranchMapper {
+  BranchMapper._();
+
+  static BranchModel fromData(Branch data) => BranchModel(
+        id: data.id,
+        code: data.code,
+        name: data.name,
+        nameAr: data.nameAr,
+        description: data.description,
+        isActive: data.isActive,
+        isHeadOffice: data.isHeadOffice,
+        interBranchAccountId: data.interBranchAccountId,
+        costCenterId: data.costCenterId,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      );
+
+  static BranchesCompanion toCompanion(BranchModel model) => BranchesCompanion(
+        id: model.id != null ? Value(model.id!) : const Value.absent(),
+        code: Value(model.code),
+        name: Value(model.name),
+        nameAr: Value(_nullIfBlank(model.nameAr)),
+        description: Value(_nullIfBlank(model.description)),
+        isActive: Value(model.isActive),
+        isHeadOffice: Value(model.isHeadOffice),
+        interBranchAccountId: Value(model.interBranchAccountId),
+        costCenterId: Value(model.costCenterId),
+        updatedAt: Value(DateTime.now()),
       );
 }

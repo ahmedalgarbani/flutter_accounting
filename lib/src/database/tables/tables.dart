@@ -58,6 +58,7 @@ class AccountingPeriods extends Table {
 @TableIndex(name: 'idx_journal_entries_date', columns: {#date})
 @TableIndex(
     name: 'idx_journal_entries_source', columns: {#sourceType, #sourceId})
+@TableIndex(name: 'idx_journal_entries_branch', columns: {#branchId})
 class JournalEntries extends Table {
   IntColumn get id => integer().autoIncrement()();
 
@@ -89,6 +90,9 @@ class JournalEntries extends Table {
 
   /// إن كان هذا القيد قيداً عكسياً: معرّف القيد الأصلي
   IntColumn get reversalOfId => integer().nullable()();
+
+  /// الفرع الذي ينتمي إليه القيد (Schema v5)
+  IntColumn get branchId => integer().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -329,4 +333,68 @@ class AccountingSettings extends Table {
 
   @override
   String get tableName => 'accounting_settings';
+}
+
+// ─────────────────────────────────────────────────────────────
+// الفروع - Branches (Schema v5)
+// ─────────────────────────────────────────────────────────────
+
+@DataClassName('Branch')
+class Branches extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get code => text().withLength(min: 1, max: 30)();
+  TextColumn get name => text().withLength(min: 1, max: 255)();
+  TextColumn get nameAr => text().withLength(min: 1, max: 255).nullable()();
+  TextColumn get description => text().nullable()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  BoolColumn get isHeadOffice => boolean().withDefault(const Constant(false))();
+
+  /// حساب "جاري الفرع" الذي تسجل عليه الفروع الأخرى معاملاتها معه
+  IntColumn get interBranchAccountId =>
+      integer().nullable().references(Accounts, #id)();
+
+  /// مركز التكلفة المرتبط (بُعد الفرع) لنسبة الحركات إليه تلقائياً
+  IntColumn get costCenterId =>
+      integer().nullable().references(CostCenters, #id)();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {code}
+      ];
+
+  @override
+  String get tableName => 'branches';
+}
+
+/// إقفال فترة محاسبية لفرع معيّن
+class BranchPeriodClosures extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get periodId => integer().references(AccountingPeriods, #id)();
+  IntColumn get branchId => integer().references(Branches, #id)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {periodId, branchId}
+      ];
+
+  @override
+  String get tableName => 'branch_period_closures';
+}
+
+/// تقييد حساب (وحساباته الفرعية) بفروع معيّنة
+class AccountBranches extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get accountId => integer().references(Accounts, #id)();
+  IntColumn get branchId => integer().references(Branches, #id)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {accountId, branchId}
+      ];
+
+  @override
+  String get tableName => 'account_branches';
 }
