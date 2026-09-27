@@ -40,6 +40,8 @@ await fa.record(
   - [القوالب](#7-القوالب)
   - [الإعدادات](#8-الإعدادات)
   - [مراكز التكلفة](#9-مراكز-التكلفة-اختيارية)
+  - [تعدد العملات](#10-تعدد-العملات-اختياري)
+  - [الفروع](#11-الفروع-اختيارية)
 - [دليل التكامل مع نظامك](#دليل-التكامل-مع-نظامك-)
 - [مرجع الـ API](#مرجع-الـ-api-)
 - [القواعد المحاسبية المدمجة](#القواعد-المحاسبية-المدمجة-️)
@@ -65,6 +67,8 @@ await fa.record(
 | 🔢 | **ترقيم تلقائي** — `JV-2026-0001` لكل سنة، وبادئة قابلة للتخصيص |
 | 📅 | **الفترات المالية** — سنوية أو شهرية، إقفال/إعادة فتح، منع التداخل |
 | 📈 | **التقارير** — ميزان المراجعة، قائمة الدخل، الميزانية العمومية، **كشف حساب** برصيد تراكمي، ورصيد أي حساب (مع أبنائه) |
+| 💱 | **تعدد العملات (اختياري)** — أسعار صرف بالتاريخ، البند يحفظ عملته الأصلية، ربط الحساب بعملة، فروقات محققة عند التسوية، وإعادة تقييم نهاية الفترة مع العكس التلقائي |
+| 🏬 | **الفروع (اختيارية)** — الفروع وحدات محاسبية لكل منها دفاتر متوازنة، معاملات بين الفروع، توحيد ومطابقة، ترقيم وإقفال فترات وتقييد حسابات لكل فرع |
 | 🏢 | **مراكز التكلفة (اختيارية)** — فروع، مشاريع، أقسام أو أبعاد خاصة؛ توزيع البند بالنسب أو المبالغ أو مفاتيح التوزيع، سياسات لكل حساب، توزيع دوري، وتقارير ربحية |
 | 🧩 | **القوالب** — 7 قوالب قياسية + قوالب مخصصة محفوظة في قاعدة البيانات |
 | 🔄 | **تحويل إلى Map** — `toMap()` / `fromMap()` للمزامنة والتصدير |
@@ -78,7 +82,7 @@ await fa.record(
 ```yaml
 # pubspec.yaml
 dependencies:
-  flutter_accounting: ^0.5.0
+  flutter_accounting: ^0.6.0
 ```
 
 المنصات المدعومة: Android, iOS, Windows, macOS, Linux (عبر `sqlite3_flutter_libs`).
@@ -388,6 +392,8 @@ await FlutterAccounting.initialize(
     serialPadding: 4,
     enableCostCenters: false,  // تفعيل مراكز التكلفة (القسم 9)
     allocationDecimals: 2,     // منازل تقريب الحصص عند التوزيع
+    multiCurrency: null,       // MultiCurrencyConfig(baseCurrency: 'SAR') — القسم 10
+    branches: null,            // BranchConfig() — القسم 11
   ),
 );
 ```
@@ -472,6 +478,85 @@ final entry = await fa.costAllocations.runAllocation(request);       // قيد �
 | `getUnallocatedLines(dimensionId:)` | البنود التي بلا مركز (لضبط جودة البيانات) |
 
 الفلتر `CostCenterFilter([ryd.id!, prjA.id!])` يقاطع الأبعاد بالتناسب (بند 60% للرياض و50% لمشروع A يساهم بـ 30%)، والمراكز من نفس البعد تُجمع معاً.
+
+### 10. تعدد العملات (اختياري)
+
+سجّل العمليات بأي عملة. كل بند يحفظ **مبلغه الأصلي وسعر الصرف**، ويُحوَّل إلى **عملة الأساس** في المدين والدائن، فتبقى كل التقارير المالية بعملة واحدة. المبالغ تُقرَّب حسب منازل كل عملة (الدينار الكويتي 3، الين 0)، وهو نفس أسلوب Odoo وERPNext.
+
+```dart
+await FlutterAccounting.initialize(
+  seedDefaultAccounts: true,            // يشمل 45 أرباح فروقات العملة و50 خسائرها
+  seedDefaultCurrencies: true,          // SAR, USD, EUR, KWD, ...
+  config: const AccountingConfig(
+    multiCurrency: MultiCurrencyConfig(baseCurrency: 'SAR'),
+  ),
+);
+
+// الأسعار يدخلها المستخدم (وحدات الأساس لكل وحدة)، ويُطبق آخر سعر في تاريخ القيد أو قبله
+await fa.currencies.setExchangeRate('USD', 3.75, date: DateTime(2026, 1, 1));
+
+// اختياري: ربط حساب بعملة (بنك أو مورد بالدولار)
+await fa.accounts.createAccount(AccountModel.create(
+    code: '2111', name: 'Supplier (USD)', nameAr: 'مورد (دولار)',
+    type: AccountType.liability, parentId: payablesId, currencyCode: 'USD'));
+
+await fa.record(JournalEntryBuilder(description: 'فاتورة مورد أمريكي')
+  .currency('USD')              // أو .currency('USD', rate: 3.76)
+  .debitCode('51', 1000)        // 1000 دولار = 3750 ريال
+  .creditCode('2111', 1000));
+```
+
+- عملة الأساس تُثبَّت في قاعدة البيانات ولا يمكن تغييرها بعد تسجيل قيود (`BaseCurrencyMismatchException`).
+- فروقات التقريب الصغيرة الناتجة عن التحويل (حتى `roundingTolerance`) تُسجل تلقائياً على حساب التقريب أو الفروقات.
+- `fa.currencies.getAccountCurrencyBalance(id)` و`getAccountCurrencyLedger(id)` تعرض الحساب بعملته وبعملة الأساس.
+
+**الفروقات المحققة**: عند تسوية مبلغ أجنبي، يُسجَّل تلقائياً الفرق بين السعر الدفتري (متوسط سعر الحساب افتراضياً) وسعر السداد:
+
+```dart
+await fa.exchangeDifferences.settle(SettlementRequest(
+  accountId: usdCustomerId, amount: 1000, rate: 3.70,
+  counterAccountId: bankId, date: DateTime.now(),
+));  // فاتورة بسعر 3.75 وتحصيل بسعر 3.70 → خسارة 50
+```
+
+**إعادة التقييم في نهاية الفترة (غير المحققة)** لحسابات الأصول والخصوم، مع معاينة وعكس تلقائي:
+
+```dart
+final preview = await fa.exchangeDifferences.previewRevaluation(
+    RevaluationRequest(asOf: DateTime(2026, 6, 30)));
+final result = await fa.exchangeDifferences.runRevaluation(RevaluationRequest(
+    asOf: DateTime(2026, 6, 30), autoReverseOn: DateTime(2026, 7, 1)));
+// result.realizedEntry (حسابات صار رصيدها بالعملة صفراً؛ لا يُعكس)
+// result.unrealizedEntry + result.reversalEntry
+```
+
+`getForeignCurrencyBalances(asOf:)` يعرض رصيد كل حساب بكل عملة، وقيمته الدفترية، وقيمته بالسعر الحالي، والفرق.
+
+### 11. الفروع (اختيارية)
+
+الفروع **وحدات محاسبية**: كل قيد ينتمي لفرع واحد، فيكون لكل فرع ميزان مراجعة وميزانية متوازنة.
+
+```dart
+await FlutterAccounting.initialize(
+  config: const AccountingConfig(branches: BranchConfig(
+    requireBranch: false,        // جعل الفرع إلزامياً في كل قيد
+    serialPerBranch: false,      // ترقيم JV-RYD-2026-0001
+    interBranchParentCode: '11', // الأب لحسابات جاري الفروع المنشأة تلقائياً
+    linkCostCenters: true,       // نسبة القيد تلقائياً لمركز تكلفة الفرع
+  )),
+);
+
+final jed = await fa.branches.ensureBranch(code: 'JED', name: 'Jeddah', nameAr: 'فرع جدة'); // ينشئ حساب IB-JED
+await fa.record(JournalEntryBuilder(description: 'بيع').branch('JED')
+  .debitCode('111', 500).creditCode('41', 500));
+
+// كل التقارير الحالية تقبل branchIds
+await fa.reports.getBalanceSheet(asOf: now, branchIds: [jed.id!]);
+```
+
+- **المعاملات بين الفروع**: `fa.branches.recordInterBranch(InterBranchTransaction(...))` تسجل قيداً في كل فرع عبر حسابات جاري الفروع، وتُعكس معاً بـ `fa.reverseSource(SystemSources.interBranch, id)`.
+- **الضوابط**: `restrictAccount(accountId, [branchIds])` لتقييد حساب بفروع (يسري على حساباته الفرعية)، و`closePeriod(periodId, branchId)` لإقفال فترة لفرع واحد.
+- **التقارير** (`fa.branchReports`): `getComparison()` (قائمة دخل ومركز مالي لكل فرع، مع القيود التي بلا فرع)، و`getConsolidatedTrialBalance()` / `getConsolidatedBalanceSheet()` (باستبعاد حسابات جاري الفروع)، و`getInterBranchReconciliation()`.
 
 ---
 
@@ -567,6 +652,33 @@ final entry = await fa.costAllocations.runAllocation(request);       // قيد �
 | `previewAllocation(request)` | معاينة التوزيع الدوري بدون حفظ |
 | `runAllocation(request, {post, postedBy})` | إنشاء قيد `EntryType.costAllocation` |
 
+### `ICurrencyRepository` — `fa.currencies`
+
+| الدالة | الوصف |
+|--------|-------|
+| `getCurrencies()` / `createCurrency(c)` / `updateCurrency(c)` / `ensureCurrency(...)` / `setCurrencyActive(...)` | العملات |
+| `ensureBaseCurrency()` / `baseCurrencyCode` | عملة الأساس (مثبّتة في قاعدة البيانات) |
+| `setExchangeRate(code, rate, {date})` / `getExchangeRates(...)` / `getExchangeRate(code, {date})` | أسعار الصرف |
+| `convert(amount, from:, to:, date:)` | التحويل عبر عملة الأساس |
+| `getAccountCurrencyBalance(id)` / `getAccountCurrencyLedger(id)` | الحساب بعملته وبعملة الأساس |
+
+### `IExchangeDifferenceRepository` — `fa.exchangeDifferences`
+
+| الدالة | الوصف |
+|--------|-------|
+| `settle(SettlementRequest)` | تسوية مع الفرق المحقق |
+| `previewRevaluation(request)` / `runRevaluation(request)` | إعادة التقييم في نهاية الفترة |
+| `getForeignCurrencyBalances({asOf})` | أرصدة العملات الأجنبية وفروقاتها غير المحققة |
+
+### `IBranchRepository` — `fa.branches` / `IBranchReportsRepository` — `fa.branchReports`
+
+| الدالة | الوصف |
+|--------|-------|
+| `getBranches()` / `createBranch(b)` / `updateBranch(b)` / `ensureBranch(...)` / `setBranchActive(...)` / `deleteBranch(id)` | الفروع |
+| `restrictAccount(accountId, branchIds)` / `closePeriod(periodId, branchId)` | ضوابط الفروع |
+| `recordInterBranch(transaction)` | قيدان مرتبطان عبر حسابات جاري الفروع |
+| `getComparison()` / `getConsolidatedTrialBalance()` / `getConsolidatedBalanceSheet(asOf:)` / `getInterBranchReconciliation()` | تقارير الفروع |
+
 ### `IAccountingPeriodRepository` — `fa.periods`
 
 | الدالة | الوصف |
@@ -659,6 +771,13 @@ tearDown(() => fa.dispose());
 ```
 
 ---
+
+## الترقية من 0.5.x ⬆️
+
+- **ترقية تلقائية للمخطط v4 وv5** تضيف جداول وأعمدة العملات والفروع. البنود الحالية تُعتبر بعملة الأساس، والقيود الحالية بلا فرع.
+- الميزتان موقوفتان افتراضياً (`multiCurrency: null` و`branches: null`).
+- أُضيف معامل اختياري `branchIds` لدوال `IReportsRepository`. إن كنت تطبّق الواجهة بنفسك (مثل الـ mocks)، أضفه.
+- أُضيفت القيمة `EntryType.exchangeDifference`، وأُضيف للدليل الجاهز الحسابان `45` (أرباح فروقات العملة) و`50` (خسائرها).
 
 ## الترقية من 0.4.x ⬆️
 
