@@ -18,8 +18,8 @@ class SalesAccountingService {
 
   /// فاتورة بيع (نقدية أو آجلة) مع ضريبة وتكلفة بضاعة اختيارية.
   ///
-  /// [branchCode] (اختياري) رمز مركز تكلفة الفرع: يُنسب إليه الإيراد والتكلفة
-  /// لتظهر ربحية كل فرع. يتطلب تفعيل مراكز التكلفة.
+  /// [branchCode] (اختياري) رمز الفرع: القيد يُسجل في دفاتره، ويُنسب تلقائياً
+  /// لمركز تكلفة الفرع. يتطلب تفعيل الفروع.
   Future<JournalEntryModel> onInvoiceCreated({
     required int invoiceId,
     required double netAmount,
@@ -30,9 +30,6 @@ class SalesAccountingService {
     String? user,
   }) {
     final total = netAmount + vatAmount;
-    final branch = [
-      if (branchCode != null) CostAllocationModel.code(branchCode),
-    ];
     final entry = JournalEntryBuilder(
             description: 'فاتورة مبيعات رقم $invoiceId')
         .reference('INV-$invoiceId')
@@ -40,14 +37,14 @@ class SalesAccountingService {
         .source(_invoice, invoiceId)
         .createdBy(user)
         .debitCode(paidInCash ? AppAccounts.cash : AppAccounts.customers, total)
-        .creditCode(AppAccounts.sales, netAmount, allocations: branch);
+        .creditCode(AppAccounts.sales, netAmount);
+    if (branchCode != null) entry.branch(branchCode);
 
     if (vatAmount > 0) entry.creditCode(AppAccounts.vatPayable, vatAmount);
 
     // إثبات تكلفة البضاعة المباعة في نفس القيد
     if (costAmount > 0) {
       entry.debitCode(AppAccounts.costOfGoodsSold, costAmount, allocations: [
-        ...branch,
         if (branchCode != null)
           CostAllocationModel.code(AppCostCenters.salesDept),
       ]).creditCode(AppAccounts.inventory, costAmount);
@@ -94,6 +91,69 @@ class SalesAccountingService {
           .creditCode(AppAccounts.cash, amount),
       postedBy: user,
     );
+  }
+
+  /// فاتورة بالدولار لعميل خارجي (تُحوَّل للريال بسعر اليوم وتحفظ بالدولار)
+  Future<JournalEntryModel> onForeignInvoice({
+    required int invoiceId,
+    required double usdAmount,
+    String? branchCode,
+  }) {
+    final entry = JournalEntryBuilder(description: 'فاتورة تصدير $invoiceId')
+        .reference('EXP-$invoiceId')
+        .type(EntryType.saleAgil)
+        .source(_invoice, invoiceId)
+        .currency('USD')
+        .debitCode(AppAccounts.usdCustomers, usdAmount)
+        .creditCode(AppAccounts.sales, usdAmount);
+    if (branchCode != null) entry.branch(branchCode);
+    return _fa.record(entry);
+  }
+
+  /// تحصيل من العميل الخارجي إلى البنك بسعر [rate]: فرق السعر عن سعر
+  /// الفاتورة يُسجل تلقائياً ربحاً أو خسارة فروقات عملة.
+  Future<JournalEntryModel> onForeignPaymentReceived({
+    required double usdAmount,
+    required double rate,
+  }) async {
+    final customers =
+        await _fa.accounts.getAccountByCode(AppAccounts.usdCustomers);
+    final bank = await _fa.accounts.getAccountByCode(AppAccounts.bank);
+    return _fa.exchangeDifferences.settle(SettlementRequest(
+      accountId: customers!.id!,
+      amount: usdAmount,
+      rate: rate,
+      counterAccountId: bank!.id!,
+      date: DateTime.now(),
+    ));
+  }
+
+  /// المركز الرئيسي يدفع مصروفاً عن فرع (معاملة بين الفروع: قيد في كل فرع)
+  Future<List<JournalEntryModel>> onHeadOfficePaysForBranch({
+    required String branchCode,
+    required String expenseCode,
+    required double amount,
+    required String description,
+  }) async {
+    final hq = await _fa.branches.getBranchByCode(AppBranches.headOffice);
+    final branch = await _fa.branches.getBranchByCode(branchCode);
+    final cash = await _fa.accounts.getAccountByCode(AppAccounts.cash);
+    final expense = await _fa.accounts.getAccountByCode(expenseCode);
+    return _fa.branches.recordInterBranch(InterBranchTransaction(
+      fromBranchId: hq!.id!,
+      toBranchId: branch!.id!,
+      description: description,
+      fromLines: [
+        JournalEntryLineModel.creditLine(accountId: cash!.id!, amount: amount),
+      ],
+      toLines: [
+        JournalEntryLineModel.debitLine(
+          accountId: expense!.id!,
+          amount: amount,
+          allocations: [CostAllocationModel.code(AppCostCenters.adminDept)],
+        ),
+      ],
+    ));
   }
 
   /// إلغاء فاتورة: يعكس كل قيودها المرحّلة (آمن للاستدعاء أكثر من مرة)

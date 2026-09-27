@@ -49,32 +49,35 @@ void main() {
     expect(tb.isBalanced, isTrue);
   });
 
-  group('مع مراكز التكلفة', () {
+  group('مع مراكز التكلفة والفروع والعملات', () {
     late FlutterAccounting fc;
-    late SalesAccountingService withCenters;
+    late SalesAccountingService withAll;
 
     setUp(() async {
-      fc = FlutterAccounting.forTesting(
-          config: const AccountingConfig(enableCostCenters: true));
+      fc = FlutterAccounting.forTesting(config: appConfig);
       await AccountingSeedData.seed(fc.accounts);
       await CostCenterSeedData.seed(fc.costCenters);
       await fc.periods.ensureOpenPeriodFor(DateTime.now());
-      await setupCostCenters(fc);
-      await setupCostCenters(fc); // لا يتكرر شيء
-      withCenters = SalesAccountingService(fc);
+      for (var i = 0; i < 2; i++) {
+        // مرتين للتأكد من عدم التكرار
+        await setupCostCenters(fc);
+        await setupBranches(fc);
+        await setupCurrencies(fc);
+      }
+      withAll = SalesAccountingService(fc);
     });
 
     tearDown(() => fc.dispose());
 
     test('ربحية الفروع: فاتورة لكل فرع وإيجار موزع حسب المساحة', () async {
-      await withCenters.onInvoiceCreated(
+      await withAll.onInvoiceCreated(
           invoiceId: 1,
           netAmount: 1000,
           costAmount: 600,
-          branchCode: AppCostCenters.riyadh);
-      await withCenters.onInvoiceCreated(
-          invoiceId: 2, netAmount: 500, branchCode: AppCostCenters.jeddah);
-      await withCenters.onExpensePaid(
+          branchCode: AppBranches.riyadh);
+      await withAll.onInvoiceCreated(
+          invoiceId: 2, netAmount: 500, branchCode: AppBranches.jeddah);
+      await withAll.onExpensePaid(
           expenseCode: AppAccounts.rent,
           amount: 300,
           description: 'rent',
@@ -90,10 +93,52 @@ void main() {
       expect(net(AppCostCenters.jeddah), 500 - 120);
 
       // القسم إلزامي للمصروفات
-      expect(
-          () => withCenters.onExpensePaid(
+      await expectLater(
+          () => withAll.onExpensePaid(
               expenseCode: AppAccounts.rent, amount: 10, description: 'x'),
           throwsA(isA<CostCenterRequiredException>()));
+    });
+
+    test('الفروع: ميزانية لكل فرع ومعاملة بين الفروع متطابقة', () async {
+      await withAll.onInvoiceCreated(
+          invoiceId: 1, netAmount: 1000, branchCode: AppBranches.riyadh);
+      await withAll.onHeadOfficePaysForBranch(
+          branchCode: AppBranches.jeddah,
+          expenseCode: AppAccounts.rent,
+          amount: 500,
+          description: 'rent');
+
+      final comparison = await fc.branchReports.getComparison();
+      for (final b in comparison.branches) {
+        expect(b.isBalanced, isTrue, reason: b.branch.code);
+      }
+      final jed = comparison.branches
+          .firstWhere((b) => b.branch.code == AppBranches.jeddah);
+      expect(jed.expenses, 500);
+      expect(
+          (await fc.branchReports.getInterBranchReconciliation()).isReconciled,
+          isTrue);
+      expect(
+          (await fc.branchReports
+                  .getConsolidatedBalanceSheet(asOf: DateTime.now()))
+              .isBalanced,
+          isTrue);
+    });
+
+    test('العملات: فاتورة بالدولار وتحصيل بسعر مختلف', () async {
+      final invoice = await withAll.onForeignInvoice(
+          invoiceId: 7, usdAmount: 100, branchCode: AppBranches.riyadh);
+      expect(invoice.totalDebits, 375);
+      final receipt =
+          await withAll.onForeignPaymentReceived(usdAmount: 100, rate: 3.70);
+      final loss = receipt.lines.firstWhere((l) => l.accountCode == '50');
+      expect(loss.debit, 5);
+      final customers =
+          await fc.accounts.getAccountByCode(AppAccounts.usdCustomers);
+      final balance =
+          await fc.currencies.getAccountCurrencyBalance(customers!.id!);
+      expect(balance.foreignBalance, 0);
+      expect(balance.baseBalance, 0);
     });
   });
 }

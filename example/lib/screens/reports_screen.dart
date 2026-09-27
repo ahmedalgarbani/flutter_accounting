@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_accounting/flutter_accounting.dart';
 
-/// التقارير الثلاثة: ميزان المراجعة، قائمة الدخل، الميزانية العمومية.
+/// التقارير المالية + مقارنة الفروع + أرصدة العملات الأجنبية.
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key, required this.fa});
 
@@ -12,8 +12,14 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  late Future<(TrialBalanceReport, IncomeStatementReport, BalanceSheetReport)>
-      _future;
+  late Future<
+      (
+        TrialBalanceReport,
+        IncomeStatementReport,
+        BalanceSheetReport,
+        BranchComparisonReport?,
+        ForeignCurrencyBalancesReport?,
+      )> _future;
 
   @override
   void initState() {
@@ -21,14 +27,28 @@ class _ReportsScreenState extends State<ReportsScreen> {
     _future = _load();
   }
 
-  Future<(TrialBalanceReport, IncomeStatementReport, BalanceSheetReport)>
-      _load() async {
+  Future<
+      (
+        TrialBalanceReport,
+        IncomeStatementReport,
+        BalanceSheetReport,
+        BranchComparisonReport?,
+        ForeignCurrencyBalancesReport?,
+      )> _load() async {
+    final fa = widget.fa;
     final now = DateTime.now();
     final yearStart = DateTime(now.year, 1, 1);
     return (
-      await widget.fa.reports.getTrialBalance(from: yearStart, to: now),
-      await widget.fa.reports.getIncomeStatement(from: yearStart, to: now),
-      await widget.fa.reports.getBalanceSheet(asOf: now),
+      await fa.reports.getTrialBalance(from: yearStart, to: now),
+      await fa.reports.getIncomeStatement(from: yearStart, to: now),
+      await fa.reports.getBalanceSheet(asOf: now),
+      // الميزات الاختيارية تظهر فقط إن كانت مفعّلة
+      fa.config.isBranchesEnabled
+          ? await fa.branchReports.getComparison(from: yearStart, to: now)
+          : null,
+      fa.config.isMultiCurrency
+          ? await fa.exchangeDifferences.getForeignCurrencyBalances(asOf: now)
+          : null,
     );
   }
 
@@ -42,7 +62,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final (tb, income, bs) = snapshot.data!;
+          final (tb, income, bs, branches, fx) = snapshot.data!;
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -72,6 +92,28 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 _row('أصول = خصوم + حقوق ملكية؟', bs.isBalanced ? '✅' : '❌',
                     bold: true),
               ]),
+              if (branches != null)
+                _section('الفروع', [
+                  for (final b in branches.branches) ...[
+                    _row(b.branch.displayName, 'صافي الربح ${_f(b.netIncome)}',
+                        bold: true),
+                    _row(
+                        '  إيرادات ${_f(b.revenue)} • مصروفات ${_f(b.expenses)}',
+                        ''),
+                    _row('  الأصول ${_f(b.totalAssets)} • ميزانية متوازنة؟',
+                        b.isBalanced ? '✅' : '❌'),
+                  ],
+                ]),
+              if (fx != null && fx.rows.isNotEmpty)
+                _section('أرصدة العملات الأجنبية (${fx.baseCurrency})', [
+                  for (final r in fx.rows)
+                    _row(
+                        '${r.accountCode} ${r.accountName}: '
+                            '${_f(r.foreignBalance)} ${r.currencyCode}',
+                        'فرق ${_f(r.difference)}'),
+                  _row('صافي فرق إعادة التقييم', _f(fx.totalDifference),
+                      bold: true),
+                ]),
             ],
           );
         },
