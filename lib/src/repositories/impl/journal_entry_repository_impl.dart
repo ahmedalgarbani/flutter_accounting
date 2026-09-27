@@ -448,6 +448,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       }
     }
 
+    // حسابات فروقات العملة والتقريب لا يُشترط لها مركز تكلفة
+    final fxAccountIds = await _exchangeAccountIds();
+
     final result = <JournalEntryLineModel>[];
     for (final line in entry.lines) {
       final allocations = <CostAllocationModel>[
@@ -472,7 +475,8 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
         if (effective.policy == DimensionPolicy.required &&
             !has &&
             entry.entryType != EntryType.costAllocation &&
-            entry.entryType != EntryType.exchangeDifference) {
+            entry.entryType != EntryType.exchangeDifference &&
+            !fxAccountIds.contains(line.accountId)) {
           throw CostCenterRequiredException(
               await _accountCode(line.accountId), dimension.code);
         }
@@ -517,6 +521,24 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   // ─────────────────────────────────────────────────────────────
   // تعدد العملات
   // ─────────────────────────────────────────────────────────────
+
+  /// معرّفات حسابات فروقات العملة والتقريب المعرّفة في الإعدادات
+  Future<Set<int>> _exchangeAccountIds() async {
+    final mc = _config.multiCurrency;
+    if (mc == null) return const {};
+    final ids = <int>{};
+    for (final code in {
+      mc.realizedGainAccountCode,
+      mc.realizedLossAccountCode,
+      mc.unrealizedGainCode,
+      mc.unrealizedLossCode,
+      if (mc.roundingAccountCode != null) mc.roundingAccountCode!,
+    }) {
+      final account = await _accountsDao.getAccountByCode(code);
+      if (account != null) ids.add(account.id);
+    }
+    return ids;
+  }
 
   /// يحوّل كل بند إلى عملة الأساس ([debit]/[credit]) مع حفظ مبلغه بعملته
   /// وسعر الصرف، ويتحقق من عملة الحساب، ويسوّي فرق التقريب الصغير.

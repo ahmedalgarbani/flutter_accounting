@@ -445,6 +445,42 @@ void main() {
       expect(e.lines.firstWhere((l) => l.accountId == gainId).credit, 50);
     });
 
+    test('سطر فرق العملة لا يتطلب مركز تكلفة حتى مع سياسة إلزامية', () async {
+      final both = FlutterAccounting.forTesting(
+          config: const AccountingConfig(
+              enableCostCenters: true,
+              multiCurrency: MultiCurrencyConfig(baseCurrency: 'SAR')));
+      addTearDown(both.dispose);
+      await AccountingSeedData.seed(both.accounts);
+      await both.periods.createFiscalYear(2024);
+      await both.currencies.ensureCurrency(code: 'USD', name: 'USD');
+      await both.currencies.setExchangeRate('USD', 3.75, date: DateTime(2024));
+      await CostCenterSeedData.seed(both.costCenters);
+      final dep =
+          await both.costCenters.getDimensionByCode(CostCenterSeedData.department);
+      await both.costCenters.setRule(DimensionRuleModel.forType(
+          dimensionId: dep!.id!,
+          accountType: AccountType.expense,
+          policy: DimensionPolicy.required));
+      final customer = await both.accounts.createAccount(AccountModel.create(
+          code: '1131',
+          name: 'USD customer',
+          type: AccountType.asset,
+          parentId: (await both.accounts.getAccountByCode('11'))!.id,
+          currencyCode: 'USD'));
+      await both.record(JournalEntryBuilder(description: 'sale', date: march)
+          .currency('USD')
+          .debit(customer.id!, 100)
+          .creditCode('41', 100));
+      final e = await both.exchangeDifferences.settle(SettlementRequest(
+          accountId: customer.id!,
+          amount: 100,
+          rate: 3.70,
+          counterAccountId: (await both.accounts.getAccountByCode('112'))!.id!,
+          date: june));
+      expect(e.totalDebits, 375);
+    });
+
     test('تسوية بلا رصيد أو بعملة الأساس مرفوضة', () async {
       await expectLater(
           () => fa.exchangeDifferences.settle(SettlementRequest(
