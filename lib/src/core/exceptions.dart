@@ -350,3 +350,132 @@ class DuplicateAllocationKeyCodeException extends AccountingException {
 class InvalidAllocationKeyException extends AccountingException {
   const InvalidAllocationKeyException(super.message);
 }
+
+// ─────────────────────────────────────────────────────────────
+// استثناءات تعدد العملات
+// ─────────────────────────────────────────────────────────────
+
+/// تعدد العملات غير مفعّل في [AccountingConfig.multiCurrency]
+class MultiCurrencyDisabledException extends AccountingException {
+  const MultiCurrencyDisabledException()
+      : super('تعدد العملات غير مفعّل. فعّله عبر '
+            'AccountingConfig(multiCurrency: MultiCurrencyConfig(baseCurrency: ...)).');
+}
+
+/// العملة غير معرّفة
+class CurrencyNotFoundException extends AccountingException {
+  final String code;
+  const CurrencyNotFoundException(this.code)
+      : super('العملة "$code" غير معرّفة.');
+}
+
+/// رمز العملة مكرر
+class DuplicateCurrencyCodeException extends AccountingException {
+  final String code;
+  const DuplicateCurrencyCodeException(this.code)
+      : super('العملة "$code" موجودة مسبقاً.');
+}
+
+/// العملة موقوفة
+class InactiveCurrencyException extends AccountingException {
+  final String code;
+  const InactiveCurrencyException(this.code)
+      : super('العملة "$code" موقوفة ولا يمكن التسجيل بها.');
+}
+
+/// لا يوجد سعر صرف للعملة في التاريخ المطلوب أو قبله
+class ExchangeRateNotFoundException extends AccountingException {
+  final String currencyCode;
+  final DateTime date;
+  const ExchangeRateNotFoundException(this.currencyCode, this.date)
+      : super('لا يوجد سعر صرف للعملة "$currencyCode" في تاريخ $date أو قبله. '
+            'أدخل السعر أولاً أو مرّره يدوياً.');
+}
+
+/// سعر صرف غير صالح (صفر أو سالب...)
+class InvalidExchangeRateException extends AccountingException {
+  const InvalidExchangeRateException(super.message);
+}
+
+/// عملة البند لا تطابق عملة الحساب
+class CurrencyMismatchException extends AccountingException {
+  final String accountCode;
+  final String accountCurrency;
+  final String lineCurrency;
+  const CurrencyMismatchException(
+      this.accountCode, this.accountCurrency, this.lineCurrency)
+      : super('الحساب "$accountCode" بعملة "$accountCurrency" ولا يقبل بنوداً '
+            'بعملة "$lineCurrency".');
+}
+
+/// عملة الأساس في الإعدادات تختلف عن المثبّتة في قاعدة البيانات
+class BaseCurrencyMismatchException extends AccountingException {
+  final String storedCurrency;
+  final String configuredCurrency;
+  const BaseCurrencyMismatchException(
+      this.storedCurrency, this.configuredCurrency)
+      : super(
+            'عملة الأساس في قاعدة البيانات "$storedCurrency" ولا يمكن تغييرها '
+            'إلى "$configuredCurrency" بعد تسجيل قيود.');
+}
+
+/// عملية عملات غير صالحة (تغيير عملة حساب عليه حركات، تسوية بلا رصيد...)
+class InvalidCurrencyOperationException extends AccountingException {
+  const InvalidCurrencyOperationException(super.message);
+}
+
+// ─────────────────────────────────────────────────────────────
+// استثناءات الفروع
+// ─────────────────────────────────────────────────────────────
+
+/// الفروع غير مفعّلة في [AccountingConfig.branches]
+class BranchesDisabledException extends AccountingException {
+  const BranchesDisabledException()
+      : super(
+            'الفروع غير مفعّلة. فعّلها عبر AccountingConfig(branches: BranchConfig()).');
+}
+
+/// الفرع غير موجود
+class BranchNotFoundException extends AccountingException {
+  final dynamic identifier;
+  const BranchNotFoundException(this.identifier)
+      : super('الفرع "$identifier" غير موجود.');
+}
+
+/// رمز الفرع مكرر
+class DuplicateBranchCodeException extends AccountingException {
+  final String code;
+  const DuplicateBranchCodeException(this.code)
+      : super('رمز الفرع "$code" موجود مسبقاً.');
+}
+
+/// الفرع موقوف
+class InactiveBranchException extends AccountingException {
+  final String code;
+  const InactiveBranchException(this.code)
+      : super('الفرع "$code" موقوف ولا يمكن التسجيل عليه.');
+}
+
+/// القيد يجب أن يحدد فرعاً ([BranchConfig.requireBranch])
+class BranchRequiredException extends AccountingException {
+  const BranchRequiredException() : super('يجب تحديد فرع القيد.');
+}
+
+/// الحساب مقيّد بفروع أخرى
+class AccountNotAllowedForBranchException extends AccountingException {
+  final String accountCode;
+  final String? branchCode;
+  const AccountNotAllowedForBranchException(this.accountCode, this.branchCode)
+      : super('الحساب "$accountCode" غير مسموح للفرع "${branchCode ?? '-'}".');
+}
+
+/// لا يمكن حذف فرع عليه قيود
+class BranchHasEntriesException extends AccountingException {
+  const BranchHasEntriesException()
+      : super('لا يمكن حذف الفرع لأنه يحتوي على قيود. أوقفه بدلاً من ذلك.');
+}
+
+/// عملية فروع غير صالحة (فرع بلا حساب جاري، معاملة بين فروع غير متوازنة...)
+class InvalidBranchOperationException extends AccountingException {
+  const InvalidBranchOperationException(super.message);
+}

@@ -2,6 +2,7 @@
 /// تنفيذ Repository الحسابات مع قواعد العمل الكاملة
 library;
 
+import '../../core/accounting_config.dart';
 import '../../core/enums.dart';
 import '../../core/exceptions.dart';
 import '../../models/account_model.dart';
@@ -13,8 +14,20 @@ import '../interfaces/interfaces.dart';
 class AccountRepositoryImpl implements IAccountRepository {
   final AccountsDao _accountsDao;
   final JournalEntriesDao _entriesDao;
+  final AccountingConfig _config;
 
-  AccountRepositoryImpl(this._accountsDao, this._entriesDao);
+  AccountRepositoryImpl(this._accountsDao, this._entriesDao,
+      [this._config = const AccountingConfig()]);
+
+  /// عملة الحساب تتطلب تعدد العملات وعملة معرّفة
+  Future<void> _validateCurrency(String? code) async {
+    if (code == null || code.trim().isEmpty) return;
+    if (!_config.isMultiCurrency) throw const MultiCurrencyDisabledException();
+    final currencies = _entriesDao.attachedDatabase.currenciesDao;
+    if (await currencies.getCurrency(code) == null) {
+      throw CurrencyNotFoundException(code);
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────
   // القراءة
@@ -87,6 +100,7 @@ class AccountRepositoryImpl implements IAccountRepository {
     if (await _accountsDao.codeExists(account.code)) {
       throw DuplicateAccountCodeException(account.code);
     }
+    await _validateCurrency(account.currencyCode);
 
     // تحديد مستوى الحساب تلقائياً + قواعد الحساب الأب
     int level = 1;
@@ -131,6 +145,15 @@ class AccountRepositoryImpl implements IAccountRepository {
         (await _entriesDao.accountHasLines(account.id!) ||
             await _accountsDao.hasChildren(account.id!))) {
       throw CannotChangeAccountTypeException(existing.code);
+    }
+
+    // لا يمكن تغيير عملة حساب عليه قيود
+    if (existing.currencyCode != account.currencyCode) {
+      await _validateCurrency(account.currencyCode);
+      if (await _entriesDao.accountHasLines(account.id!)) {
+        throw InvalidCurrencyOperationException(
+            'لا يمكن تغيير عملة الحساب "${existing.code}" لأنه يحتوي على قيود.');
+      }
     }
 
     // التحقق من الحساب الأب وإعادة حساب المستوى

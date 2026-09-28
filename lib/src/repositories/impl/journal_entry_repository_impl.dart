@@ -13,10 +13,13 @@ import '../../core/enums.dart';
 import '../../core/exceptions.dart';
 import '../../core/accounting_validator.dart';
 import '../../core/cost_allocation_calculator.dart';
+import '../../core/money.dart';
+import '../../models/currency_model.dart';
 import '../../models/cost_allocation_model.dart';
 import '../../models/journal_entry_model.dart';
 import '../../models/journal_entry_line_model.dart';
 import '../../database/daos/accounts_dao.dart';
+import '../../database/daos/branches_dao.dart';
 import '../../database/daos/cost_centers_dao.dart';
 import '../../database/daos/journal_entries_dao.dart';
 import '../../database/mappers/mappers.dart';
@@ -28,16 +31,24 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   final AccountsDao _accountsDao;
   final AccountingConfig _config;
   final CostCentersDao? _costCentersDao;
+  final ICurrencyRepository? _currencyRepository;
 
   JournalEntryRepositoryImpl(
     this._entriesDao,
     this._accountsDao, [
     this._config = const AccountingConfig(),
     this._costCentersDao,
+    this._currencyRepository,
   ]);
+
+  ICurrencyRepository get _currencies =>
+      _currencyRepository ??
+      (throw StateError('ICurrencyRepository مطلوب لتعدد العملات.'));
 
   CostCentersDao get _costDao =>
       _costCentersDao ?? _entriesDao.attachedDatabase.costCentersDao;
+
+  BranchesDao get _branchDao => _entriesDao.attachedDatabase.branchesDao;
 
   // ─────────────────────────────────────────────────────────────
   // القراءة
@@ -125,7 +136,7 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     final serial = entry.serialNumber ??
         await _entriesDao.generateNextSerialNumber(
           entry.date,
-          prefix: _config.serialPrefix,
+          prefix: await _serialPrefix(entry),
           padding: _config.serialPadding,
         );
 
@@ -179,6 +190,7 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
         entryType: entry.entryType,
         sourceType: entry.sourceType,
         sourceId: entry.sourceId,
+        branchId: entry.branchId,
         createdAt: existing.createdAt,
         updatedAt: DateTime.now(),
       );
@@ -271,6 +283,10 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
             sortOrder: line.sortOrder,
             // نفس توزيع البند الأصلي كي يلغي أثره على كل مركز
             allocations: line.allocations,
+            // ونفس العملة والسعر كي يلغي أثره بالعملة وبعملة الأساس
+            currencyCode: line.currencyCode,
+            amountCurrency: line.amountCurrency,
+            exchangeRate: line.exchangeRate,
           ),
       ];
 
@@ -287,6 +303,7 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
         sourceType: original.sourceType,
         sourceId: original.sourceId,
         reversalOfId: original.id,
+        branchId: original.branchId,
       ));
 
       // تحديث حالة القيد الأصلي إلى "معكوس"
@@ -341,6 +358,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
   /// يتحقق من القيد ويُعيد بنوده بعد حل توزيعها على مراكز التكلفة
   Future<List<JournalEntryLineModel>> _validateEntry(
       JournalEntryModel entry) async {
+    // 0. تحويل البنود بالعملات الأجنبية إلى عملة الأساس
+    entry = entry.copyWith(lines: await _resolveCurrencies(entry));
+
     // 1. التحقق من القواعد المحاسبية للبنود
     await _validateLines(entry.lines);
 
@@ -353,6 +373,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
     } else if (period.isClosed) {
       throw PeriodClosedException(entry.date);
     }
+
+    // 2.5 الفروع
+    await _validateBranch(entry, period);
 
     // 3. مراكز التكلفة (القيد العكسي ينسخ توزيع الأصل كما هو دون إعادة تحقق،
     //    كي يُلغى أثره حتى لو أُوقف مركز أو تغيرت السياسات بعد ذلك)
@@ -415,6 +438,19 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
           dimensionId: c.dimensionId,
         );
 
+    // مركز تكلفة فرع القيد (يُنسب إليه كل بند لم يحدد مركزاً من بُعده)
+    CostCenter? branchCenter;
+    final branchId = entry.branchId;
+    if (branchId != null && _config.branches?.linkCostCenters == true) {
+      final centerId = (await _branchDao.getBranchById(branchId))?.costCenterId;
+      if (centerId != null) {
+        branchCenter = await _costDao.getCenterById(centerId);
+      }
+    }
+
+    // حسابات فروقات العملة والتقريب لا يُشترط لها مركز تكلفة
+    final fxAccountIds = await _exchangeAccountIds();
+
     final result = <JournalEntryLineModel>[];
     for (final line in entry.lines) {
       final allocations = <CostAllocationModel>[
@@ -426,7 +462,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       for (final dimension in resolver.activeDimensions) {
         final effective = await resolver.resolve(line.accountId, dimension.id);
         var has = allocations.any((a) => a.dimensionId == dimension.id);
-        final defaultId = effective.defaultCostCenterId;
+        final defaultId = branchCenter?.dimensionId == dimension.id
+            ? branchCenter!.id
+            : effective.defaultCostCenterId;
         if (!has &&
             defaultId != null &&
             effective.policy != DimensionPolicy.forbidden) {
@@ -436,7 +474,9 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
         }
         if (effective.policy == DimensionPolicy.required &&
             !has &&
-            entry.entryType != EntryType.costAllocation) {
+            entry.entryType != EntryType.costAllocation &&
+            entry.entryType != EntryType.exchangeDifference &&
+            !fxAccountIds.contains(line.accountId)) {
           throw CostCenterRequiredException(
               await _accountCode(line.accountId), dimension.code);
         }
@@ -476,6 +516,201 @@ class JournalEntryRepositoryImpl implements IJournalEntryRepository {
       result.add(line.copyWith(allocations: resolved));
     }
     return result;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // تعدد العملات
+  // ─────────────────────────────────────────────────────────────
+
+  /// معرّفات حسابات فروقات العملة والتقريب المعرّفة في الإعدادات
+  Future<Set<int>> _exchangeAccountIds() async {
+    final mc = _config.multiCurrency;
+    if (mc == null) return const {};
+    final ids = <int>{};
+    for (final code in {
+      mc.realizedGainAccountCode,
+      mc.realizedLossAccountCode,
+      mc.unrealizedGainCode,
+      mc.unrealizedLossCode,
+      if (mc.roundingAccountCode != null) mc.roundingAccountCode!,
+    }) {
+      final account = await _accountsDao.getAccountByCode(code);
+      if (account != null) ids.add(account.id);
+    }
+    return ids;
+  }
+
+  /// يحوّل كل بند إلى عملة الأساس ([debit]/[credit]) مع حفظ مبلغه بعملته
+  /// وسعر الصرف، ويتحقق من عملة الحساب، ويسوّي فرق التقريب الصغير.
+  Future<List<JournalEntryLineModel>> _resolveCurrencies(
+      JournalEntryModel entry) async {
+    final mc = _config.multiCurrency;
+    if (mc == null) {
+      if (entry.lines
+          .any((l) => l.currencyCode != null || l.amountCurrency != null)) {
+        throw const MultiCurrencyDisabledException();
+      }
+      return entry.lines;
+    }
+
+    final base = await _currencies.ensureBaseCurrency();
+    final isReversal = entry.reversalOfId != null;
+    final isSystem =
+        entry.entryType == EntryType.exchangeDifference || isReversal;
+    final currencies = <String, CurrencyModel>{};
+    final result = <JournalEntryLineModel>[];
+    var anyForeign = false;
+
+    JournalEntryLineModel convert(JournalEntryLineModel line, double amount,
+            {String? code, double? foreign, double? rate}) =>
+        JournalEntryLineModel(
+          id: line.id,
+          entryId: line.entryId,
+          accountId: line.accountId,
+          accountCode: line.accountCode,
+          accountName: line.accountName,
+          debit: line.isDebit ? amount : 0,
+          credit: line.isDebit ? 0 : amount,
+          description: line.description,
+          sortOrder: line.sortOrder,
+          allocations: line.allocations,
+          currencyCode: code,
+          amountCurrency: foreign,
+          exchangeRate: rate,
+        );
+
+    for (final line in entry.lines) {
+      final account = await _accountsDao.getAccountById(line.accountId);
+      final lockCode = account?.currencyCode;
+      final code = line.currencyCode ?? lockCode ?? base.code;
+      if (lockCode != null && lockCode != code) {
+        throw CurrencyMismatchException(account!.code, lockCode, code);
+      }
+
+      // بند بعملة الأساس
+      if (code == base.code) {
+        result.add(convert(
+            line,
+            Money.round(
+                line.amountCurrency ?? line.amount, base.decimalPlaces)));
+        continue;
+      }
+
+      final currency = currencies[code] ??=
+          await _currencies.getCurrency(code) ??
+              (throw CurrencyNotFoundException(code));
+      if (!currency.isActive && !isReversal) {
+        throw InactiveCurrencyException(code);
+      }
+      anyForeign = true;
+
+      // تعديل بعملة الأساس فقط (قيود فروقات العملة وعكسها)
+      if (line.amountCurrency == 0 && isSystem) {
+        result.add(convert(line, Money.round(line.amount, base.decimalPlaces),
+            code: code, foreign: 0));
+        continue;
+      }
+
+      final foreign = Money.round(
+          line.amountCurrency ?? line.amount, currency.decimalPlaces);
+      final rate = line.exchangeRate ??
+          await _currencies.getExchangeRate(code, date: entry.date);
+      if (rate <= 0 || rate.isNaN || rate.isInfinite) {
+        throw const InvalidExchangeRateException(
+            'سعر الصرف يجب أن يكون أكبر من صفر.');
+      }
+      result.add(convert(line, Money.round(foreign * rate, base.decimalPlaces),
+          code: code, foreign: foreign, rate: rate));
+    }
+
+    // تسوية فرق التقريب الناتج عن التحويل
+    if (anyForeign) {
+      final diff = Money.round(
+          AccountingValidator.totalDebits(result) -
+              AccountingValidator.totalCredits(result),
+          base.decimalPlaces);
+      if (diff != 0 && diff.abs() <= mc.roundingTolerance) {
+        final code = mc.roundingAccountCode ??
+            (diff > 0
+                ? mc.realizedGainAccountCode
+                : mc.realizedLossAccountCode);
+        final account = await _accountsDao.getAccountByCode(code);
+        if (account == null) throw AccountNotFoundException(code);
+        result.add(JournalEntryLineModel(
+          accountId: account.id,
+          debit: diff < 0 ? -diff : 0,
+          credit: diff > 0 ? diff : 0,
+          description: 'فرق تقريب تحويل العملة',
+          sortOrder: result.length,
+        ));
+      }
+    }
+    return result;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // الفروع
+  // ─────────────────────────────────────────────────────────────
+
+  /// بادئة الترقيم: `JV` أو `JV-RYD` عند الترقيم المستقل لكل فرع
+  Future<String> _serialPrefix(JournalEntryModel entry) async {
+    final branchId = entry.branchId;
+    if (branchId == null || _config.branches?.serialPerBranch != true) {
+      return _config.serialPrefix;
+    }
+    final branch = await _branchDao.getBranchById(branchId);
+    return branch == null
+        ? _config.serialPrefix
+        : '${_config.serialPrefix}-${branch.code}';
+  }
+
+  Future<void> _validateBranch(
+      JournalEntryModel entry, AccountingPeriod? period) async {
+    final config = _config.branches;
+    final branchId = entry.branchId;
+    if (config == null) {
+      if (branchId != null) throw const BranchesDisabledException();
+      return;
+    }
+    final isReversal = entry.reversalOfId != null;
+
+    Branch? branch;
+    if (branchId == null) {
+      if (config.requireBranch && !isReversal) {
+        throw const BranchRequiredException();
+      }
+    } else {
+      branch = await _branchDao.getBranchById(branchId);
+      if (branch == null) throw BranchNotFoundException(branchId);
+      if (!branch.isActive && !isReversal) {
+        throw InactiveBranchException(branch.code);
+      }
+      if (period != null &&
+          await _branchDao.isPeriodClosed(period.id, branchId)) {
+        throw PeriodClosedException(entry.date);
+      }
+    }
+    if (isReversal) return;
+
+    // تقييد الحسابات: أقرب تقييد على الحساب أو أحد آبائه يحدد الفروع المسموحة
+    for (final accountId in entry.lines.map((l) => l.accountId).toSet()) {
+      Account? current = await _accountsDao.getAccountById(accountId);
+      final visited = <int>{};
+      while (current != null && visited.add(current.id)) {
+        final allowed = await _branchDao.getAccountBranchIds(current.id);
+        if (allowed.isNotEmpty) {
+          if (branchId == null || !allowed.contains(branchId)) {
+            throw AccountNotAllowedForBranchException(
+                await _accountCode(accountId), branch?.code);
+          }
+          break;
+        }
+        final parentId = current.parentId;
+        current = parentId == null
+            ? null
+            : await _accountsDao.getAccountById(parentId);
+      }
+    }
   }
 
   Future<String> _accountCode(int accountId) async =>

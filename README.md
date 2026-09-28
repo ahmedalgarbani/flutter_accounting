@@ -37,6 +37,8 @@ await fa.record(
   - [7. Entry Templates](#7-entry-templates)
   - [8. Configuration](#8-configuration)
   - [9. Cost Centers (Optional)](#9-cost-centers-optional)
+  - [10. Multi-Currency (Optional)](#10-multi-currency-optional)
+  - [11. Branches (Optional)](#11-branches-optional)
 - [Integration Guide](#integration-guide-)
 - [API Reference](#api-reference-)
 - [Enforced Accounting Rules](#enforced-accounting-rules-️)
@@ -63,6 +65,8 @@ await fa.record(
 | 🔢 | **Auto-Sequenced Serials** — Yearly serial numbering (e.g. `JV-2026-0001`) with configurable prefixes and padding. |
 | 📅 | **Fiscal Period Control** — Annual or monthly periods, open/close safeguards, and overlap prevention. |
 | 📈 | **Financial Reports** — Trial Balance, Income Statement (P&L), Balance Sheet, Account Balance (recursive), and Account Ledger with opening/running balances. |
+| 💱 | **Multi-Currency (optional)** — Dated exchange rates, lines kept in their original currency, account currency lock, realized differences on settlement, period-end revaluation with auto-reversal. |
+| 🏬 | **Branches (optional)** — Branches as accounting units with balanced books each, inter-branch transactions, consolidation, reconciliation, per-branch serials, period closing and account restrictions. |
 | 🏢 | **Cost Centers (optional)** — Branches, projects, departments or custom dimensions; split lines by percentage/amount/allocation keys, per-account policies, periodic allocation, and profitability reports. |
 | 🧩 | **Entry Templates** — 7 built-in standard templates plus persistent database custom templates. |
 | 🔄 | **Serialization Support** — `toMap()` and `fromMap()` across all models for exports and sync. |
@@ -77,7 +81,7 @@ Add `flutter_accounting` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_accounting: ^0.5.0
+  flutter_accounting: ^0.6.0
 ```
 
 Supported platforms: **Android, iOS, Windows, macOS, Linux** (powered by `sqlite3_flutter_libs`).
@@ -401,6 +405,8 @@ await FlutterAccounting.initialize(
     serialPadding: 4,
     enableCostCenters: false,  // Opt-in cost centers (see section 9)
     allocationDecimals: 2,     // Rounding of percentage/key splits
+    multiCurrency: null,       // MultiCurrencyConfig(baseCurrency: 'SAR') — section 10
+    branches: null,            // BranchConfig() — section 11
   ),
 );
 ```
@@ -486,6 +492,85 @@ final entry = await fa.costAllocations.runAllocation(request);       // posted, 
 
 `CostCenterFilter([ryd.id!, prjA.id!])` intersects dimensions proportionally (a line 60% Riyadh and 50% Project A contributes 30%); centers from the same dimension are added together.
 
+### 10. Multi-Currency (Optional)
+
+Record transactions in any currency. Every line keeps its **original amount and exchange rate**, and is converted to the **base currency** for debit/credit, so all financial reports stay in one currency. Amounts are rounded to each currency's decimal places (KWD 3, JPY 0), the same approach as Odoo and ERPNext.
+
+```dart
+await FlutterAccounting.initialize(
+  seedDefaultAccounts: true,            // includes 45 FX Gain / 50 FX Loss
+  seedDefaultCurrencies: true,          // SAR, USD, EUR, KWD, ...
+  config: const AccountingConfig(
+    multiCurrency: MultiCurrencyConfig(baseCurrency: 'SAR'),
+  ),
+);
+
+// Rates are entered by the user (base units per 1 unit); the latest rate on/before the entry date applies
+await fa.currencies.setExchangeRate('USD', 3.75, date: DateTime(2026, 1, 1));
+
+// Optional: lock an account to a currency (e.g. a USD bank or supplier)
+await fa.accounts.createAccount(AccountModel.create(
+    code: '2111', name: 'Supplier (USD)', type: AccountType.liability,
+    parentId: payablesId, currencyCode: 'USD'));
+
+await fa.record(JournalEntryBuilder(description: 'US supplier invoice')
+  .currency('USD')              // or .currency('USD', rate: 3.76)
+  .debitCode('51', 1000)        // 1000 USD → 3750 SAR
+  .creditCode('2111', 1000));
+```
+
+- The base currency is pinned in the database and cannot change after entries exist (`BaseCurrencyMismatchException`).
+- Small conversion rounding differences (≤ `roundingTolerance`) are posted automatically to the rounding / FX account.
+- `fa.currencies.getAccountCurrencyBalance(id)` and `getAccountCurrencyLedger(id)` show an account in its currency and in the base currency.
+
+**Realized differences**: settle a foreign amount; the difference between the book rate (the account's average rate by default) and the payment rate is posted automatically:
+
+```dart
+await fa.exchangeDifferences.settle(SettlementRequest(
+  accountId: usdCustomerId, amount: 1000, rate: 3.70,
+  counterAccountId: bankId, date: DateTime.now(),
+));  // invoice at 3.75, collected at 3.70 → 50 FX loss
+```
+
+**Period-end revaluation (unrealized)** of asset/liability accounts, with preview and automatic reversal:
+
+```dart
+final preview = await fa.exchangeDifferences.previewRevaluation(
+    RevaluationRequest(asOf: DateTime(2026, 6, 30)));
+final result = await fa.exchangeDifferences.runRevaluation(RevaluationRequest(
+    asOf: DateTime(2026, 6, 30), autoReverseOn: DateTime(2026, 7, 1)));
+// result.realizedEntry (accounts fully settled in currency; never reversed)
+// result.unrealizedEntry + result.reversalEntry
+```
+
+`getForeignCurrencyBalances(asOf:)` lists each account/currency balance, its book value, its value at the current rate, and the difference.
+
+### 11. Branches (Optional)
+
+Branches are **accounting units**: each entry belongs to one branch, so every branch has its own balanced trial balance and balance sheet.
+
+```dart
+await FlutterAccounting.initialize(
+  config: const AccountingConfig(branches: BranchConfig(
+    requireBranch: false,        // make branch mandatory on every entry
+    serialPerBranch: false,      // JV-RYD-2026-0001 numbering
+    interBranchParentCode: '11', // parent for auto-created inter-branch accounts
+    linkCostCenters: true,       // auto-allocate to the branch's cost center
+  )),
+);
+
+final jed = await fa.branches.ensureBranch(code: 'JED', name: 'Jeddah'); // creates account IB-JED
+await fa.record(JournalEntryBuilder(description: 'Sale').branch('JED')
+  .debitCode('111', 500).creditCode('41', 500));
+
+// All existing reports accept branchIds
+await fa.reports.getBalanceSheet(asOf: now, branchIds: [jed.id!]);
+```
+
+- **Inter-branch transactions**: `fa.branches.recordInterBranch(InterBranchTransaction(...))` posts one entry in each branch through the inter-branch current accounts. Reverse both with `fa.reverseSource(SystemSources.interBranch, id)`.
+- **Controls**: `restrictAccount(accountId, [branchIds])` (sub-accounts inherit it) and `closePeriod(periodId, branchId)` for one branch.
+- **Reports** (`fa.branchReports`): `getComparison()` (P&L and position per branch, including entries with no branch), `getConsolidatedTrialBalance()` / `getConsolidatedBalanceSheet()` (inter-branch accounts eliminated), and `getInterBranchReconciliation()`.
+
 ---
 
 ## Integration Guide 🔌
@@ -515,6 +600,8 @@ Check the [`example/`](example/) directory for a full working Flutter app includ
 | `forTesting({config})` | Creates an in-memory test instance |
 | `accounts` / `journalEntries` / `reports` / `templates` / `periods` | Repository accessors |
 | `costCenters` / `costAllocations` / `costReports` | Cost center accessors (see section 9) |
+| `currencies` / `exchangeDifferences` | Multi-currency accessors (see section 10) |
+| `branches` / `branchReports` | Branch accessors (see section 11) |
 | `record(builder, {post, postedBy})` | Resolves, creates, and optionally posts an entry |
 | `reverseSource(type, id, {reversalDate, postedBy})` | Reverses all posted entries for a source document |
 | `transaction(action)` | Executes multiple database operations in an atomic transaction |
@@ -596,6 +683,33 @@ Check the [`example/`](example/) directory for a full working Flutter app includ
 | `previewAllocation(request)` | Computes a periodic allocation without saving |
 | `runAllocation(request, {post, postedBy})` | Creates the `EntryType.costAllocation` entry |
 
+### `ICurrencyRepository` — `fa.currencies`
+
+| Method | Description |
+|---|---|
+| `getCurrencies()` / `createCurrency(c)` / `updateCurrency(c)` / `ensureCurrency(...)` / `setCurrencyActive(...)` | Currencies |
+| `ensureBaseCurrency()` / `baseCurrencyCode` | Base currency (pinned in the database) |
+| `setExchangeRate(code, rate, {date})` / `getExchangeRates(...)` / `getExchangeRate(code, {date})` | Exchange rates |
+| `convert(amount, from:, to:, date:)` | Conversion through the base currency |
+| `getAccountCurrencyBalance(id)` / `getAccountCurrencyLedger(id)` | Account in its currency and in base |
+
+### `IExchangeDifferenceRepository` — `fa.exchangeDifferences`
+
+| Method | Description |
+|---|---|
+| `settle(SettlementRequest)` | Settlement with the realized difference |
+| `previewRevaluation(request)` / `runRevaluation(request)` | Period-end revaluation |
+| `getForeignCurrencyBalances({asOf})` | Foreign balances with unrealized differences |
+
+### `IBranchRepository` — `fa.branches` / `IBranchReportsRepository` — `fa.branchReports`
+
+| Method | Description |
+|---|---|
+| `getBranches()` / `createBranch(b)` / `updateBranch(b)` / `ensureBranch(...)` / `setBranchActive(...)` / `deleteBranch(id)` | Branches |
+| `restrictAccount(accountId, branchIds)` / `closePeriod(periodId, branchId)` | Branch controls |
+| `recordInterBranch(transaction)` | Two linked entries through inter-branch accounts |
+| `getComparison()` / `getConsolidatedTrialBalance()` / `getConsolidatedBalanceSheet(asOf:)` / `getInterBranchReconciliation()` | Branch reports |
+
 ---
 
 ## Enforced Accounting Rules ⚖️
@@ -627,6 +741,10 @@ Check the [`example/`](example/) directory for a full working Flutter app includ
 | Allocations only to active leaf centers in active dimensions | `InactiveCostCenterException` / `CostCenterIsParentException` |
 | Required / forbidden dimension policies | `CostCenterRequiredException` / `CostCenterNotAllowedException` |
 | Cost center writes while the feature is off | `CostCentersDisabledException` |
+| Line currency must match the account currency | `CurrencyMismatchException` |
+| A rate must exist on/before the entry date | `ExchangeRateNotFoundException` |
+| Base currency cannot change after entries | `BaseCurrencyMismatchException` |
+| Branch required / active / period open for the branch / account allowed for the branch | `BranchRequiredException` / `InactiveBranchException` / `PeriodClosedException` / `AccountNotAllowedForBranchException` |
 
 ---
 
@@ -666,6 +784,13 @@ tearDown(() => fa.dispose());
 ```
 
 ---
+
+## Upgrading from 0.5.x ⬆️
+
+- **Automatic migrations to schema v4 and v5** add the currency and branch tables and columns. Existing lines are treated as base currency, and existing entries have no branch.
+- Both features are off by default (`multiCurrency: null`, `branches: null`).
+- `IReportsRepository` methods gained an optional `branchIds` parameter. If you implement the interface yourself (for example in mocks), add it.
+- `EntryType.exchangeDifference` was appended. The seed chart adds accounts `45` (FX gain) and `50` (FX loss).
 
 ## Upgrading from 0.4.x ⬆️
 

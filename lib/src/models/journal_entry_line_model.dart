@@ -22,6 +22,19 @@ class JournalEntryLineModel {
   /// بُعد، أو توزيعه على عدة مراكز من نفس البعد. انظر [CostAllocationModel].
   final List<CostAllocationModel> allocations;
 
+  /// عملة البند (يتطلب تعدد العملات). `null` = عملة الأساس، أو عملة الحساب
+  /// إن كان للحساب عملة.
+  final String? currencyCode;
+
+  /// المبلغ بعملة البند. عند الحفظ يُحوَّل إلى عملة الأساس في [debit]/[credit]
+  /// حسب [exchangeRate]. إن لم يُحدَّد وكان البند بعملة أجنبية، يُعتبر
+  /// [debit]/[credit] المُدخل مبلغاً بعملة البند.
+  final double? amountCurrency;
+
+  /// سعر الصرف (وحدات عملة الأساس لكل وحدة من عملة البند). إن لم يُحدَّد
+  /// يُؤخذ آخر سعر مسجل في تاريخ القيد أو قبله.
+  final double? exchangeRate;
+
   const JournalEntryLineModel({
     this.id,
     this.entryId,
@@ -33,6 +46,9 @@ class JournalEntryLineModel {
     this.description,
     this.sortOrder = 0,
     this.allocations = const [],
+    this.currencyCode,
+    this.amountCurrency,
+    this.exchangeRate,
   }) : assert(
           !(debit > 0 && credit > 0),
           'البند لا يمكن أن يكون مديناً ودائناً في نفس الوقت',
@@ -42,7 +58,7 @@ class JournalEntryLineModel {
   // Factory constructors مساعدة
   // ─────────────────────────────────────────────────────────────
 
-  /// إنشاء بند مدين
+  /// إنشاء بند مدين. مع [currencyCode] يكون [amount] بتلك العملة.
   factory JournalEntryLineModel.debitLine({
     int? id,
     int? entryId,
@@ -53,6 +69,8 @@ class JournalEntryLineModel {
     String? description,
     int sortOrder = 0,
     List<CostAllocationModel> allocations = const [],
+    String? currencyCode,
+    double? exchangeRate,
   }) {
     return JournalEntryLineModel(
       id: id,
@@ -65,10 +83,13 @@ class JournalEntryLineModel {
       description: description,
       sortOrder: sortOrder,
       allocations: allocations,
+      currencyCode: currencyCode,
+      amountCurrency: currencyCode == null ? null : amount,
+      exchangeRate: exchangeRate,
     );
   }
 
-  /// إنشاء بند دائن
+  /// إنشاء بند دائن. مع [currencyCode] يكون [amount] بتلك العملة.
   factory JournalEntryLineModel.creditLine({
     int? id,
     int? entryId,
@@ -79,6 +100,8 @@ class JournalEntryLineModel {
     String? description,
     int sortOrder = 0,
     List<CostAllocationModel> allocations = const [],
+    String? currencyCode,
+    double? exchangeRate,
   }) {
     return JournalEntryLineModel(
       id: id,
@@ -91,6 +114,9 @@ class JournalEntryLineModel {
       description: description,
       sortOrder: sortOrder,
       allocations: allocations,
+      currencyCode: currencyCode,
+      amountCurrency: currencyCode == null ? null : amount,
+      exchangeRate: exchangeRate,
     );
   }
 
@@ -99,6 +125,9 @@ class JournalEntryLineModel {
   // ─────────────────────────────────────────────────────────────
 
   bool get isDebit => debit > 0;
+
+  /// هل البند بعملة أجنبية (بعد الحفظ)؟
+  bool get isForeignCurrency => currencyCode != null;
   bool get isCredit => credit > 0;
   double get amount => isDebit ? debit : credit;
 
@@ -113,6 +142,9 @@ class JournalEntryLineModel {
     String? description,
     int? sortOrder,
     List<CostAllocationModel>? allocations,
+    String? currencyCode,
+    double? amountCurrency,
+    double? exchangeRate,
   }) {
     return JournalEntryLineModel(
       id: id ?? this.id,
@@ -125,6 +157,9 @@ class JournalEntryLineModel {
       description: description ?? this.description,
       sortOrder: sortOrder ?? this.sortOrder,
       allocations: allocations ?? this.allocations,
+      currencyCode: currencyCode ?? this.currencyCode,
+      amountCurrency: amountCurrency ?? this.amountCurrency,
+      exchangeRate: exchangeRate ?? this.exchangeRate,
     );
   }
 
@@ -139,6 +174,9 @@ class JournalEntryLineModel {
         'description': description,
         'sortOrder': sortOrder,
         'allocations': allocations.map((a) => a.toMap()).toList(),
+        'currencyCode': currencyCode,
+        'amountCurrency': amountCurrency,
+        'exchangeRate': exchangeRate,
       };
 
   factory JournalEntryLineModel.fromMap(Map<String, dynamic> map) =>
@@ -156,6 +194,9 @@ class JournalEntryLineModel {
             .map((a) => CostAllocationModel.fromMap(
                 Map<String, dynamic>.from(a as Map)))
             .toList(),
+        currencyCode: map['currencyCode'] as String?,
+        amountCurrency: (map['amountCurrency'] as num?)?.toDouble(),
+        exchangeRate: (map['exchangeRate'] as num?)?.toDouble(),
       );
 
   @override

@@ -17,6 +17,8 @@ import '../../models/cost_dimension_model.dart';
 import '../../models/cost_center_model.dart';
 import '../../models/cost_allocation_model.dart';
 import '../../models/allocation_key_model.dart';
+import '../../models/currency_model.dart';
+import '../../models/branch_model.dart';
 
 /// يحوّل النص الفارغ إلى null (الأعمدة الاختيارية لا تقبل نصاً فارغاً)
 String? _nullIfBlank(String? v) => (v == null || v.trim().isEmpty) ? null : v;
@@ -38,6 +40,7 @@ class AccountMapper {
         isActive: data.isActive,
         description: data.description,
         level: data.level,
+        currencyCode: data.currencyCode,
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
       );
@@ -52,6 +55,7 @@ class AccountMapper {
         isActive: Value(model.isActive),
         description: Value(model.description),
         level: Value(model.level),
+        currencyCode: Value(_nullIfBlank(model.currencyCode)),
         updatedAt: Value(DateTime.now()),
       );
 
@@ -81,6 +85,9 @@ class JournalEntryLineMapper {
         sortOrder: data.line.sortOrder,
         allocations:
             data.allocations.map(CostAllocationMapper.fromData).toList(),
+        currencyCode: data.line.currencyCode,
+        amountCurrency: data.line.amountCurrency,
+        exchangeRate: data.line.exchangeRate,
       );
 
   static JournalEntryLinesCompanion toCompanion(JournalEntryLineModel model) =>
@@ -94,6 +101,9 @@ class JournalEntryLineMapper {
         credit: Value(model.credit),
         description: Value(model.description),
         sortOrder: Value(model.sortOrder),
+        currencyCode: Value(model.currencyCode),
+        amountCurrency: Value(model.amountCurrency),
+        exchangeRate: Value(model.exchangeRate),
       );
 }
 
@@ -124,6 +134,7 @@ class JournalEntryMapper {
         sourceType: data.sourceType,
         sourceId: data.sourceId,
         reversalOfId: data.reversalOfId,
+        branchId: data.branchId,
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
       );
@@ -146,6 +157,7 @@ class JournalEntryMapper {
         sourceType: Value(_nullIfBlank(model.sourceType)),
         sourceId: Value(_nullIfBlank(model.sourceId)),
         reversalOfId: Value(model.reversalOfId),
+        branchId: Value(model.branchId),
         updatedAt: Value(DateTime.now()),
       );
 }
@@ -378,5 +390,75 @@ class AllocationKeyMapper {
       AllocationKeyItemsCompanion(
         costCenterId: Value(item.costCenterId),
         weight: Value(item.weight),
+      );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Currency Mappers
+// ─────────────────────────────────────────────────────────────
+
+class CurrencyMapper {
+  CurrencyMapper._();
+
+  static CurrencyModel fromData(Currency data) => CurrencyModel(
+        id: data.id,
+        code: data.code,
+        name: data.name,
+        nameAr: data.nameAr,
+        symbol: data.symbol,
+        decimalPlaces: data.decimalPlaces,
+        isActive: data.isActive,
+      );
+
+  static CurrenciesCompanion toCompanion(CurrencyModel model) =>
+      CurrenciesCompanion(
+        code: Value(model.code),
+        name: Value(model.name),
+        nameAr: Value(_nullIfBlank(model.nameAr)),
+        symbol: Value(_nullIfBlank(model.symbol)),
+        decimalPlaces: Value(model.decimalPlaces),
+        isActive: Value(model.isActive),
+      );
+
+  static ExchangeRateModel rateFromData(ExchangeRate data) => ExchangeRateModel(
+        id: data.id,
+        currencyCode: data.currencyCode,
+        date: data.date,
+        rate: data.rate,
+      );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Branch Mapper
+// ─────────────────────────────────────────────────────────────
+
+class BranchMapper {
+  BranchMapper._();
+
+  static BranchModel fromData(Branch data) => BranchModel(
+        id: data.id,
+        code: data.code,
+        name: data.name,
+        nameAr: data.nameAr,
+        description: data.description,
+        isActive: data.isActive,
+        isHeadOffice: data.isHeadOffice,
+        interBranchAccountId: data.interBranchAccountId,
+        costCenterId: data.costCenterId,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      );
+
+  static BranchesCompanion toCompanion(BranchModel model) => BranchesCompanion(
+        id: model.id != null ? Value(model.id!) : const Value.absent(),
+        code: Value(model.code),
+        name: Value(model.name),
+        nameAr: Value(_nullIfBlank(model.nameAr)),
+        description: Value(_nullIfBlank(model.description)),
+        isActive: Value(model.isActive),
+        isHeadOffice: Value(model.isHeadOffice),
+        interBranchAccountId: Value(model.interBranchAccountId),
+        costCenterId: Value(model.costCenterId),
+        updatedAt: Value(DateTime.now()),
       );
 }

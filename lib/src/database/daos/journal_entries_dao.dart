@@ -421,9 +421,14 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
   ///   (القيد المعكوس يبقى في الدفتر ويلغيه القيد العكسي المرحّل).
   /// - المسودات لا تدخل في الأرصدة.
   /// - [from] شامل، [toExclusive] غير شامل.
+  ///
+  /// [branchIds]: قيود هذه الفروع فقط (null = كل القيود).
+  /// [withoutBranch]: القيود التي بلا فرع فقط.
   Future<List<AccountBalanceRow>> getAccountBalances({
     DateTime? from,
     DateTime? toExclusive,
+    List<int>? branchIds,
+    bool withoutBranch = false,
   }) async {
     final result = await customSelect(
       '''
@@ -447,6 +452,8 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
         WHERE e.status IN (?, ?)
           AND (? IS NULL OR e.date >= ?)
           AND (? IS NULL OR e.date < ?)
+          ${_branchFilter(branchIds)}
+          ${withoutBranch ? 'AND e.branch_id IS NULL' : ''}
         GROUP BY l.account_id
       ) t ON t.account_id = a.id
       ORDER BY a.code
@@ -458,6 +465,7 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
         Variable<DateTime>(from),
         Variable<DateTime>(toExclusive),
         Variable<DateTime>(toExclusive),
+        ..._branchVariables(branchIds),
       ],
       readsFrom: {accounts, journalEntries, journalEntryLines},
     ).get();
@@ -471,6 +479,7 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
     required List<int> accountIds,
     DateTime? from,
     DateTime? toExclusive,
+    List<int>? branchIds,
   }) async {
     if (accountIds.isEmpty) return [];
     final placeholders = List.filled(accountIds.length, '?').join(', ');
@@ -493,6 +502,7 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
         AND e.status IN (?, ?)
         AND (? IS NULL OR e.date >= ?)
         AND (? IS NULL OR e.date < ?)
+        ${_branchFilter(branchIds)}
       ORDER BY e.date, e.id, l.sort_order, l.id
       ''',
       variables: [
@@ -503,6 +513,7 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
         Variable<DateTime>(from),
         Variable<DateTime>(toExclusive),
         Variable<DateTime>(toExclusive),
+        ..._branchVariables(branchIds),
       ],
       readsFrom: {journalEntries, journalEntryLines},
     ).get();
@@ -523,6 +534,16 @@ class JournalEntriesDao extends DatabaseAccessor<AccountingDatabase>
         .toList();
   }
 }
+
+// فلتر الفروع في استعلامات التقارير (e = journal_entries)
+String _branchFilter(List<int>? branchIds) => branchIds == null
+    ? ''
+    : branchIds.isEmpty
+        ? 'AND 0'
+        : 'AND e.branch_id IN (${List.filled(branchIds.length, '?').join(', ')})';
+
+List<Variable> _branchVariables(List<int>? branchIds) =>
+    [for (final id in branchIds ?? const <int>[]) Variable.withInt(id)];
 
 // ─────────────────────────────────────────────────────────────
 // نموذج صف رصيد الحساب (لتقديم البيانات للـ Repository)

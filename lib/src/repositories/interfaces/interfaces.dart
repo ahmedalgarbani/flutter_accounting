@@ -15,6 +15,11 @@ import '../../models/allocation_key_model.dart';
 import '../../models/cost_allocation_run_model.dart';
 import '../../reports/report_models.dart';
 import '../../reports/cost_center_report_models.dart';
+import '../../models/currency_model.dart';
+import '../../models/currency_operation_model.dart';
+import '../../reports/currency_report_models.dart';
+import '../../models/branch_model.dart';
+import '../../reports/branch_report_models.dart';
 
 // ─────────────────────────────────────────────────────────────
 // IAccountRepository - دليل الحسابات
@@ -151,12 +156,17 @@ abstract class IAccountingPeriodRepository {
 // IReportsRepository - التقارير
 // ─────────────────────────────────────────────────────────────
 
+///
+/// [branchIds] (اختياري في كل التقارير): قيود هذه الفروع فقط، والافتراضي كل
+/// القيود. لأن كل قيد متوازن داخل فرعه، فميزانية الفرع متوازنة دائماً.
 abstract class IReportsRepository {
   /// ميزان المراجعة. الافتراضي: من بداية السنة الحالية حتى اليوم.
-  Future<TrialBalanceReport> getTrialBalance({DateTime? from, DateTime? to});
-  Future<BalanceSheetReport> getBalanceSheet({required DateTime asOf});
+  Future<TrialBalanceReport> getTrialBalance(
+      {DateTime? from, DateTime? to, List<int>? branchIds});
+  Future<BalanceSheetReport> getBalanceSheet(
+      {required DateTime asOf, List<int>? branchIds});
   Future<IncomeStatementReport> getIncomeStatement(
-      {required DateTime from, required DateTime to});
+      {required DateTime from, required DateTime to, List<int>? branchIds});
 
   /// رصيد حساب بالاتجاه الطبيعي (موجب = رصيد طبيعي).
   /// [includeChildren] يجمع أرصدة الحسابات الفرعية (مفيد للحسابات الرئيسية).
@@ -164,6 +174,7 @@ abstract class IReportsRepository {
     int accountId, {
     DateTime? asOf,
     bool includeChildren = true,
+    List<int>? branchIds,
   });
 
   /// كشف حساب (دفتر الأستاذ) مع رصيد افتتاحي ورصيد تراكمي لكل حركة
@@ -172,6 +183,7 @@ abstract class IReportsRepository {
     DateTime? from,
     DateTime? to,
     bool includeChildren = true,
+    List<int>? branchIds,
   });
 }
 
@@ -385,4 +397,164 @@ abstract class ICostReportsRepository {
     DateTime? to,
     bool incomeStatementOnly = true,
   });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ICurrencyRepository - العملات وأسعار الصرف
+// ─────────────────────────────────────────────────────────────
+
+/// العملات وأسعار الصرف وأرصدة الحسابات بعملاتها.
+/// الكتابة ترمي [MultiCurrencyDisabledException] إن لم يكن تعدد العملات مفعّلاً.
+abstract class ICurrencyRepository {
+  /// رمز عملة الأساس (null إن كان تعدد العملات غير مفعّل)
+  String? get baseCurrencyCode;
+
+  /// يتأكد من وجود عملة الأساس وتثبيتها في قاعدة البيانات.
+  /// يرمي [BaseCurrencyMismatchException] إن تغيرت بعد تسجيل قيود.
+  Future<CurrencyModel> ensureBaseCurrency();
+
+  Future<List<CurrencyModel>> getCurrencies({bool activeOnly = false});
+  Future<CurrencyModel?> getCurrency(String code);
+  Future<CurrencyModel> createCurrency(CurrencyModel currency);
+  Future<CurrencyModel> updateCurrency(CurrencyModel currency);
+
+  /// يُعيد العملة إن كانت موجودة، وإلا ينشئها
+  Future<CurrencyModel> ensureCurrency({
+    required String code,
+    required String name,
+    String? nameAr,
+    String? symbol,
+    int decimalPlaces = 2,
+  });
+
+  Future<void> setCurrencyActive(String code, {required bool isActive});
+
+  /// تسجيل سعر صرف [code] مقابل عملة الأساس في [date] (الافتراضي: اليوم).
+  /// يستبدل سعر نفس اليوم إن وُجد.
+  Future<ExchangeRateModel> setExchangeRate(String code, double rate,
+      {DateTime? date});
+
+  Future<List<ExchangeRateModel>> getExchangeRates(
+      {String? code, DateTime? from, DateTime? to});
+  Future<void> deleteExchangeRate(int id);
+
+  /// آخر سعر مسجل في [date] أو قبله (عملة الأساس = 1).
+  /// يرمي [ExchangeRateNotFoundException] إن لم يوجد.
+  Future<double> getExchangeRate(String code, {DateTime? date});
+
+  /// تحويل مبلغ بين عملتين عبر عملة الأساس، مقرّباً لمنازل [to]
+  Future<double> convert(double amount,
+      {required String from, required String to, DateTime? date});
+
+  /// رصيد حساب بعملة (الافتراضي: عملة الحساب)
+  Future<CurrencyBalance> getAccountCurrencyBalance(int accountId,
+      {String? currencyCode, DateTime? asOf});
+
+  /// كشف حساب بعملته وبعملة الأساس
+  Future<CurrencyLedgerReport> getAccountCurrencyLedger(int accountId,
+      {String? currencyCode, DateTime? from, DateTime? to});
+}
+
+// ─────────────────────────────────────────────────────────────
+// IExchangeDifferenceRepository - فروقات العملة
+// ─────────────────────────────────────────────────────────────
+
+abstract class IExchangeDifferenceRepository {
+  /// أرصدة الحسابات بالعملات الأجنبية مع تقييمها بسعر [asOf].
+  /// الافتراضي: حسابات الأصول والخصوم؛ مرّر [accountIds] لحسابات محددة.
+  Future<ForeignCurrencyBalancesReport> getForeignCurrencyBalances(
+      {DateTime? asOf, List<int>? accountIds});
+
+  /// معاينة إعادة التقييم دون حفظ
+  Future<RevaluationPreview> previewRevaluation(RevaluationRequest request);
+
+  /// ينشئ قيود إعادة التقييم (`EntryType.exchangeDifference`): قيد للفروقات
+  /// المحققة، وقيد لغير المحققة يُعكس تلقائياً في `request.autoReverseOn`.
+  /// يرمي [InvalidCurrencyOperationException] إن لم توجد فروقات.
+  Future<RevaluationResult> runRevaluation(
+    RevaluationRequest request, {
+    bool post = true,
+    String? postedBy,
+  });
+
+  /// تسوية مبلغ بعملة أجنبية مع قيد فرق العملة المحقق في نفس القيد
+  Future<JournalEntryModel> settle(
+    SettlementRequest request, {
+    bool post = true,
+    String? postedBy,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// IBranchRepository - الفروع
+// ─────────────────────────────────────────────────────────────
+
+/// الفروع كوحدات محاسبية. الكتابة ترمي [BranchesDisabledException] إن لم تكن
+/// الفروع مفعّلة في `AccountingConfig.branches`.
+abstract class IBranchRepository {
+  Future<List<BranchModel>> getBranches({bool activeOnly = false});
+  Future<BranchModel?> getBranchById(int id);
+  Future<BranchModel?> getBranchByCode(String code);
+
+  /// إنشاء فرع. إن لم يُحدَّد حساب جاري له يُنشأ تلقائياً تحت
+  /// `BranchConfig.interBranchParentCode`.
+  Future<BranchModel> createBranch(BranchModel branch);
+  Future<BranchModel> updateBranch(BranchModel branch);
+
+  /// يُعيد الفرع إن كان رمزه موجوداً، وإلا ينشئه
+  Future<BranchModel> ensureBranch({
+    required String code,
+    required String name,
+    String? nameAr,
+    bool isHeadOffice = false,
+    int? costCenterId,
+  });
+
+  Future<void> setBranchActive(int id, {required bool isActive});
+
+  /// حذف فرع بلا قيود
+  Future<void> deleteBranch(int id);
+
+  /// تقييد حساب (وحساباته الفرعية) بفروع معيّنة. قائمة فارغة = إلغاء التقييد.
+  Future<void> restrictAccount(int accountId, List<int> branchIds);
+  Future<List<int>> getAccountBranchIds(int accountId);
+
+  /// إقفال فترة لفرع واحد (يُرفض إن كانت له مسودات فيها)
+  Future<void> closePeriod(int periodId, int branchId);
+  Future<void> reopenPeriod(int periodId, int branchId);
+  Future<bool> isPeriodClosed(int periodId, int branchId);
+
+  /// تسجيل معاملة بين فرعين كقيدين مرتبطين (ذرّياً). يُعيد [قيد المُرسِل،
+  /// قيد المستقبِل]، ويمكن عكسهما معاً بـ `fa.reverseSource('inter_branch', id)`.
+  Future<List<JournalEntryModel>> recordInterBranch(
+    InterBranchTransaction transaction, {
+    bool post = true,
+    String? postedBy,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// IBranchReportsRepository - تقارير الفروع
+// ─────────────────────────────────────────────────────────────
+
+abstract class IBranchReportsRepository {
+  /// مقارنة الفروع: قائمة دخل كل فرع للفترة ومركزه المالي في نهايتها
+  Future<BranchComparisonReport> getComparison({
+    DateTime? from,
+    DateTime? to,
+    List<int>? branchIds,
+    bool includeUnassigned = true,
+  });
+
+  /// ميزان مراجعة موحّد يستبعد حسابات جاري الفروع
+  Future<TrialBalanceReport> getConsolidatedTrialBalance(
+      {DateTime? from, DateTime? to});
+
+  /// ميزانية موحّدة تستبعد حسابات جاري الفروع
+  Future<BalanceSheetReport> getConsolidatedBalanceSheet(
+      {required DateTime asOf});
+
+  /// مطابقة الحسابات الجارية بين كل فرعين
+  Future<InterBranchReconciliationReport> getInterBranchReconciliation(
+      {DateTime? asOf});
 }

@@ -24,6 +24,17 @@ import 'exceptions.dart';
 /// await fa.record(entry);
 /// ```
 ///
+/// ### تعدد العملات (اختياري)
+/// [currency] يجعل مبالغ البنود بعملة أجنبية (تُحوَّل لعملة الأساس عند الحفظ)،
+/// ويمكن تحديد عملة وسعر لكل بند عبر `currency:` و`rate:`:
+///
+/// ```dart
+/// JournalEntryBuilder(description: 'فاتورة مورد أمريكي')
+///   .currency('USD', rate: 3.75)
+///   .debitCode('51', 1000)          // 1000 USD = 3750 SAR
+///   .creditCode('2111', 1000);      // حساب المورد بالدولار
+/// ```
+///
 /// ### مراكز التكلفة (اختياري)
 /// كل دوال البنود تقبل `allocations` لتوزيع البند على مراكز التكلفة،
 /// أو `allocationKey` (رمز مفتاح توزيع) ليُقسَّم البند حسب أوزانه:
@@ -51,6 +62,9 @@ class JournalEntryBuilder {
   EntryType? _entryType;
   String? _sourceType;
   String? _sourceId;
+  String? _currency;
+  double? _rate;
+  Object? _branch;
   final List<_PendingLine> _lines = [];
 
   // ─────────────────────────────────────────────────────────────
@@ -93,6 +107,20 @@ class JournalEntryBuilder {
     return this;
   }
 
+  /// فرع القيد بالمعرّف (`int`) أو بالرمز (`String`، يُحلّ عند [resolve])
+  JournalEntryBuilder branch(Object idOrCode) {
+    _branch = idOrCode;
+    return this;
+  }
+
+  /// عملة مبالغ البنود (الافتراضي: عملة الأساس، أو عملة حساب البند).
+  /// [rate] سعر الصرف؛ إن لم يُحدَّد يُؤخذ السعر المسجل في تاريخ القيد.
+  JournalEntryBuilder currency(String code, {double? rate}) {
+    _currency = code;
+    _rate = rate;
+    return this;
+  }
+
   /// ربط القيد بمستند في نظامك، مثل `source('invoice', '15')`
   JournalEntryBuilder source(String type, Object id) {
     _sourceType = type;
@@ -108,49 +136,65 @@ class JournalEntryBuilder {
   JournalEntryBuilder debit(int accountId, double amount,
           {String? description,
           List<CostAllocationModel> allocations = const [],
-          String? allocationKey}) =>
+          String? allocationKey,
+          String? currency,
+          double? rate}) =>
       _add(_PendingLine(
           accountId: accountId,
           debit: amount,
           description: description,
           allocations: allocations,
-          allocationKey: allocationKey));
+          allocationKey: allocationKey,
+          currency: currency,
+          rate: rate));
 
   /// بند دائن على حساب بالمعرّف
   JournalEntryBuilder credit(int accountId, double amount,
           {String? description,
           List<CostAllocationModel> allocations = const [],
-          String? allocationKey}) =>
+          String? allocationKey,
+          String? currency,
+          double? rate}) =>
       _add(_PendingLine(
           accountId: accountId,
           credit: amount,
           description: description,
           allocations: allocations,
-          allocationKey: allocationKey));
+          allocationKey: allocationKey,
+          currency: currency,
+          rate: rate));
 
   /// بند مدين على حساب بالرمز (يُحلّ عند [resolve] أو `fa.record`)
   JournalEntryBuilder debitCode(String accountCode, double amount,
           {String? description,
           List<CostAllocationModel> allocations = const [],
-          String? allocationKey}) =>
+          String? allocationKey,
+          String? currency,
+          double? rate}) =>
       _add(_PendingLine(
           accountCode: accountCode,
           debit: amount,
           description: description,
           allocations: allocations,
-          allocationKey: allocationKey));
+          allocationKey: allocationKey,
+          currency: currency,
+          rate: rate));
 
   /// بند دائن على حساب بالرمز (يُحلّ عند [resolve] أو `fa.record`)
   JournalEntryBuilder creditCode(String accountCode, double amount,
           {String? description,
           List<CostAllocationModel> allocations = const [],
-          String? allocationKey}) =>
+          String? allocationKey,
+          String? currency,
+          double? rate}) =>
       _add(_PendingLine(
           accountCode: accountCode,
           credit: amount,
           description: description,
           allocations: allocations,
-          allocationKey: allocationKey));
+          allocationKey: allocationKey,
+          currency: currency,
+          rate: rate));
 
   /// إضافة بند جاهز
   JournalEntryBuilder line(JournalEntryLineModel line) => _add(_PendingLine(
@@ -159,6 +203,9 @@ class JournalEntryBuilder {
         credit: line.credit,
         description: line.description,
         allocations: line.allocations,
+        currency: line.currencyCode,
+        amountCurrency: line.amountCurrency,
+        rate: line.exchangeRate,
       ));
 
   JournalEntryBuilder _add(_PendingLine line) {
@@ -180,6 +227,7 @@ class JournalEntryBuilder {
 
   /// هل توجد بنود تشير لحسابات بالرمز أو لمفاتيح توزيع وتحتاج إلى [resolve]؟
   bool get needsResolution =>
+      _branch is String ||
       _lines.any((l) => l.accountId == null || l.allocationKey != null);
 
   // ─────────────────────────────────────────────────────────────
@@ -194,7 +242,7 @@ class JournalEntryBuilder {
         'بعض البنود تستخدم رموز حسابات أو مفاتيح توزيع. استخدم resolve() أو fa.record() بدلاً من build().',
       );
     }
-    return _toModel({}, {});
+    return _toModel({}, {}, _branch as int?);
   }
 
   /// يحلّ رموز الحسابات إلى معرّفات ومفاتيح التوزيع إلى حصص، ثم يبني القيد.
@@ -204,7 +252,21 @@ class JournalEntryBuilder {
   Future<JournalEntryModel> resolve(
     IAccountRepository accounts, {
     ICostCenterRepository? costCenters,
+    IBranchRepository? branches,
   }) async {
+    int? branchId;
+    final branch = _branch;
+    if (branch is String) {
+      if (branches == null) {
+        throw StateError('branch(code) يتطلب تمرير branches إلى resolve().');
+      }
+      final found = await branches.getBranchByCode(branch);
+      if (found == null) throw BranchNotFoundException(branch);
+      branchId = found.id;
+    } else {
+      branchId = branch as int?;
+    }
+
     final ids = <String, int>{};
     for (final line in _lines) {
       final code = line.accountCode;
@@ -231,12 +293,13 @@ class JournalEntryBuilder {
       keyShares[i] = await costCenters.splitByKey(
           key.id!, line.debit > 0 ? line.debit : line.credit);
     }
-    return _toModel(ids, keyShares);
+    return _toModel(ids, keyShares, branchId);
   }
 
   JournalEntryModel _toModel(
     Map<String, int> codeIds,
     Map<int, List<CostAllocationModel>> keyShares,
+    int? branchId,
   ) {
     final lines = <JournalEntryLineModel>[];
     for (var i = 0; i < _lines.length; i++) {
@@ -249,6 +312,13 @@ class JournalEntryBuilder {
         description: l.description,
         sortOrder: i,
         allocations: [...?keyShares[i], ...l.allocations],
+        currencyCode: l.currency ?? _currency,
+        amountCurrency: l.amountCurrency ??
+            ((l.currency ?? _currency) == null
+                ? null
+                : (l.debit > 0 ? l.debit : l.credit)),
+        exchangeRate: l.rate ??
+            (l.currency == null || l.currency == _currency ? _rate : null),
       ));
     }
     return JournalEntryModel(
@@ -261,6 +331,7 @@ class JournalEntryBuilder {
       entryType: _entryType,
       sourceType: _sourceType,
       sourceId: _sourceId,
+      branchId: branchId,
       lines: lines,
     );
   }
@@ -274,6 +345,9 @@ class _PendingLine {
   final String? description;
   final List<CostAllocationModel> allocations;
   final String? allocationKey;
+  final String? currency;
+  final double? amountCurrency;
+  final double? rate;
 
   _PendingLine({
     this.accountId,
@@ -283,5 +357,8 @@ class _PendingLine {
     this.description,
     this.allocations = const [],
     this.allocationKey,
+    this.currency,
+    this.amountCurrency,
+    this.rate,
   });
 }

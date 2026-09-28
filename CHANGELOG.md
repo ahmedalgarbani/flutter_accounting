@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-09-27
+
+Adds **multi-currency** and **branches as accounting units**. Both are opt-in and off by default.
+
+### Added — multi-currency (`AccountingConfig.multiCurrency`)
+- `fa.currencies`: ISO currencies with decimal places, dated exchange rates entered by the
+  user, `convert`, and account balance/ledger in the account currency and base currency.
+  The base currency is pinned in the database (`BaseCurrencyMismatchException`).
+- Lines keep `currencyCode`, `amountCurrency` and `exchangeRate`, and are converted to the
+  base currency with per-currency rounding. Small conversion differences are posted
+  automatically (`roundingTolerance`).
+- Optional account currency lock (`AccountModel.currencyCode`, `CurrencyMismatchException`).
+- `JournalEntryBuilder.currency(code, rate:)` and per-line `currency:` / `rate:`.
+- `fa.exchangeDifferences`: `settle` (realized difference at the account's book rate),
+  `previewRevaluation` / `runRevaluation` (realized and unrealized differences, optional
+  automatic reversal), and `getForeignCurrencyBalances`.
+- `Money` rounding helpers, `CurrencySeedData` (16 common currencies),
+  `seedDefaultCurrencies`, `EntryType.exchangeDifference`, and seed accounts `45` / `50`.
+
+### Added — branches (`AccountingConfig.branches`)
+- `fa.branches`: branches with auto-created inter-branch current accounts, optional
+  required branch, per-branch serials, per-branch period closing, and account restrictions.
+- `JournalEntryModel.branchId`, `JournalEntryBuilder.branch(idOrCode)`.
+- `recordInterBranch`: two linked entries through the current accounts.
+- `branchIds` filter on all `fa.reports` methods.
+- `fa.branchReports`: branch comparison, consolidated trial balance and balance sheet
+  (inter-branch accounts eliminated), and inter-branch reconciliation.
+- Optional automatic allocation to the branch's cost center (`linkCostCenters`).
+- `SystemSources` constants for library-generated source types.
+
+### Changed
+- Database schema **v4** (currencies) and **v5** (branches) with automatic migration.
+- `IReportsRepository` methods accept an optional `branchIds`.
+- Exchange gain/loss and rounding accounts are exempt from required cost center policies.
+
 ## [0.5.0] - 2026-09-27
 
 Adds **cost centers** (analytic dimensions). The feature is opt-in and off by default.

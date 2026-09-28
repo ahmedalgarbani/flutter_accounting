@@ -17,7 +17,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   double _cash = 0;
   int? _lastInvoiceId;
-  String _branch = AppCostCenters.riyadh;
+  String _branch = AppBranches.riyadh;
 
   SalesAccountingService get _service => widget.service;
 
@@ -75,11 +75,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         SegmentedButton<String>(
           segments: const [
             ButtonSegment(
-                value: AppCostCenters.riyadh,
+                value: AppBranches.riyadh,
                 icon: Icon(Icons.store),
                 label: Text('فرع الرياض')),
             ButtonSegment(
-                value: AppCostCenters.jeddah,
+                value: AppBranches.jeddah,
                 icon: Icon(Icons.store),
                 label: Text('فرع جدة')),
           ],
@@ -133,6 +133,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 allocations: [
                   CostAllocationModel.code(AppCostCenters.adminDept),
                 ]);
+          });
+        }),
+        _action(Icons.public, 'فاتورة تصدير 100 دولار', () {
+          return _run('تم ترحيل فاتورة التصدير', () async {
+            await _service.onForeignInvoice(
+                invoiceId: _newInvoiceId(),
+                usdAmount: 100,
+                branchCode: _branch);
+          });
+        }),
+        _action(Icons.currency_exchange,
+            'تحصيل 100 دولار بسعر 3.70 (فرق عملة محقق)', () {
+          return _run('تم التحصيل وتسجيل فرق العملة', () async {
+            await _service.onForeignPaymentReceived(usdAmount: 100, rate: 3.70);
+          });
+        }),
+        _action(Icons.account_balance,
+            'الرئيسي يدفع إيجار الفرع المختار 500 (بين الفروع)', () {
+          return _run('تم تسجيل المعاملة في دفاتر الفرعين', () async {
+            await _service.onHeadOfficePaysForBranch(
+                branchCode: _branch,
+                expenseCode: AppAccounts.rent,
+                amount: 500,
+                description: 'إيجار دفعه المركز الرئيسي');
           });
         }),
         _action(Icons.rule, 'مصروف بدون قسم (سيُرفض: القسم إلزامي)', () {

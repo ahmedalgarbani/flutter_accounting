@@ -6,6 +6,7 @@ import '../../core/accounting_config.dart';
 import '../../core/date_utils.dart';
 import '../../core/enums.dart';
 import '../../core/exceptions.dart';
+import '../../core/system_sources.dart';
 import '../../database/daos/accounts_dao.dart';
 import '../../database/daos/cost_centers_dao.dart';
 import '../../models/cost_allocation_model.dart';
@@ -20,9 +21,6 @@ class CostAllocationRepositoryImpl implements ICostAllocationRepository {
   final ICostCenterRepository _costCenters;
   final IJournalEntryRepository _journalEntries;
   final AccountingConfig _config;
-
-  /// نوع المصدر لقيود التوزيع (sourceId = معرّف المركز المصدر)
-  static const sourceType = 'cost_allocation';
 
   CostAllocationRepositoryImpl(
     this._dao,
@@ -153,7 +151,7 @@ class CostAllocationRepositoryImpl implements ICostAllocationRepository {
               'حسب مفتاح ${preview.allocationKeyCode}',
       reference: request.reference,
       entryType: EntryType.costAllocation,
-      sourceType: sourceType,
+      sourceType: SystemSources.costAllocation,
       sourceId: request.sourceCostCenterId.toString(),
       lines: lines,
     );

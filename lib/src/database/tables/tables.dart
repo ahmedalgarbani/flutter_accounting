@@ -22,6 +22,9 @@ class Accounts extends Table {
   /// مستوى الحساب في التسلسل الهرمي (1 = حساب رئيسي، 2 = فرعي، ...)
   IntColumn get level => integer().withDefault(const Constant(1))();
 
+  /// عملة الحساب (Schema v4) - null = أي عملة
+  TextColumn get currencyCode => text().withLength(min: 3, max: 3).nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
@@ -55,6 +58,7 @@ class AccountingPeriods extends Table {
 @TableIndex(name: 'idx_journal_entries_date', columns: {#date})
 @TableIndex(
     name: 'idx_journal_entries_source', columns: {#sourceType, #sourceId})
+@TableIndex(name: 'idx_journal_entries_branch', columns: {#branchId})
 class JournalEntries extends Table {
   IntColumn get id => integer().autoIncrement()();
 
@@ -86,6 +90,9 @@ class JournalEntries extends Table {
 
   /// إن كان هذا القيد قيداً عكسياً: معرّف القيد الأصلي
   IntColumn get reversalOfId => integer().nullable()();
+
+  /// الفرع الذي ينتمي إليه القيد (Schema v5)
+  IntColumn get branchId => integer().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -120,6 +127,13 @@ class JournalEntryLines extends Table {
 
   /// ترتيب البند داخل القيد
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  // ── Schema v4: تعدد العملات (null = عملة الأساس) ──
+  TextColumn get currencyCode => text().withLength(min: 3, max: 3).nullable()();
+
+  /// المبلغ بعملة البند (موجب، والجهة تتبع المدين/الدائن)
+  RealColumn get amountCurrency => real().nullable()();
+  RealColumn get exchangeRate => real().nullable()();
 
   @override
   String get tableName => 'journal_entry_lines';
@@ -268,4 +282,119 @@ class AllocationKeyItems extends Table {
 
   @override
   String get tableName => 'allocation_key_items';
+}
+
+// ─────────────────────────────────────────────────────────────
+// تعدد العملات - Multi-currency (Schema v4)
+// ─────────────────────────────────────────────────────────────
+
+class Currencies extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get code => text().withLength(min: 3, max: 3)();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get nameAr => text().withLength(min: 1, max: 100).nullable()();
+  TextColumn get symbol => text().withLength(min: 1, max: 10).nullable()();
+  IntColumn get decimalPlaces => integer().withDefault(const Constant(2))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {code}
+      ];
+
+  @override
+  String get tableName => 'currencies';
+}
+
+/// أسعار الصرف مقابل عملة الأساس (سعر واحد لكل عملة في اليوم)
+@TableIndex(name: 'idx_exchange_rates_lookup', columns: {#currencyCode, #date})
+class ExchangeRates extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get currencyCode => text().withLength(min: 3, max: 3)();
+  DateTimeColumn get date => dateTime()();
+  RealColumn get rate => real()();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {currencyCode, date}
+      ];
+
+  @override
+  String get tableName => 'exchange_rates';
+}
+
+/// إعدادات مثبّتة في قاعدة البيانات (مثل عملة الأساس)
+class AccountingSettings extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+
+  @override
+  String get tableName => 'accounting_settings';
+}
+
+// ─────────────────────────────────────────────────────────────
+// الفروع - Branches (Schema v5)
+// ─────────────────────────────────────────────────────────────
+
+@DataClassName('Branch')
+class Branches extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get code => text().withLength(min: 1, max: 30)();
+  TextColumn get name => text().withLength(min: 1, max: 255)();
+  TextColumn get nameAr => text().withLength(min: 1, max: 255).nullable()();
+  TextColumn get description => text().nullable()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  BoolColumn get isHeadOffice => boolean().withDefault(const Constant(false))();
+
+  /// حساب "جاري الفرع" الذي تسجل عليه الفروع الأخرى معاملاتها معه
+  IntColumn get interBranchAccountId =>
+      integer().nullable().references(Accounts, #id)();
+
+  /// مركز التكلفة المرتبط (بُعد الفرع) لنسبة الحركات إليه تلقائياً
+  IntColumn get costCenterId =>
+      integer().nullable().references(CostCenters, #id)();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {code}
+      ];
+
+  @override
+  String get tableName => 'branches';
+}
+
+/// إقفال فترة محاسبية لفرع معيّن
+class BranchPeriodClosures extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get periodId => integer().references(AccountingPeriods, #id)();
+  IntColumn get branchId => integer().references(Branches, #id)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {periodId, branchId}
+      ];
+
+  @override
+  String get tableName => 'branch_period_closures';
+}
+
+/// تقييد حساب (وحساباته الفرعية) بفروع معيّنة
+class AccountBranches extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get accountId => integer().references(Accounts, #id)();
+  IntColumn get branchId => integer().references(Branches, #id)();
+
+  @override
+  List<Set<Column>>? get uniqueKeys => [
+        {accountId, branchId}
+      ];
+
+  @override
+  String get tableName => 'account_branches';
 }
